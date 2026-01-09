@@ -1,0 +1,322 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Utilisateurs (synchronisés avec Supabase Auth)
+model User {
+  id            String     @id // UUID from Supabase Auth
+  email         String     @unique
+  username      String?    @unique
+  displayName   String?
+  avatarUrl     String?
+  bio           String?
+  isAdmin       Boolean    @default(false)
+  reputation    Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  // Relations
+  favorites     Favorite[]
+  votes         Vote[]
+  comments      Comment[]
+  postedDeals   Deal[]     @relation("DealAuthor")
+  
+  @@index([email])
+  @@index([username])
+}
+
+// Favoris des utilisateurs
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, dealId])
+  @@index([userId])
+  @@index([dealId])
+}
+
+// Votes sur les deals (like Dealabs)
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  value     Int      // +1 ou -1
+  createdAt DateTime @default(now())
+
+  @@unique([userId, dealId])
+  @@index([userId])
+  @@index([dealId])
+}
+
+// Commentaires sur les deals
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId    String
+  deal      Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([dealId])
+  @@index([parentId])
+}
+
+// Catégories de produits beauté
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  icon        String?
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Marchands/Sites e-commerce
+model Merchant {
+  id               String            @id @default(cuid())
+  name             String            @unique
+  slug             String            @unique
+  logoUrl          String?
+  website          String
+  products         Product[]
+  scrapingSources  ScrapingSource[]
+  competitorPrices CompetitorPrice[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+// Marques de produits beauté (normalisées)
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique  // Nom normalisé (ex: "Chanel")
+  slug        String    @unique  // slug (ex: "chanel")
+  logoUrl     String?            // Logo de la marque
+  description String?            // Description de la marque
+  aliases     String?            // Variantes séparées par virgules (ex: "YSL,Yves St Laurent")
+  tier        Int       @default(2) // 1=Luxe, 2=Milieu de gamme, 3=Entrée de gamme
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Produits beauté (fiche produit immuable)
+model Product {
+  id                   String            @id @default(cuid())
+  name                 String
+  slug                 String            @unique
+  description          String?           // Description simple (marque - nom)
+  imageUrl             String?
+  brand                String?           // Ancien champ texte (sera migré vers brandId)
+  brandId              String?           // Relation vers Brand (nouveau)
+  brandRef             Brand?            @relation(fields: [brandId], references: [id])
+  categoryId           String
+  category             Category          @relation(fields: [categoryId], references: [id])
+  subcategory          String?           // Sous-catégorie (ex: "levres", "shampoings", etc.)
+  subsubcategory       String?           // Sous-sous-catégorie (ex: "rouge-a-levres", "shampoing-hydratant")
+  merchantId           String
+  merchant             Merchant          @relation(fields: [merchantId], references: [id])
+  productUrl           String
+  isActive             Boolean           @default(true)
+  
+  // Relations
+  variants             ProductVariant[]  // Un produit peut avoir plusieurs variantes (50ml, 100ml, etc.)
+  priceHistory         PriceHistory[]
+  deals                Deal[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  // Index simples
+  @@index([categoryId])
+  @@index([merchantId])
+  @@index([brandId])
+  @@index([subcategory])
+  @@index([subsubcategory])
+  
+  // Index composites pour requêtes fréquentes
+  @@index([brandId, categoryId])           // Produits d'une marque dans une catégorie
+  @@index([isActive, categoryId])          // Produits actifs d'une catégorie
+}
+
+// Variantes de produit (différentes contenances: 50ml, 100ml, etc.)
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  volumeValue   Float    // Valeur numérique (ex: 50, 100, 200)
+  volumeUnit    String   // Unité normalisée: "ml", "g", "l", "kg"
+  volumeRaw     String?  // Volume brut original (ex: "50 ML", "1.7 oz") pour debug
+  ean           String?  // Code-barres EAN spécifique à la variante
+  
+  deals         Deal[]   // Les deals sont liés à une variante spécifique
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, volumeValue, volumeUnit]) // Une seule variante par produit+volume
+  @@index([productId])
+  @@index([ean])
+  @@index([volumeValue, volumeUnit])  // Pour trouver toutes les variantes 50ml
+}
+
+// Historique des prix pour chaque produit
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Float
+  date      DateTime @default(now())
+
+  @@index([productId])
+  @@index([date])
+}
+
+// Deals/Promotions (offres éphémères)
+model Deal {
+  id              String     @id @default(cuid())
+  productId       String
+  product         Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Variante du produit (50ml, 100ml, etc.) - optionnel pour migration progressive
+  variantId       String?
+  variant         ProductVariant? @relation(fields: [variantId], references: [id])
+  
+  title           String
+  refinedTitle    String?    // Titre optimisé par IA (ex: "L'Oréal Pro - Crème Hydratante Curl (200ml)")
+  description     String?
+  type            String     @default("scraped") // "scraped", "manual", "promo_code"
+  dealPrice       Float
+  originalPrice   Float
+  discountPercent Int
+  discountAmount  Float
+  promoCode       String?
+  
+  // Volume (gardé temporairement pour migration, sera supprimé quand variantId obligatoire)
+  volume          String?    // @deprecated - utiliser variant.volumeRaw
+  volumeValue     Float?     // @deprecated - utiliser variant.volumeValue  
+  volumeUnit      String?    // @deprecated - utiliser variant.volumeUnit
+  
+  pricePerUnit    Float?     // Prix par unité (€/ml ou €/g) - calculé depuis dealPrice / variant.volumeValue
+  brandTier       Int        @default(2) // Notoriété marque: 1=connue (Chanel, Dior), 2=moyenne, 3=inconnue
+  score           Float      @default(0) // Score global du deal (0-100)
+  tags            String?    // Tags séparés par virgules (ex: "LUXE,TENDANCE,TOP_DEAL")
+  startDate       DateTime   @default(now())
+  endDate         DateTime?
+  isHot           Boolean    @default(false) // Validé par la communauté (votes >= 20)
+  isExpired       Boolean    @default(false)
+  isTrending      Boolean    @default(false) // Produit tendance réseaux sociaux
+  votes           Int        @default(0)
+  views           Int        @default(0)
+  
+  // Auteur du deal (optionnel pour les deals scrapés)
+  authorId        String?
+  author          User?      @relation("DealAuthor", fields: [authorId], references: [id])
+  
+  // Relations
+  favorites        Favorite[]
+  voteRecords      Vote[]
+  comments         Comment[]
+  competitorPrices CompetitorPrice[]  // Prix du même produit chez les concurrents
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Index simples
+  @@index([productId])
+  @@index([variantId])
+  @@index([isExpired])
+  @@index([isHot])
+  @@index([brandTier])
+  @@index([pricePerUnit])
+  @@index([score])
+  @@index([type])
+  @@index([createdAt])
+  @@index([authorId])
+  
+  // Index composites pour requêtes fréquentes
+  @@index([isExpired, score])              // Deals actifs triés par score
+  @@index([isExpired, brandTier, score])   // Deals actifs par tier de marque
+  @@index([isExpired, pricePerUnit])       // Deals actifs triés par prix/unité
+  @@index([productId, isExpired])          // Deals actifs d'un produit
+}
+
+// Alertes de prix pour les utilisateurs
+model PriceAlert {
+  id          String   @id @default(cuid())
+  email       String
+  productSlug String
+  targetPrice Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([productSlug])
+}
+
+// Sources de scraping (URLs à scraper pour chaque marchand)
+model ScrapingSource {
+  id          String   @id @default(cuid())
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  url         String   @unique
+  name        String   // Nom descriptif (ex: "Promos Maquillage", "Tendances réseaux sociaux")
+  category    String   // Catégorie cible (ex: "maquillage", "parfums")
+  type        String   @default("promo") // "promo", "trending", "nouveautes", etc.
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0) // Pour ordonner les sources (plus élevé = priorité)
+  maxProducts Int      @default(50) // Nombre max de produits à scraper
+  lastScraped DateTime? // Date du dernier scraping
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([merchantId])
+  @@index([isActive])
+  @@index([type])
+}
+
+// Prix des concurrents pour un même produit (ex: prix Sephora pour un deal Nocibé)
+model CompetitorPrice {
+  id              String   @id @default(cuid())
+  dealId          String
+  deal            Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  merchantId      String
+  merchant        Merchant @relation(fields: [merchantId], references: [id])
+  merchantName    String   // Nom du concurrent (ex: "Sephora", "Nocibé")
+  productName     String   // Nom du produit trouvé chez le concurrent
+  productUrl      String   // URL du produit chez le concurrent
+  currentPrice    Float    // Prix actuel
+  originalPrice   Float?   // Prix barré (si promo)
+  discountPercent Int?     // % de réduction (si promo)
+  volume          String?  // Contenance (ex: "50 ml")
+  inStock         Boolean  @default(true)
+  lastChecked     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([dealId, merchantId])
+  @@index([dealId])
+  @@index([merchantId])
+  @@index([lastChecked])
+}

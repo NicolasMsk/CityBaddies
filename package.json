@@ -1,5 +1,5 @@
 {
-  "name": "fitness-deals",
+  "name": "beauty-deals",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,25 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.87.1",
+    "@tanstack/react-query": "^5.90.12",
+    "axios": "^1.13.2",
+    "cheerio": "^1.1.2",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.555.0",
     "next": "16.0.7",
+    "openai": "^6.10.0",
+    "playwright": "^1.57.0",
+    "playwright-extra": "^4.3.6",
+    "prisma": "^5.22.0",
+    "puppeteer-core": "^24.32.0",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "recharts": "^3.5.1",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

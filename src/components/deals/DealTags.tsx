@@ -1,6 +1,7 @@
 'use client';
 
 import { stringToTags } from '@/lib/utils/scoring';
+import { Star, Flame, Award, Tag, Zap, Heart, Check, TrendingUp, Gift } from 'lucide-react';
 
 interface DealTagsProps {
   tags: string | null;
@@ -10,7 +11,7 @@ interface DealTagsProps {
 
 /**
  * Composant d'affichage des tags de deal
- * Style "City Baddies" : dark, rouge bordeaux, touches dorées
+ * Style "High-End Editorial": Minimaliste, sharp edges, monochrome & metallic accents
  */
 export default function DealTags({ tags, score, compact = false }: DealTagsProps) {
   const tagList = stringToTags(tags);
@@ -21,20 +22,20 @@ export default function DealTags({ tags, score, compact = false }: DealTagsProps
   const displayTags = compact ? tagList.slice(0, 3) : tagList;
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {displayTags.map((tag) => (
         <span
           key={tag}
-          className={`${getTagStyle(tag)} ${compact ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'} rounded-full font-medium inline-flex items-center gap-1 transition-all`}
+          className={`${getTagStyle(tag)} ${compact ? 'text-[10px] px-1.5 py-0.5' : 'text-[10px] px-2 py-1'} font-medium uppercase tracking-[0.2em] inline-flex items-center gap-1.5 border`}
         >
-          {getTagIcon(tag)}
+          {getTagIcon(tag, compact)}
           {getTagLabel(tag)}
         </span>
       ))}
       
       {/* Indicateur de score si fourni */}
       {score !== undefined && score >= 60 && !compact && (
-        <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-white/5 text-white/60 border border-white/10">
+        <span className="text-[10px] px-2 py-1 font-bold bg-[#1a1a1a] text-white border border-white/20 uppercase tracking-[0.2em]">
           Score: {score}
         </span>
       )}
@@ -44,54 +45,56 @@ export default function DealTags({ tags, score, compact = false }: DealTagsProps
 
 /**
  * Retourne le style Tailwind pour chaque tag
- * Palette City Baddies : noir, bordeaux, or
+ * Palette Premium: Noir, Blanc, Or, Bordeaux - Bords nets
  */
 function getTagStyle(tag: string): string {
   const styles: Record<string, string> = {
     // Tags principaux - très visibles
-    'DEAL_EXCEPTIONNEL': 'bg-gradient-to-r from-[#7b0a0a] to-[#d4a855] text-white shadow-lg shadow-[#7b0a0a]/30 animate-pulse-slow',
-    'TOP_DEAL': 'bg-[#7b0a0a] text-white shadow-md shadow-[#7b0a0a]/20',
-    'BON_DEAL': 'bg-[#2d1a1e] text-[#ff8a8a] border border-[#7b0a0a]/30',
-    'DEAL_CORRECT': 'bg-white/5 text-white/70 border border-white/10',
+    'DEAL_EXCEPTIONNEL': 'bg-[#d4a855] text-black border-[#d4a855]',
+    'TOP_DEAL': 'bg-[#1a1a1a] text-[#d4a855] border-[#d4a855]',
+    'BON_DEAL': 'bg-transparent text-white border-white/40',
+    'DEAL_CORRECT': 'bg-transparent text-neutral-500 border-neutral-800',
     
     // Tags secondaires - plus subtils
-    'LUXE': 'bg-gradient-to-r from-[#d4a855]/20 to-[#b8924a]/20 text-[#d4a855] border border-[#d4a855]/30',
-    'MOINS_50': 'bg-[#7b0a0a]/80 text-white',
-    'GROSSE_PROMO': 'bg-[#5c1010] text-[#ff8a8a]',
-    'TENDANCE': 'bg-gradient-to-r from-pink-500/20 to-[#7b0a0a]/20 text-pink-300 border border-pink-500/30',
-    'HOT': 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
-    'APPROUVE': 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
-    'MEILLEUR_PRIX': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    'NOUVEAU': 'bg-sky-500/20 text-sky-300 border border-sky-500/30',
-    'IDEE_CADEAU': 'bg-[#7b0a0a]/30 text-[#ff8a8a] border border-[#7b0a0a]/40',
-    'ESSENTIEL_ETE': 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+    'LUXE': 'bg-[#0a0a0a] text-white border-white/20',
+    'MOINS_50': 'bg-[#9b1515] text-white border-[#9b1515]',
+    'GROSSE_PROMO': 'bg-[#7b0a0a]/50 text-white border-[#7b0a0a]',
+    'TENDANCE': 'bg-transparent text-white border-white/30',
+    'HOT': 'bg-[#d4a855]/10 text-[#d4a855] border-[#d4a855]/30',
+    'APPROUVE': 'bg-emerald-900/20 text-emerald-500 border-emerald-900/50',
+    'MEILLEUR_PRIX': 'bg-transparent text-[#d4a855] border-[#d4a855]/50',
+    'NOUVEAU': 'bg-white text-black border-white',
+    'IDEE_CADEAU': 'bg-transparent text-[#d4a855] border-[#d4a855]/30',
+    'ESSENTIEL_ETE': 'bg-transparent text-neutral-400 border-neutral-800',
   };
   
-  return styles[tag] || 'bg-white/5 text-white/60 border border-white/10';
+  return styles[tag] || 'bg-transparent text-neutral-500 border-neutral-800';
 }
 
 /**
- * Retourne l'icône emoji pour chaque tag
+ * Retourne l'icône Lucide pour chaque tag
  */
-function getTagIcon(tag: string): string {
-  const icons: Record<string, string> = {
-    'DEAL_EXCEPTIONNEL': '🔥',
-    'TOP_DEAL': '⭐',
-    'BON_DEAL': '👍',
-    'DEAL_CORRECT': '💡',
-    'LUXE': '💎',
-    'MOINS_50': '🏷️',
-    'GROSSE_PROMO': '🏷️',
-    'TENDANCE': '📈',
-    'HOT': '🔥',
-    'APPROUVE': '✅',
-    'MEILLEUR_PRIX': '💰',
-    'NOUVEAU': '🆕',
-    'IDEE_CADEAU': '🎁',
-    'ESSENTIEL_ETE': '☀️',
+function getTagIcon(tag: string, compact: boolean) {
+  const size = compact ? "w-3 h-3" : "w-3 h-3";
+  
+  const icons: Record<string, any> = {
+    'DEAL_EXCEPTIONNEL': <Flame className={size} />,
+    'TOP_DEAL': <Star className={size} fill="currentColor" />,
+    'BON_DEAL': <Check className={size} />,
+    'DEAL_CORRECT': <Tag className={size} />,
+    'LUXE': <Award className={size} />,
+    'MOINS_50': <TrendingUp className={`${size} rotate-180`} />, // Down trend
+    'GROSSE_PROMO': <Tag className={size} />,
+    'TENDANCE': <TrendingUp className={size} />,
+    'HOT': <Zap className={size} />,
+    'APPROUVE': <Check className={size} />,
+    'MEILLEUR_PRIX': <Tag className={size} />,
+    'NOUVEAU': <Star className={size} />,
+    'IDEE_CADEAU': <Gift className={size} />,
+    'ESSENTIEL_ETE': <Star className={size} />,
   };
   
-  return icons[tag] || '';
+  return icons[tag] || null;
 }
 
 /**
@@ -101,21 +104,21 @@ function getTagLabel(tag: string): string {
   const labels: Record<string, string> = {
     'DEAL_EXCEPTIONNEL': 'Exceptionnel',
     'TOP_DEAL': 'Top Deal',
-    'BON_DEAL': 'Bon Deal',
-    'DEAL_CORRECT': 'Correct',
+    'BON_DEAL': 'Bon Plan',
+    'DEAL_CORRECT': 'Prix Correct',
     'LUXE': 'Luxe',
     'MOINS_50': '-50%',
     'GROSSE_PROMO': 'Grosse Promo',
     'TENDANCE': 'Tendance',
     'HOT': 'Hot',
-    'APPROUVE': 'Approuvé',
+    'APPROUVE': 'Vérifié',
     'MEILLEUR_PRIX': 'Meilleur Prix',
     'NOUVEAU': 'Nouveau',
     'IDEE_CADEAU': 'Idée Cadeau',
     'ESSENTIEL_ETE': 'Été',
   };
   
-  return labels[tag] || tag;
+  return labels[tag] || tag.replace(/_/g, ' ');
 }
 
 /**
@@ -124,31 +127,26 @@ function getTagLabel(tag: string): string {
 export function ScoreBadge({ score }: { score: number }) {
   if (score < 40) return null;
   
-  let bgColor = 'bg-white/10';
-  let textColor = 'text-white/60';
-  let icon = '';
+  let styles = 'bg-[#1a1a1a] text-neutral-500 border-neutral-800';
+  let icon = null;
   
   if (score >= 90) {
-    bgColor = 'bg-gradient-to-r from-[#7b0a0a] to-[#d4a855]';
-    textColor = 'text-white';
-    icon = '🔥';
+    styles = 'bg-[#d4a855] text-black border-[#d4a855]';
+    icon = <Flame className="w-3 h-3" />;
   } else if (score >= 75) {
-    bgColor = 'bg-[#7b0a0a]';
-    textColor = 'text-white';
-    icon = '⭐';
+    styles = 'bg-[#1a1a1a] text-white border-white';
+    icon = <Star className="w-3 h-3" fill="currentColor" />;
   } else if (score >= 60) {
-    bgColor = 'bg-[#2d1a1e]';
-    textColor = 'text-[#ff8a8a]';
-    icon = '👍';
+    styles = 'bg-[#1a1a1a] text-[#d4a855] border-[#d4a855]';
+    icon = <Check className="w-3 h-3" />;
   } else if (score >= 40) {
-    bgColor = 'bg-white/5';
-    textColor = 'text-white/70';
-    icon = '💡';
+    styles = 'bg-[#1a1a1a] text-white border-white/20';
+    icon = <Tag className="w-3 h-3" />;
   }
   
   return (
-    <div className={`${bgColor} ${textColor} px-3 py-1.5 rounded-full text-sm font-bold inline-flex items-center gap-1.5 shadow-lg`}>
-      <span>{icon}</span>
+    <div className={`${styles} px-2 py-1 text-[10px] font-bold uppercase tracking-[0.2em] inline-flex items-center gap-1.5 border`}>
+      {icon}
       <span>{score}</span>
     </div>
   );

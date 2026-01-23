@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -213,6 +213,9 @@ model Deal {
   discountAmount  Float
   promoCode       String?
   
+  // Traçabilité du scraping
+  sourceUrl       String?    // URL de la page source qui a permis de scraper ce deal (pour debug)
+  
   // Volume (gardé temporairement pour migration, sera supprimé quand variantId obligatoire)
   volume          String?    // @deprecated - utiliser variant.volumeRaw
   volumeValue     Float?     // @deprecated - utiliser variant.volumeValue  
@@ -319,4 +322,20 @@ model CompetitorPrice {
   @@index([dealId])
   @@index([merchantId])
   @@index([lastChecked])
+}
+
+// Abonnements newsletter
+model NewsletterSubscription {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  firstName     String?
+  isConfirmed   Boolean   @default(false)
+  confirmToken  String?   @unique
+  subscribedAt  DateTime  @default(now())
+  confirmedAt   DateTime?
+  unsubscribedAt DateTime?
+  source        String    @default("website") // "signup", "homepage", "popup"
+  
+  @@index([email])
+  @@index([confirmToken])
 }

@@ -107,14 +107,16 @@ const SUBSUBCATEGORIES: Record<string, { slug: string; name: string }[]> = {
 
 function FilterChip({ label, onRemove, variant = 'default' }: { label: string; onRemove: () => void; variant?: 'default' | 'hot' | 'price'; }) {
   const variants = {
-    default: 'bg-[#7b0a0a]/20 text-[#ff6b6b] border-[#7b0a0a]/30',
-    hot: 'bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400 border-orange-500/30',
-    price: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    default: 'bg-white/5 text-white border-white/10 hover:border-[#d4a855] hover:text-[#d4a855]',
+    hot: 'bg-[#9b1515]/10 text-[#9b1515] border-[#9b1515]/20 hover:border-[#9b1515]',
+    price: 'bg-[#d4a855]/10 text-[#d4a855] border-[#d4a855]/20 hover:border-[#d4a855]',
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border ${variants[variant]}`}>
+    <span className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase border transition-colors ${variants[variant]}`}>
       {label}
-      <button onClick={onRemove} className="hover:bg-white/10 rounded-full p-0.5 transition-colors"><X className="h-3 w-3" /></button>
+      <button onClick={onRemove} className="hover:text-white transition-colors group">
+        <X className="h-3 w-3 group-hover:scale-110 transition-transform" />
+      </button>
     </span>
   );
 }
@@ -127,28 +129,59 @@ function MultiSelectDropdown({ icon: Icon, values, options, onChange, placeholde
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  
   const toggleValue = (value: string) => values.includes(value) ? onChange(values.filter(v => v !== value)) : onChange([...values, value]);
   const selectedLabels = values.map(v => options.find(o => o.value === v)?.label).filter(Boolean);
+  
   return (
     <div ref={dropdownRef} className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all w-full md:w-auto min-w-[180px] border ${values.length > 0 ? 'bg-[#7b0a0a]/20 border-[#7b0a0a]/50 text-[#ff6b6b]' : 'bg-[#1a1a1a] border-white/10 text-white/60 hover:bg-[#252525] hover:border-[#7b0a0a]/30'}`}>
-        <Icon className="h-4 w-4 flex-shrink-0" />
-        <span className="flex-1 text-left text-sm truncate">{values.length === 0 ? placeholder : values.length === 1 ? selectedLabels[0] : `${values.length} sélectionnés`}</span>
-        {values.length > 0 && <span className="bg-[#7b0a0a] text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{values.length}</span>}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className={`
+          flex items-center gap-3 px-6 py-4 transition-all w-full md:w-auto min-w-[200px] border-b-2
+          text-xs font-bold tracking-widest uppercase
+          ${values.length > 0 
+            ? 'bg-[#0a0a0a] border-[#d4a855] text-white' 
+            : 'bg-transparent border-white/10 text-neutral-400 hover:text-white hover:border-white/30'
+          }
+        `}
+      >
+        <span className="flex-1 text-left truncate">
+          {values.length === 0 ? placeholder : values.length === 1 ? selectedLabels[0] : `${values.length} SÉLECTIONNÉS`}
+        </span>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#d4a855]' : ''}`} />
       </button>
+
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full min-w-[250px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="p-2 border-b border-white/10"><button onClick={() => onChange([])} className="text-xs text-[#ff6b6b] hover:text-white transition-colors">Tout effacer</button></div>
-          <div className="p-1 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-0 w-full min-w-[280px] bg-[#0a0a0a] border border-white/10 border-t-0 shadow-2xl z-50">
+          <div className="p-3 border-b border-white/5 flex justify-end">
+            <button onClick={() => onChange([])} className="text-[10px] font-bold tracking-widest uppercase text-neutral-500 hover:text-[#9b1515] transition-colors">
+              Effacer
+            </button>
+          </div>
+          <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
             {options.map((option) => {
               const isSelected = values.includes(option.value);
               return (
-                <button key={option.value} onClick={() => toggleValue(option.value)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${isSelected ? 'bg-[#7b0a0a]/30 text-[#ff6b6b]' : 'text-white/60 hover:bg-white/5'}`}>
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#7b0a0a] border-[#7b0a0a]' : 'border-white/30 hover:border-[#7b0a0a]/50'}`}>{isSelected && <Check className="h-3 w-3 text-white" />}</div>
-                  {option.icon && <CategoryIcon name={option.icon} size={16} className="text-[#9b1515]/60" />}
-                  <span className="text-sm flex-1">{option.label}</span>
-                  {option.count !== undefined && <span className="text-xs text-white/30">{option.count}</span>}
+                <button 
+                  key={option.value} 
+                  onClick={() => toggleValue(option.value)} 
+                  className={`
+                    w-full flex items-center gap-4 px-6 py-4 text-left transition-colors border-l-2
+                    ${isSelected 
+                      ? 'bg-white/5 border-[#d4a855] text-white' 
+                      : 'border-transparent text-neutral-400 hover:bg-white/[0.02] hover:text-white'
+                    }
+                  `}
+                >
+                  <div className={`
+                    w-4 h-4 border flex items-center justify-center transition-colors
+                    ${isSelected ? 'bg-[#d4a855] border-[#d4a855]' : 'border-neutral-700'}
+                  `}>
+                    {isSelected && <Check className="h-3 w-3 text-black" />}
+                  </div>
+                  <span className="text-xs font-medium tracking-wide flex-1 uppercase">{option.label}</span>
+                  {option.count !== undefined && <span className="text-[10px] text-neutral-600">{option.count}</span>}
                 </button>
               );
             })}
@@ -162,28 +195,42 @@ function MultiSelectDropdown({ icon: Icon, values, options, onChange, placeholde
 function SingleSelectDropdown({ icon: Icon, value, options, onChange }: { icon: React.ElementType; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) setIsOpen(false); }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  
   const selectedOption = options.find(o => o.value === value);
+  
   return (
     <div ref={dropdownRef} className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1a1a1a] border border-white/10 text-white/60 hover:bg-[#252525] hover:border-[#7b0a0a]/30 transition-all min-w-[160px]">
-        <Icon className="h-4 w-4 flex-shrink-0" />
-        <span className="flex-1 text-left text-sm">{selectedOption?.label}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="flex items-center gap-3 px-6 py-4 bg-transparent border-b-2 border-white/10 text-neutral-400 hover:text-white hover:border-white/30 transition-all min-w-[200px] text-xs font-bold tracking-widest uppercase"
+      >
+        <span className="flex-1 text-left">{selectedOption?.label}</span>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#d4a855]' : ''}`} />
       </button>
+      
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full min-w-[180px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="p-1">
-            {options.map((option) => (
-              <button key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${value === option.value ? 'bg-[#7b0a0a]/30 text-[#ff6b6b]' : 'text-white/60 hover:bg-white/5'}`}>
-                <span className="text-sm">{option.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="absolute top-full left-0 mt-0 w-full min-w-[200px] bg-[#0a0a0a] border border-white/10 border-t-0 shadow-2xl z-50">
+          {options.map((option) => (
+            <button 
+              key={option.value} 
+              onClick={() => { onChange(option.value); setIsOpen(false); }} 
+              className={`
+                w-full flex items-center gap-3 px-6 py-4 text-left transition-colors border-l-2
+                ${value === option.value 
+                  ? 'bg-white/5 border-[#d4a855] text-[#d4a855]' 
+                  : 'border-transparent text-neutral-400 hover:bg-white/[0.02] hover:text-white'
+                }
+              `}
+            >
+              <span className="text-xs font-medium tracking-wide uppercase">{option.label}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -198,31 +245,67 @@ function PriceRangeInput({ minPrice, maxPrice, onMinChange, onMaxChange }: { min
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  
   const hasPrice = minPrice !== undefined || maxPrice !== undefined;
-  const priceLabel = hasPrice ? `${minPrice ?? 0}€ - ${maxPrice ?? '∞'}€` : 'Prix';
+  const priceLabel = hasPrice ? `${minPrice ?? 0}€ - ${maxPrice ?? '∞'}€` : 'PRIX';
+  
   return (
     <div ref={dropdownRef} className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all min-w-[140px] border ${hasPrice ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-[#1a1a1a] border-white/10 text-white/60 hover:bg-[#252525] hover:border-[#7b0a0a]/30'}`}>
-        <Euro className="h-4 w-4 flex-shrink-0" />
-        <span className="text-sm">{priceLabel}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className={`
+          flex items-center gap-3 px-6 py-4 transition-all min-w-[160px] border-b-2 text-xs font-bold tracking-widest uppercase
+          ${hasPrice 
+            ? 'bg-[#0a0a0a] border-[#d4a855] text-[#d4a855]' 
+            : 'bg-transparent border-white/10 text-neutral-400 hover:text-white hover:border-white/30'
+          }
+        `}
+      >
+        <span className="flex-1 text-left">{priceLabel}</span>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#d4a855]' : ''}`} />
       </button>
+      
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-[280px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 p-4">
-          <p className="text-sm text-white/60 mb-3">Fourchette de prix</p>
-          <div className="flex items-center gap-3">
+        <div className="absolute top-full left-0 mt-0 w-[300px] bg-[#0a0a0a] border border-white/10 border-t-0 shadow-2xl z-50 p-6">
+          <p className="text-[10px] font-bold tracking-widest text-[#d4a855] uppercase mb-4">Budget</p>
+          <div className="flex items-center gap-4 mb-6">
             <div className="flex-1">
-              <label className="text-xs text-white/40 mb-1 block">Min</label>
-              <input type="number" placeholder="0" value={minPrice ?? ''} onChange={(e) => onMinChange(e.target.value ? Number(e.target.value) : undefined)} className="w-full px-3 py-2 bg-[#252525] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[#7b0a0a]/50" />
+              <label className="text-[10px] text-neutral-500 uppercase tracking-wide mb-2 block">Min</label>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  placeholder="0" 
+                  value={minPrice ?? ''} 
+                  onChange={(e) => onMinChange(e.target.value ? Number(e.target.value) : undefined)} 
+                  className="w-full pl-3 pr-8 py-3 bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#d4a855]" 
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs">€</span>
+              </div>
             </div>
-            <span className="text-white/40 mt-5">—</span>
             <div className="flex-1">
-              <label className="text-xs text-white/40 mb-1 block">Max</label>
-              <input type="number" placeholder="∞" value={maxPrice ?? ''} onChange={(e) => onMaxChange(e.target.value ? Number(e.target.value) : undefined)} className="w-full px-3 py-2 bg-[#252525] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[#7b0a0a]/50" />
+              <label className="text-[10px] text-neutral-500 uppercase tracking-wide mb-2 block">Max</label>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  placeholder="∞" 
+                  value={maxPrice ?? ''} 
+                  onChange={(e) => onMaxChange(e.target.value ? Number(e.target.value) : undefined)} 
+                  className="w-full pl-3 pr-8 py-3 bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#d4a855]" 
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs">€</span>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
-            {[20, 50, 100].map((price) => (<button key={price} onClick={() => onMaxChange(price)} className="px-3 py-1.5 text-xs bg-[#252525] hover:bg-[#7b0a0a]/20 border border-white/10 hover:border-[#7b0a0a]/30 rounded-lg text-white/60 hover:text-[#ff6b6b] transition-colors">&lt; {price}€</button>))}
+          <div className="flex gap-2">
+            {[20, 50, 100].map((price) => (
+              <button 
+                key={price} 
+                onClick={() => onMaxChange(price)} 
+                className="flex-1 py-2 text-[10px] font-bold tracking-wide uppercase bg-white/5 hover:bg-[#d4a855] text-neutral-400 hover:text-black transition-colors"
+              >
+                &lt; {price}€
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -285,58 +368,175 @@ export default function DealFilters({ categories, merchants, onFilterChange, cur
   const filterChips = getActiveFilterChips();
 
   return (
-    <div className="space-y-4 mb-6">
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-4">
-        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full md:hidden">
-          <div className="flex items-center gap-2 text-white">
-            <SlidersHorizontal className="h-5 w-5" />
-            <span className="font-medium">Filtres</span>
-            {activeFilterCount > 0 && <span className="bg-[#7b0a0a] text-white text-xs px-2 py-0.5 rounded-full">{activeFilterCount}</span>}
+    <div className="space-y-4 mb-24">
+      {/* Mobile Toggle */}
+      <div className="md:hidden">
+        <button 
+          onClick={() => setIsOpen(!isOpen)} 
+          className="w-full flex items-center justify-between px-6 py-4 bg-[#0a0a0a] border border-white/10 text-white"
+        >
+          <div className="flex items-center gap-4">
+            <SlidersHorizontal className="h-4 w-4 text-[#d4a855]" />
+            <span className="text-xs font-bold tracking-widest uppercase">Filtres</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-[#9b1515] text-white text-[10px] font-bold px-2 py-0.5 min-w-[20px] text-center">
+                {activeFilterCount}
+              </span>
+            )}
           </div>
-          <ChevronDown className={`h-5 w-5 text-[#9b1515] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
+      </div>
 
-        <div className={`${isOpen ? 'block' : 'hidden'} md:block mt-4 md:mt-0 space-y-4`}>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
-            <input type="text" placeholder="Rechercher un produit, une marque..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-[#252525] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#7b0a0a]/50 transition-colors" />
-            {searchValue && <button onClick={() => setSearchValue('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"><X className="h-5 w-5" /></button>}
+      <div className={`${isOpen ? 'block' : 'hidden'} md:block transition-all duration-300`}>
+        {/* Main Filter Bar */}
+        <div className="bg-[#0a0a0a] border border-white/10 p-2 overflow-x-auto">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-8 min-w-max lg:min-w-0 px-4">
+            
+            {/* Search Input */}
+             <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-[#d4a855]" />
+              <input
+                type="text"
+                placeholder="RECHERCHER DANS LES OFFRES..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full pl-8 pr-4 py-4 bg-transparent border-b-2 border-white/10 text-xs font-bold tracking-widest text-white placeholder-neutral-500 focus:outline-none focus:border-[#d4a855] uppercase transition-colors"
+              />
+              {searchValue && (
+                <button
+                  onClick={() => { setSearchValue(''); handleChange('search', ''); }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Separator */}
+            <div className="hidden lg:block w-px h-8 bg-white/10" />
+
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+              <MultiSelectDropdown
+                icon={CategoryIcon}
+                values={currentFilters.categories}
+                options={categoryOptions}
+                onChange={(v) => handleChange('categories', v)}
+                placeholder="CATÉGORIES"
+              />
+
+              {(currentFilters.categories.length > 0 || currentFilters.subcategories.length > 0) && (
+                <MultiSelectDropdown
+                  icon={CategoryIcon}
+                  values={currentFilters.subcategories}
+                  options={subcategoryOptions}
+                  onChange={(v) => handleChange('subcategories', v)}
+                  placeholder="SOUS-CATÉGORIES"
+                />
+              )}
+
+              {(currentFilters.subcategories.length > 0 || currentFilters.subsubcategories.length > 0) && (
+                <MultiSelectDropdown
+                  icon={CategoryIcon}
+                  values={currentFilters.subsubcategories}
+                  options={subsubcategoryOptions}
+                  onChange={(v) => handleChange('subsubcategories', v)}
+                  placeholder="TYPE"
+                />
+              )}
+
+              <MultiSelectDropdown
+                icon={Store}
+                values={currentFilters.merchants}
+                options={merchantOptions}
+                onChange={(v) => handleChange('merchants', v)}
+                placeholder="MARCHANDS"
+              />
+
+              <MultiSelectDropdown
+                icon={Tag}
+                values={currentFilters.tags}
+                options={tagOptions}
+                onChange={(v) => handleChange('tags', v)}
+                placeholder="TAGS"
+              />
+
+              <PriceRangeInput
+                minPrice={currentFilters.minPrice}
+                maxPrice={currentFilters.maxPrice}
+                onMinChange={(v) => handleChange('minPrice', v)}
+                onMaxChange={(v) => handleChange('maxPrice', v)}
+              />
+            </div>
           </div>
+          
+          {/* Secondary Row (Sort & Toggles) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-white/5 px-4">
+             <div className="flex items-center gap-4 w-full sm:w-auto">
+               <label className="flex items-center gap-3 cursor-pointer group select-none">
+                 <div className={`
+                    w-10 h-5 rounded-full relative transition-colors duration-300 
+                    ${currentFilters.hotOnly ? 'bg-[#9b1515]' : 'bg-white/10 group-hover:bg-white/20'}
+                 `}>
+                   <div className={`
+                      absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform duration-300
+                      ${currentFilters.hotOnly ? 'translate-x-5' : 'translate-x-0'}
+                   `} />
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <Flame className={`h-4 w-4 ${currentFilters.hotOnly ? 'text-[#9b1515] fill-[#9b1515]' : 'text-neutral-500'}`} />
+                   <span className={`text-[10px] font-bold tracking-widest uppercase ${currentFilters.hotOnly ? 'text-white' : 'text-neutral-500'}`}>
+                     Hot Deals Only
+                   </span>
+                 </div>
+                 <input
+                   type="checkbox"
+                   checked={currentFilters.hotOnly}
+                   onChange={(e) => handleChange('hotOnly', e.target.checked)}
+                   className="hidden"
+                 />
+               </label>
+             </div>
 
-          <div className="flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
-            <button onClick={() => handleChange('hotOnly', !currentFilters.hotOnly)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all font-medium ${currentFilters.hotOnly ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25' : 'bg-[#252525] border border-white/10 text-white/60 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-400'}`}>
-              <Flame className={`h-4 w-4 ${currentFilters.hotOnly ? 'animate-pulse' : ''}`} />
-              Hot deals
-            </button>
-
-            <MultiSelectDropdown icon={Tag} values={currentFilters.categories} options={categoryOptions} onChange={(values) => handleChange('categories', values)} placeholder="Catégories" />
-
-            {subcategoryOptions.length > 0 && <MultiSelectDropdown icon={Tag} values={currentFilters.subcategories} options={subcategoryOptions} onChange={(values) => handleChange('subcategories', values)} placeholder="Sous-catégories" />}
-
-            {subsubcategoryOptions.length > 0 && <MultiSelectDropdown icon={Tag} values={currentFilters.subsubcategories} options={subsubcategoryOptions} onChange={(values) => handleChange('subsubcategories', values)} placeholder="Type de produit" />}
-
-            <MultiSelectDropdown icon={Store} values={currentFilters.merchants} options={merchantOptions} onChange={(values) => handleChange('merchants', values)} placeholder="Marchands" />
-
-            <MultiSelectDropdown icon={Tag} values={currentFilters.tags} options={tagOptions} onChange={(values) => handleChange('tags', values)} placeholder="Tags" />
-
-            <PriceRangeInput minPrice={currentFilters.minPrice} maxPrice={currentFilters.maxPrice} onMinChange={(value) => handleChange('minPrice', value)} onMaxChange={(value) => handleChange('maxPrice', value)} />
-
-            <div className="flex-1" />
-
-            <SingleSelectDropdown icon={SortAsc} value={currentFilters.sortBy} options={SORT_OPTIONS} onChange={(val) => handleChange('sortBy', val)} />
-
-            <button onClick={() => handleChange('sortOrder', currentFilters.sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-1 px-3 py-2.5 bg-[#252525] border border-white/10 rounded-xl text-white/60 hover:bg-[#7b0a0a]/20 hover:border-[#7b0a0a]/30 hover:text-[#ff6b6b] transition-all" title={currentFilters.sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}>
-              <span className="text-lg">{currentFilters.sortOrder === 'asc' ? '↑' : '↓'}</span>
-            </button>
+             <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+               <span className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Trier par:</span>
+               <SingleSelectDropdown
+                 icon={SortAsc}
+                 value={currentFilters.sortBy}
+                 options={SORT_OPTIONS}
+                 onChange={(v) => handleChange('sortBy', v)}
+               />
+               <button
+                 onClick={() => handleChange('sortOrder', currentFilters.sortOrder === 'asc' ? 'desc' : 'asc')}
+                 className="p-3 border border-white/10 hover:border-white/30 text-neutral-400 hover:text-white transition-colors group"
+                 title={currentFilters.sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
+               >
+                 <SortAsc className={`h-4 w-4 transition-transform duration-300 ${currentFilters.sortOrder === 'desc' ? 'rotate-180' : ''} group-hover:scale-110`} />
+               </button>
+             </div>
           </div>
         </div>
       </div>
 
+      {/* Active Filters */}
       {filterChips.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-white/40">Filtres actifs :</span>
-          {filterChips.map((chip) => <FilterChip key={chip.key} label={chip.label} onRemove={chip.onRemove} variant={chip.variant} />)}
-          <button onClick={clearFilters} className="text-sm text-[#ff6b6b] hover:text-white transition-colors ml-2">Tout effacer</button>
+        <div className="flex flex-wrap items-center gap-3 animate-fade-in px-2">
+          <span className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mr-2">Filtres actifs:</span>
+          {filterChips.map((chip) => (
+            <FilterChip
+              key={chip.key}
+              label={chip.label}
+              onRemove={chip.onRemove}
+              variant={chip.variant}
+            />
+          ))}
+          <button
+            onClick={clearFilters}
+            className="text-[10px] font-bold tracking-widest text-[#9b1515] hover:text-red-400 uppercase ml-4 transition-colors border-b border-transparent hover:border-red-400"
+          >
+            Tout effacer
+          </button>
         </div>
       )}
     </div>

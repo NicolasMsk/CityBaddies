@@ -10,12 +10,15 @@ interface CategoryCardProps {
 const categoryImages: Record<string, string> = {
   'maquillage': '/images/maquillage.png',
   'soins-visage': '/images/soins-visage.png',
+  'soins-corps': '/images/soins-corps.png',
   'cheveux': '/images/cheveux.png',
   'bijoux': '/images/bijoux.png',
   'ongles': '/images/ongles.png',
   'parfums': '/images/parfum.png',
+  'parfum': '/images/parfum.png',
   'blanchiment-dentaire': '/images/blanchiment-dentaire.png',
   'accessoires': '/images/accessoires.png',
+  'grain': '/images/grain.png',
 };
 
 export default function CategoryCard({ category }: CategoryCardProps) {
@@ -50,7 +53,10 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
         {/* Count - Affiche le nombre de deals, pas de produits */}
         <p className="text-sm text-white/60">
-          {(category._count as any)?.deals || (category._count as any)?.products || 0} deals
+          {(() => {
+            const count = (category._count as any)?.deals || (category._count as any)?.products || 0;
+            return `${count} deal${count !== 1 ? 's' : ''}`;
+          })()}
         </p>
       </div>
 

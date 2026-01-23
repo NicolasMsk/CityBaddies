@@ -8,12 +8,12 @@ export default function Footer() {
   const footerLinks = {
     'Explorer': [
       { label: 'Tous les deals', href: '/deals' },
-      { label: 'Trending 🔥', href: '/deals?hotOnly=true' },
+      { label: 'Tendances 🔥', href: '/deals?hotOnly=true' },
       { label: 'Par catégorie', href: '/categories' },
     ],
     'Catégories': [
       { label: 'Maquillage', href: '/categories/maquillage' },
-      { label: 'Skincare', href: '/categories/soins-visage' },
+      { label: 'Soin Visage', href: '/categories/soins-visage' },
       { label: 'Parfums', href: '/categories/parfums' },
       { label: 'Cheveux', href: '/categories/cheveux' },
     ],
@@ -25,33 +25,35 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-neutral-900 text-white">
+    <footer className="relative z-10 bg-[#0a0a0a] text-white border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
-          <div className="lg:col-span-2">
-            <Link href="/" className="inline-block mb-6">
+          <div className="lg:col-span-2 space-y-8">
+            <Link href="/" className="inline-block">
               <Image
                 src="/images/logo-white.png"
                 alt="City Baddies"
                 width={200}
                 height={55}
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain brightness-200 contrast-200"
               />
             </Link>
-            <p className="text-neutral-400 text-sm leading-relaxed max-w-sm mb-8">
-              On traque les meilleures promos beauté pour que tu slayes 
-              sans te ruiner. Sephora, Nocibé, on gère.
+            <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">
+              LE VRAI PRIX, PAS LE FAKE. <br/>
+              <span className="text-neutral-600 block mt-2">
+                Nous traquons l&apos;historique des prix pour vous garantir la meilleure affaire. Transparence totale.
+              </span>
             </p>
             
             {/* Social */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <a 
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-neutral-400 hover:bg-white/20 hover:text-white transition-all"
+                className="w-10 h-10 border border-white/10 flex items-center justify-center text-neutral-400 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
               >
                 <Instagram className="h-4 w-4" />
               </a>
@@ -59,13 +61,13 @@ export default function Footer() {
                 href="https://twitter.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-neutral-400 hover:bg-white/20 hover:text-white transition-all"
+                className="w-10 h-10 border border-white/10 flex items-center justify-center text-neutral-400 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
               >
                 <Twitter className="h-4 w-4" />
               </a>
               <a 
                 href="mailto:hello@citybaddies.com" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-neutral-400 hover:bg-white/20 hover:text-white transition-all"
+                className="w-10 h-10 border border-white/10 flex items-center justify-center text-neutral-400 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
               >
                 <Mail className="h-4 w-4" />
               </a>
@@ -75,15 +77,15 @@ export default function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-neutral-500 mb-4">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4a855] mb-6">
                 {title}
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {links.map((link) => (
                   <li key={link.href}>
                     <Link 
                       href={link.href} 
-                      className="text-sm text-neutral-400 hover:text-white transition-colors"
+                      className="text-sm font-light text-neutral-400 hover:text-white hover:translate-x-1 transition-all duration-300 inline-block"
                     >
                       {link.label}
                     </Link>
@@ -95,11 +97,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="py-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-neutral-500">
+        <div className="py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-600">
             © {currentYear} City Baddies. Tous droits réservés.
           </p>
-          <p className="text-xs text-neutral-600">
+          <p className="text-xs text-neutral-500 font-light italic">
             Made for baddies who love a good deal 💅
           </p>
         </div>

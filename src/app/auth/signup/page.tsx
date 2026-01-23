@@ -14,6 +14,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [subscribeNewsletter, setSubscribeNewsletter] = useState(true);
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,7 +44,7 @@ export default function SignUpPage() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -51,7 +52,6 @@ export default function SignUpPage() {
             username,
             display_name: username,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}`,
         },
       });
 
@@ -64,6 +64,41 @@ export default function SignUpPage() {
         return;
       }
 
+      // Vérifier si l'email existe déjà (cas OAuth/Google)
+      // Quand un user existe déjà, Supabase retourne un user avec identities vide
+      if (data?.user?.identities?.length === 0) {
+        setError('Cet email est déjà associé à un compte. Essaie de te connecter avec Google.');
+        return;
+      }
+
+      // Envoi de l'email de bienvenue (fire and forget - ne bloque pas l'UX)
+      fetch('/api/email/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username }),
+      }).catch((err) => {
+        // Log silencieux - l'inscription est déjà réussie
+        console.error('Erreur envoi email bienvenue:', err);
+      });
+
+      // Inscription à la newsletter si l'option est cochée
+      if (subscribeNewsletter) {
+        fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'signup' }),
+        }).catch((err) => {
+          console.error('Erreur inscription newsletter:', err);
+        });
+      }
+
+      // Si une session existe (confirmation email désactivée), rediriger directement
+      if (data?.session) {
+        router.push(redirect);
+        return;
+      }
+
+      // Sinon, afficher l'écran de succès
       setSuccess(true);
     } catch {
       setError('Une erreur est survenue');
@@ -88,23 +123,25 @@ export default function SignUpPage() {
 
   if (success) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-500" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Email envoyé !</h1>
-            <p className="text-neutral-400 mb-6">
-              Nous avons envoyé un email de confirmation à <span className="text-white">{email}</span>.
-              <br />
-              Clique sur le lien pour activer ton compte.
+      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1a1a1a_0%,_#0a0a0a_80%)] z-0 pointer-events-none" />
+        <div className="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[#9b1515] opacity-[0.06] blur-[100px] rounded-full pointer-events-none z-0" />
+        <div className="fixed bottom-[10%] right-[-5%] w-[30vw] h-[30vw] bg-[#d4a855] opacity-[0.04] blur-[120px] rounded-full pointer-events-none z-0" />
+
+        <div className="w-full max-w-md text-center relative z-10">
+          <div className="bg-[#0a0a0a] border border-white/5 p-10 shadow-2xl">
+            <Check className="w-12 h-12 text-[#d4a855] mx-auto mb-6" />
+            <h1 className="text-2xl font-light uppercase tracking-widest text-white mb-2">Bienvenue !</h1>
+            <p className="text-neutral-500 font-light mb-8 text-sm">
+              Ton compte a été créé avec succès.<br />
+              Un email de bienvenue t&apos;a été envoyé à <span className="text-white font-medium">{email}</span>.
             </p>
             <Link
-              href="/auth/login"
-              className="inline-block px-6 py-3 bg-[#7b0a0a] hover:bg-[#9b1a1a] text-white font-medium rounded-xl transition-colors"
+              href="/deals"
+              className="inline-block w-full py-4 bg-[#d4a855] hover:bg-white text-black font-bold rounded-lg transition-all duration-300 transform hover:scale-[1.02] text-xs tracking-[0.2em] uppercase"
             >
-              Retour à la connexion
+              Découvrir les deals
             </Link>
           </div>
         </div>
@@ -113,23 +150,35 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden py-10">
+      {/* Background Effects */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1a1a1a_0%,_#0a0a0a_80%)] z-0 pointer-events-none" />
+      <div className="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[#9b1515] opacity-[0.06] blur-[100px] rounded-full pointer-events-none z-0" />
+      <div className="fixed bottom-[10%] right-[-5%] w-[30vw] h-[30vw] bg-[#d4a855] opacity-[0.04] blur-[120px] rounded-full pointer-events-none z-0" />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Créer un compte</h1>
-          <p className="text-neutral-400">
-            Rejoins la communauté et découvre les meilleurs deals beauté
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-block mb-8">
+            <span className="text-xs font-bold tracking-[0.3em] text-[#d4a855] uppercase border border-[#d4a855]/30 px-3 py-1 rounded-full">
+              Nouveau Membre
+            </span>
+          </Link>
+          <h1 className="text-4xl font-thin text-white tracking-tight uppercase mb-2">
+            Créer un compte
+          </h1>
+          <p className="text-neutral-500 font-light">
+            Rejoins la communauté City Baddies
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8">
+        <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-white/5 rounded-2xl p-8 sm:p-10 shadow-2xl">
           {/* Social Login */}
           <button
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-neutral-100 text-black font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white text-black font-bold text-xs tracking-widest uppercase rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-50 mb-8"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -152,140 +201,149 @@ export default function SignUpPage() {
             Continuer avec Google
           </button>
 
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-neutral-500 text-sm">ou</span>
-            <div className="flex-1 h-px bg-white/10" />
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/5"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-widest text-neutral-500">
+              <span className="bg-[#0a0a0a] px-4">Ou avec email</span>
+            </div>
           </div>
 
-          {/* Email Form */}
-          <form onSubmit={handleSignUp} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Pseudo
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 ml-1">Pseudo</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 group-focus-within:text-white transition-colors" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-3.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-[#d4a855]/50 focus:bg-white/10 transition-all placeholder:text-neutral-600"
                   placeholder="ton_pseudo"
                   required
                   minLength={3}
                   maxLength={20}
-                  className="w-full pl-11 pr-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-[#7b0a0a] transition-colors"
                 />
               </div>
-              <p className="text-xs text-neutral-500 mt-1">3-20 caractères, lettres minuscules, chiffres et _</p>
+              <p className="text-[10px] text-neutral-600 ml-1">3-20 caractères, minuscules et chiffres</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 ml-1">Email</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 group-focus-within:text-white transition-colors" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ton@email.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-3.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-[#d4a855]/50 focus:bg-white/10 transition-all placeholder:text-neutral-600"
+                  placeholder="exemple@email.com"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-[#7b0a0a] transition-colors"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full pl-11 pr-12 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-[#7b0a0a] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 ml-1">Mot de passe</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 group-focus-within:text-white transition-colors" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3.5 pl-11 pr-12 text-sm text-white focus:outline-none focus:border-[#d4a855]/50 focus:bg-white/10 transition-all placeholder:text-neutral-600"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
-              
-              {/* Password Requirements */}
-              <div className="mt-3 space-y-1">
+
+               {/* Password Requirements */}
+              <div className="grid grid-cols-2 gap-2 mt-2">
                 {[
-                  { check: passwordChecks.length, label: 'Au moins 8 caractères' },
+                  { check: passwordChecks.length, label: '8+ caractères' },
                   { check: passwordChecks.uppercase, label: 'Une majuscule' },
                   { check: passwordChecks.lowercase, label: 'Une minuscule' },
                   { check: passwordChecks.number, label: 'Un chiffre' },
                 ].map(({ check, label }) => (
-                  <div key={label} className="flex items-center gap-2 text-xs">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${check ? 'bg-green-500' : 'bg-white/10'}`}>
-                      {check && <Check className="w-3 h-3 text-white" />}
+                  <div key={label} className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full flex items-center justify-center border ${check ? 'bg-[#d4a855] border-[#d4a855]' : 'border-neutral-700 bg-transparent'}`}>
+                      {check && <Check className="w-2 h-2 text-black" />}
                     </div>
-                    <span className={check ? 'text-green-500' : 'text-neutral-500'}>{label}</span>
+                    <span className={`text-[10px] ${check ? 'text-[#d4a855]' : 'text-neutral-500'}`}>{label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-start gap-2">
+            {error && (
+              <div className="p-4 bg-[#9b1515]/10 border border-[#9b1515]/20 rounded-lg text-sm text-[#ff8080] text-center">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-start gap-3 px-1">
               <input
                 type="checkbox"
                 required
                 id="terms"
-                className="mt-1 w-4 h-4 rounded border-white/10 bg-[#0f0f0f] text-[#7b0a0a] focus:ring-[#7b0a0a] focus:ring-offset-0"
+                className="mt-0.5 w-4 h-4 rounded border-white/10 bg-white/5 text-[#d4a855] focus:ring-[#d4a855] focus:ring-offset-0 focus:ring-offset-black"
               />
-              <label htmlFor="terms" className="text-sm text-neutral-400">
+              <label htmlFor="terms" className="text-xs text-neutral-500 leading-relaxed">
                 J&apos;accepte les{' '}
-                <Link href="/terms" className="text-[#7b0a0a] hover:underline">
+                <Link href="/legal" className="text-white hover:text-[#d4a855] transition-colors">
                   conditions d&apos;utilisation
                 </Link>{' '}
                 et la{' '}
-                <Link href="/privacy" className="text-[#7b0a0a] hover:underline">
+                <Link href="/legal" className="text-white hover:text-[#d4a855] transition-colors">
                   politique de confidentialité
                 </Link>
+              </label>
+            </div>
+
+            {/* Newsletter Checkbox */}
+            <div className="flex items-start gap-3 px-1">
+              <input
+                type="checkbox"
+                id="newsletter"
+                checked={subscribeNewsletter}
+                onChange={(e) => setSubscribeNewsletter(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-white/10 bg-white/5 text-[#d4a855] focus:ring-[#d4a855] focus:ring-offset-0 focus:ring-offset-black cursor-pointer"
+              />
+              <label htmlFor="newsletter" className="text-xs text-neutral-500 leading-relaxed cursor-pointer">
+                <span className="text-[#d4a855]">✨</span> Je souhaite recevoir la newsletter avec les meilleurs deals beauté
               </label>
             </div>
 
             <button
               type="submit"
               disabled={loading || !isPasswordValid}
-              className="w-full py-3 bg-[#7b0a0a] hover:bg-[#9b1a1a] text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#d4a855] hover:bg-white text-black font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 text-xs tracking-[0.2em] uppercase disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-[#d4a855]"
             >
               {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Création...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 'Créer mon compte'
               )}
             </button>
           </form>
 
-          {/* Login Link */}
-          <p className="text-center mt-6 text-neutral-400">
-            Déjà un compte ?{' '}
-            <Link
-              href={`/auth/login${redirect !== '/' ? `?redirect=${redirect}` : ''}`}
-              className="text-[#7b0a0a] hover:text-[#9b1a1a] font-medium transition-colors"
-            >
+          <p className="mt-8 text-center text-xs text-neutral-500">
+            Déjà membre ?{' '}
+            <Link href="/auth/login" className="text-white font-medium hover:text-[#d4a855] transition-colors border-b border-transparent hover:border-[#d4a855]">
               Se connecter
             </Link>
           </p>

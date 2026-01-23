@@ -102,6 +102,7 @@ export class SephoraScraper implements Scraper {
       imageUrl: p.imageUrl,
       volume: p.volume,
       category: p.category,
+      sourceUrl: url, // URL de la page de catégorie source (pour debug)
     }));
 
     return {

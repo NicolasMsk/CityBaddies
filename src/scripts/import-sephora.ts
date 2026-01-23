@@ -62,6 +62,8 @@ async function importProducts() {
       const result = await scraper.scrapeCategoryPage(source.url, source.maxProducts);
       for (const product of result.products) {
         product.category = source.category;
+        // Stocker l'URL source pour traçabilité
+        (product as any).sourceUrl = source.url;
         // Marquer les produits comme trending si la source est de type trending
         (product as any).isTrending = source.type === 'trending';
         if (!allProducts.find(p => p.productUrl === product.productUrl)) allProducts.push(product);
@@ -202,6 +204,7 @@ async function importProducts() {
             pricePerUnit: priceInfo?.pricePerUnit || null,
             score: scoreResult.score,
             tags: tagsToString(scoreResult.tags),
+            sourceUrl: (product as any).sourceUrl || existingDeal.sourceUrl || null,
             isTrending,
             isExpired: false,
             isHot: existingDeal.votes >= 20,
@@ -327,6 +330,7 @@ async function importProducts() {
               brandTier: classification?.brandTier || 2,
               score: scoreResult.score,
               tags: tagsToString(scoreResult.tags),
+              sourceUrl: (product as any).sourceUrl || null,
               isHot: false,
               isTrending,
               isExpired: false,

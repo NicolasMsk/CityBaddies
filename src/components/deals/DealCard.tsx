@@ -10,6 +10,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
 
+// Map des merchants vers leurs logos
+const getMerchantLogo = (slug: string): string | null => {
+  const logoMap: Record<string, string> = {
+    'nocibe': '/images/nocibe_logo.png',
+    'sephora': '/images/sephora_logo.png',
+  };
+  return logoMap[slug] || null;
+};
+
 // Calcule le prix pour 100ml/100g ou par unité selon le format
 function formatPricePerUnit(pricePerUnit: number | null | undefined, volumeUnit: string | null | undefined, volumeValue: number | null | undefined): string | null {
   if (!pricePerUnit || !volumeUnit) return null;
@@ -47,6 +56,15 @@ function formatPricePerUnit(pricePerUnit: number | null | undefined, volumeUnit:
     }
   }
   return `${formatted}€/${unitLabel}`;
+}
+
+// Capitalise le premier mot d'une chaîne
+function capitalizeFirstWord(text: string): string {
+  if (!text) return text;
+  const words = text.split(' ');
+  if (words.length === 0) return text;
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+  return words.join(' ');
 }
 
 interface DealCardProps {
@@ -180,188 +198,150 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
   };
 
   return (
-    <div className={`group card-premium bg-[#1a1a1a] border border-white/5 rounded-2xl overflow-hidden hover:border-[#7b0a0a]/30 transition-all ${featured ? 'lg:flex' : ''}`}>
-      {/* Image Container */}
-      <div className={`relative ${featured ? 'lg:w-80 lg:flex-shrink-0' : ''}`}>
-        <div className={`relative ${featured ? 'h-64 lg:h-full' : 'aspect-square'} overflow-hidden bg-[#0f0f0f]`}>
-          {deal.product.imageUrl ? (
-            <Image
-              src={deal.product.imageUrl}
-              alt={deal.product.name}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
-              quality={90}
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#7b0a0a]/50 to-black flex items-center justify-center">
-              <span className="text-4xl">✨</span>
-            </div>
-          )}
-          
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          
-          {/* Top Actions */}
-          <div className="absolute top-3 right-3 flex gap-2">
-            <button 
-              onClick={handleShare}
-              className={`p-2 rounded-full backdrop-blur-md transition-all ${
-                isCopied 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-black/60 text-white/70 hover:bg-white/20 hover:text-white'
-              }`}
-              title={isCopied ? 'Lien copié !' : 'Partager'}
-            >
-              {isCopied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Share2 className="h-4 w-4" />
-              )}
-            </button>
-            <button 
-              onClick={handleFavorite}
-              disabled={isSaving}
-              className={`p-2 rounded-full backdrop-blur-md transition-all ${
-                isFavorite 
-                  ? 'bg-[#7b0a0a] text-white' 
-                  : 'bg-black/60 text-white/70 hover:bg-[#7b0a0a]/80 hover:text-white'
-              }`}
-              title={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
-              )}
-            </button>
+    <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
+      {/* Image Container - Hauteur fixe pour uniformiser */}
+      <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[220px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
+        {deal.product.imageUrl ? (
+          <Image
+            src={deal.product.imageUrl}
+            alt={deal.product.name}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
+            quality={90}
+            className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+        ) : (
+          <div className="w-full h-full bg-[#0a0a0a] flex items-center justify-center border-b border-white/5">
+            <span className="text-xl uppercase tracking-widest text-white/20">Image Indisp.</span>
           </div>
+        )}
+        
+        {/* Overlay gradient - Subtle */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+        
+        {/* Top Actions - Minimal */}
+        <div className="absolute top-0 right-0 p-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button 
+            onClick={handleShare}
+            className={`p-2 border border-white/20 backdrop-blur-md transition-all ${
+              isCopied 
+                ? 'bg-emerald-900/50 text-emerald-400 border-emerald-500/50' 
+                : 'bg-black/80 text-white/70 hover:bg-white hover:text-black hover:border-white'
+            }`}
+            title={isCopied ? 'Copié' : 'Partager'}
+          >
+            {isCopied ? <Check className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
+          </button>
+          <button 
+            onClick={handleFavorite}
+            disabled={isSaving}
+            className={`p-2 border border-white/20 backdrop-blur-md transition-all ${
+              isFavorite 
+                ? 'bg-[#9b1515] text-white border-[#9b1515]' 
+                : 'bg-black/80 text-white/70 hover:bg-[#9b1515] hover:text-white hover:border-[#9b1515]'
+            }`}
+          >
+            {isSaving ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Heart className={`h-3 w-3 ${isFavorite ? 'fill-current' : ''}`} />
+            )}
+          </button>
+        </div>
 
-          {/* Discount Badge */}
-          <div className="absolute bottom-3 left-3">
-            <span className="px-3 py-1.5 bg-[#7b0a0a] backdrop-blur-sm rounded-full text-white text-xs font-medium">
-              -{deal.discountPercent}%
-            </span>
-          </div>
+        {/* Discount Badge - Sharp */}
+        <div className="absolute top-0 left-0 bg-[#9b1515] text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-widest">
+          -{deal.discountPercent}%
+        </div>
 
-          {/* Vote buttons */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
+        {/* Voting - Bottom Right Overlay */}
+        <div className="absolute bottom-0 right-0 p-3">
+          <div className="flex items-center gap-1 bg-black/90 border border-white/10 px-2 py-1">
             <button
               onClick={(e) => handleVote(e, 1)}
               disabled={isVoting}
-              className={`p-1 rounded-full transition-colors ${
-                userVote === 1 
-                  ? 'text-green-400' 
-                  : 'text-white/60 hover:text-green-400'
+              className={`p-1 transition-colors ${
+                userVote === 1 ? 'text-emerald-400' : 'text-neutral-500 hover:text-white'
               }`}
             >
-              <ThumbsUp className={`h-3.5 w-3.5 ${userVote === 1 ? 'fill-current' : ''}`} />
+              <ThumbsUp className={`h-3 w-3 ${userVote === 1 ? 'fill-current' : ''}`} />
             </button>
-            <span className={`text-xs font-medium min-w-[20px] text-center ${
-              votes > 0 ? 'text-green-400' : votes < 0 ? 'text-red-400' : 'text-white/60'
+            <span className={`text-[10px] font-mono mx-1 ${
+              votes > 0 ? 'text-emerald-400' : votes < 0 ? 'text-[#9b1515]' : 'text-neutral-500'
             }`}>
               {votes > 0 ? `+${votes}` : votes}
             </span>
-            <button
-              onClick={(e) => handleVote(e, -1)}
-              disabled={isVoting}
-              className={`p-1 rounded-full transition-colors ${
-                userVote === -1 
-                  ? 'text-red-400' 
-                  : 'text-white/60 hover:text-red-400'
-              }`}
-            >
-              <ThumbsDown className={`h-3.5 w-3.5 ${userVote === -1 ? 'fill-current' : ''}`} />
-            </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className={`p-5 flex flex-col ${featured ? 'lg:flex-1 lg:p-6' : ''}`}>
-        {/* Brand & Category */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-white/40">
-              {deal.product.brand || deal.product.merchant.name}
-            </span>
-            {deal.product.category && (
-              <>
-                <span className="text-white/20">•</span>
-                <span className="text-xs text-[#ff6b6b]/70">
-                  {deal.product.category.name}
-                  {deal.product.subcategory && ` › ${deal.product.subcategory.replace(/-/g, ' ')}`}
-                </span>
-              </>
-            )}
-          </div>
+      <div className={`p-5 flex flex-col flex-1 border-t border-white/5 ${featured ? 'lg:justify-center' : ''}`}>
+        
+        {/* Brand & Meta */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4a855]">
+            {deal.product.brand || deal.product.merchant.name}
+          </span>
           {deal.isHot && (
-            <span className="flex items-center gap-1 text-xs text-gold">
-              <Star className="h-3 w-3 fill-gold text-gold" />
-              Hot
+            <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#9b1515] font-bold animate-pulse">
+              <Star className="h-3 w-3 fill-current" />
+              Tendance
             </span>
           )}
         </div>
 
         {/* Title */}
-        <Link href={`/deals/${deal.id}`}>
-          <h3 className="font-medium text-white group-hover:text-[#9b1515] transition-colors line-clamp-2 mb-2 leading-snug">
-            {deal.refinedTitle || deal.product.name}
+        <Link href={`/deals/${deal.id}`} className="group/title">
+          <h3 className="font-light text-sm text-white mb-3 leading-relaxed group-hover/title:text-[#d4a855] transition-colors line-clamp-2 min-h-[2.5rem]">
+            {capitalizeFirstWord(deal.refinedTitle || deal.product.name)}
           </h3>
         </Link>
 
         {/* Tags */}
         {deal.tags && (
-          <div className="mb-3">
+          <div className="mb-4 fade-in">
             <DealTags tags={deal.tags} score={deal.score} compact />
           </div>
         )}
 
-        {/* Price */}
-        <div className="flex items-baseline gap-3 mb-2">
-          <span className="text-xl font-semibold price-premium">
-            {deal.dealPrice.toFixed(2)} €
-          </span>
-          <span className="text-sm text-white/40 line-through">
-            {deal.originalPrice.toFixed(2)} €
-          </span>
-        </div>
-        
-        {/* Volume & Prix au 100ml */}
-        {deal.volume && (
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
-              {deal.volume}
-            </span>
-            {deal.pricePerUnit && deal.volumeUnit && (
-              <span className="text-xs text-white/40">
-                ({formatPricePerUnit(deal.pricePerUnit, deal.volumeUnit, deal.volumeValue)})
+        {/* Price Section */}
+        <div className="mt-auto pt-4 border-t border-dashed border-white/10">
+          <div className="flex items-end justify-between mb-1">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">
+                {deal.originalPrice.toFixed(2)} €
               </span>
+              <span className="text-xl font-light text-white tracking-tight leading-none">
+                {deal.dealPrice.toFixed(2)} <span className="text-sm align-top">€</span>
+              </span>
+            </div>
+            
+            <a
+              href={`/api/redirect?url=${encodeURIComponent(deal.product.productUrl)}`}
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-2 bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"
+            >
+              Voir le Deal
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+          
+          {/* Unit Price & Info */}
+          <div className="flex items-center gap-2 text-[10px] text-neutral-600 uppercase tracking-wide mt-2">
+            <span>{deal.product.merchant.name}</span>
+            <span>•</span>
+            {deal.volume && (
+              <span>{deal.volume}</span>
+            )}
+            {deal.pricePerUnit && deal.volumeUnit && (
+              <>
+                <span className="bg-neutral-800 w-px h-3" />
+                <span>{formatPricePerUnit(deal.pricePerUnit, deal.volumeUnit, deal.volumeValue)}</span>
+              </>
             )}
           </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/10">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40">
-              {deal.product.merchant.name}
-            </span>
-            <span className="text-white/20">•</span>
-            <span className="text-xs text-white/40">
-              {timeAgo}
-            </span>
-          </div>
-
-          <a
-            href={`/api/redirect?url=${encodeURIComponent(deal.product.productUrl)}`}
-            target="_blank"
-            rel="noopener"
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#7b0a0a] rounded-full text-white text-xs font-medium hover:bg-[#8b1212] transition-colors"
-          >
-            Voir
-            <ExternalLink className="h-3 w-3" />
-          </a>
         </div>
       </div>
     </div>

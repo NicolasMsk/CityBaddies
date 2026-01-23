@@ -1,79 +1,106 @@
-import Link from 'next/link';
-import { Heart, Sparkles, Shield, Users } from 'lucide-react';
+import { Sparkles, Shield, Users, Star } from 'lucide-react';
+import NewsletterSection from '@/components/layout/NewsletterSection';
 
 export const metadata = {
-  title: 'Qui sommes-nous | City Baddies',
-  description: 'City Baddies - On trouve les meilleurs deals beauté pour toi.',
+  title: 'Manifesto | City Baddies',
+  description: 'City Baddies - Plus qu\'un comparateur, un club privé.',
 };
 
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Hero */}
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          C&apos;est quoi <span className="text-[#d4a855]">City Baddies</span> ?
-        </h1>
-        <p className="text-xl text-white/60 max-w-2xl mx-auto">
-          Ta meilleure amie qui te dit « girl, attends, je l&apos;ai vu moins cher ailleurs ».
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black overflow-hidden relative">
+      {/* Background Texture */}
+      <div 
+        className="fixed inset-0 opacity-[0.03] pointer-events-none z-0 mix-blend-overlay"
+        style={{ backgroundImage: 'url(/images/grain.png)' }}
+      />
 
-      {/* Mission */}
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-8 mb-12">
-        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-          <Heart className="w-6 h-6 text-[#d4a855]" />
-          Pourquoi on fait ça
-        </h2>
-        <p className="text-white/70 leading-relaxed">
-          On en avait marre de payer plein pot alors que le même produit était à -50% 
-          la semaine d&apos;avant. Alors on a créé City Baddies : on scanne Sephora, Nocibé 
-          et les autres pour te trouver les vrais deals. Pas les fausses promos, 
-          pas les -5% ridicules. Les vraies affaires qui valent le coup.
-        </p>
-      </div>
+      {/* Ambient Glow */}
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-[#9b1515] opacity-[0.05] blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-[#d4a855] opacity-[0.05] blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Values */}
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-6 text-center">
-          <div className="w-12 h-12 bg-[#7b0a0a]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-6 h-6 text-[#d4a855]" />
+      <main className="relative z-10 pt-32">
+        <div className="max-w-6xl mx-auto px-6">
+          
+          {/* Hero Section */}
+          <div className="text-center mb-32 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-[0.3em] uppercase text-[#d4a855] mb-10 hover:bg-white/10 transition-colors cursor-default">
+              <Star className="w-3 h-3" />
+              Manifesto
+            </div>
+            
+            <h1 className="text-5xl md:text-8xl font-thin tracking-tighter mb-8 leading-[0.9] text-white">
+              NO MORE <br/>
+              <span className="italic font-normal text-white/40">GATEKEEPING</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed">
+              City Baddies, c&apos;est ta meilleure amie qui te dit <br />
+              <span className="text-white">« Girl, attends, je l&apos;ai vu moins cher ailleurs ».</span>
+            </p>
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Zéro bullshit</h3>
-          <p className="text-white/60 text-sm">
-            On vérifie chaque deal. Si c&apos;est pas une vraie promo, on te la montre pas.
-          </p>
-        </div>
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-6 text-center">
-          <div className="w-12 h-12 bg-[#7b0a0a]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-6 h-6 text-[#d4a855]" />
-          </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Prix transparents</h3>
-          <p className="text-white/60 text-sm">
-            Historique des prix pour voir si le deal est vraiment intéressant.
-          </p>
-        </div>
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-6 text-center">
-          <div className="w-12 h-12 bg-[#7b0a0a]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-6 h-6 text-[#d4a855]" />
-          </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Entre baddies</h3>
-          <p className="text-white/60 text-sm">
-            Une communauté qui partage les bons plans. Ensemble on est plus fortes.
-          </p>
-        </div>
-      </div>
 
-      {/* CTA */}
-      <div className="text-center">
-        <Link
-          href="/deals"
-          className="inline-flex items-center gap-2 px-8 py-4 bg-[#7b0a0a] hover:bg-[#9b1a1a] text-white font-semibold rounded-xl transition-colors"
-        >
-          <Sparkles className="w-5 h-5" />
-          Voir les deals
-        </Link>
-      </div>
+          {/* Value Proposition */}
+          <div className="grid md:grid-cols-2 gap-16 mb-32 items-center">
+            <div className="space-y-8 order-2 md:order-1">
+              <h2 className="text-4xl font-thin uppercase tracking-wide">La Mission</h2>
+              <div className="space-y-6 text-neutral-400 font-light text-lg leading-relaxed">
+                <p>
+                  Le marché de la beauté est opaque. Les prix changent constamment, les &quot;promos&quot; sont souvent gonflées, et les vraies pépites sont cachées.
+                </p>
+                <p>
+                  <span className="text-white font-medium">On change les règles.</span>
+                </p>
+                <p>
+                  Notre algorithme scanne Sephora, Nocibé, LookFantastic et des dizaines d&apos;autres sites 24/7. Nous traquons les baisses de prix, les erreurs d&apos;affichage et les codes secrets.
+                </p>
+              </div>
+            </div>
+            
+            {/* Visual Abstract Element */}
+            <div className="relative order-1 md:order-2 group">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#d4a855] to-[#9b1515] opacity-20 blur-2xl rounded-full group-hover:opacity-30 transition-opacity duration-700" />
+              <div className="relative aspect-square rounded-2xl border border-white/10 bg-[#0a0a0a]/50 backdrop-blur-sm p-8 flex flex-col justify-center items-center text-center">
+                 <div className="text-6xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-500">💸</div>
+                 <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#d4a855]">Smart Shopping Club</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Three Pillars */}
+          <div className="grid md:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-2xl overflow-hidden mb-32">
+            {[
+              {
+                title: "Transparence Totale",
+                desc: "Historique des prix vérifié. Si une promo est fausse, on te le dit.",
+                icon: Shield
+              },
+              {
+                title: "Curated Deals",
+                desc: "Pas de spam. Uniquement les offres qui valent vraiment le coup (> 20%).",
+                icon: Sparkles
+              },
+              {
+                title: "Communauté",
+                desc: "Les meilleures offres sont partagées entre nous avant de disparaître.",
+                icon: Users
+              }
+            ].map((item, i) => (
+              <div key={i} className="bg-[#0a0a0a] p-10 group hover:bg-[#111] transition-colors">
+                <item.icon className="w-8 h-8 text-[#d4a855] mb-6 opacity-80 group-hover:opacity-100 transition-opacity" />
+                <h3 className="text-lg font-bold uppercase tracking-widest mb-4 text-white">{item.title}</h3>
+                <p className="text-neutral-500 font-light leading-relaxed group-hover:text-neutral-400 transition-colors">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        {/* Newsletter Integration */}
+        <NewsletterSection />
+      </main>
     </div>
   );
 }

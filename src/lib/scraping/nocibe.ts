@@ -97,6 +97,7 @@ export class NocibeScraper implements Scraper {
       category: p.category,
       rating: p.rating,
       reviewCount: p.reviewCount,
+      sourceUrl: url, // URL de la page de catégorie source (pour debug)
     }));
 
     return {
@@ -243,25 +244,32 @@ export class NocibeScraper implements Scraper {
         const discountMatch = discountBadge.match(/-(\d+)%/);
         if (discountMatch) discountPercent = parseInt(discountMatch[1]);
 
-        // Prix actuel
-        const priceEl = $tile.find('[data-testid="price-discount"] span[aria-label], [data-testid="discounted-price"] span[aria-label]');
+        // Prix actuel (réduit) - IMPORTANT: utiliser uniquement price-discount, pas discounted-price
+        const priceEl = $tile.find('[data-testid="price-discount"] span[aria-label]');
         const priceLabel = priceEl.attr('aria-label') || priceEl.text() || '';
         const priceMatch = priceLabel.match(/([\d]+[,.]?[\d]*)\s*€/);
         if (priceMatch) currentPrice = parseFloat(priceMatch[1].replace(',', '.'));
 
-        // Fallback prix
+        // Fallback prix - si pas de price-discount, prendre le premier prix trouvé
+        // MAIS seulement s'il n'y a pas de price-original (sinon c'est pas un deal)
         if (currentPrice === 0) {
-          const anyPriceEl = $tile.find('[data-testid="product-info-price"] span[aria-label]');
-          const anyLabel = anyPriceEl.attr('aria-label') || anyPriceEl.text() || '';
-          const anyMatch = anyLabel.match(/([\d]+[,.]?[\d]*)\s*€/);
-          if (anyMatch) currentPrice = parseFloat(anyMatch[1].replace(',', '.'));
+          const hasOriginal = $tile.find('[data-testid="price-original"]').length > 0;
+          if (!hasOriginal) {
+            const anyPriceEl = $tile.find('[data-testid="product-info-price"] span[aria-label]');
+            const anyLabel = anyPriceEl.attr('aria-label') || anyPriceEl.text() || '';
+            const anyMatch = anyLabel.match(/([\d]+[,.]?[\d]*)\s*€/);
+            if (anyMatch) currentPrice = parseFloat(anyMatch[1].replace(',', '.'));
+          }
         }
 
-        // Prix original
+        // Prix original (DOIT EXISTER pour être un vrai deal)
         const origEl = $tile.find('[data-testid="price-original"] span[aria-label]');
         const origLabel = origEl.attr('aria-label') || origEl.text() || '';
         const origMatch = origLabel.match(/([\d]+[,.]?[\d]*)\s*€/);
         if (origMatch) originalPrice = parseFloat(origMatch[1].replace(',', '.'));
+
+        // Vérifier s'il y a un badge promo (SOLDES, -XX%, etc.)
+        const hasPromoBadge = $tile.find('[data-testid="product-eyecatcher-sales"], [data-testid="product-eyecatcher-discountFlag"], .eyecatcher--pop').length > 0;
 
         // Si on a un % de réduction mais pas de prix original, le calculer
         if (originalPrice === 0 && discountPercent > 0 && currentPrice > 0) {
@@ -270,8 +278,13 @@ export class NocibeScraper implements Scraper {
           originalPrice = Math.round((currentPrice / (1 - discountPercent / 100)) * 100) / 100;
         }
 
-        // Fallback: si toujours pas de prix original, utiliser le prix actuel
-        if (originalPrice === 0) originalPrice = currentPrice;
+        // PAS DE FALLBACK ! Si pas de prix original et pas de badge, c'est pas un deal
+        // On garde quand même le produit mais avec originalPrice = currentPrice
+        const isRealDeal = originalPrice > 0 || discountPercent > 0 || hasPromoBadge;
+        if (!isRealDeal) {
+          originalPrice = currentPrice; // Pas de réduction
+          discountPercent = 0;
+        }
 
         // Calculer réduction si manquante
         if (discountPercent === 0 && originalPrice > currentPrice && currentPrice > 0) {

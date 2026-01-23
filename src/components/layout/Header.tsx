@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { Search, Menu, X, Heart, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { UserMenu } from '@/components/auth';
+import { SearchBar } from '@/components/search';
 
 // Structure des catégories avec sous-catégories
 const categories = [
@@ -21,7 +22,7 @@ const categories = [
   },
   {
     slug: 'soins-visage',
-    label: 'Soins visage',
+    label: 'Visage',
     subcategories: [
       { slug: 'nettoyants', label: 'Nettoyants' },
       { slug: 'serums', label: 'Sérums' },
@@ -32,7 +33,7 @@ const categories = [
   },
   {
     slug: 'soins-corps',
-    label: 'Soins corps',
+    label: 'Corps',
     subcategories: [
       { slug: 'hydratants', label: 'Hydratants' },
       { slug: 'gommages', label: 'Gommages' },
@@ -87,15 +88,7 @@ const categories = [
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/deals?search=${encodeURIComponent(searchQuery)}`;
-    }
-  };
 
   const toggleMobileCategory = (slug: string) => {
     setOpenMobileCategory(openMobileCategory === slug ? null : slug);
@@ -103,8 +96,8 @@ export default function Header() {
 
   return (
     <header className="bg-[#0a0a0a]/95 backdrop-blur-xl sticky top-0 z-50 border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-16 md:h-20">
           
           {/* Logo City Baddies */}
           <Link href="/" className="flex items-center group shrink-0">
@@ -119,33 +112,33 @@ export default function Header() {
           </Link>
 
           {/* Navigation - Desktop avec dropdowns */}
-          <nav className="hidden lg:flex items-center gap-1 ml-8">
+          <nav className="hidden lg:flex items-center gap-1 ml-4 h-full">
             {/* Tous les deals */}
             <Link
               href="/deals"
-              className="px-3 py-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors whitespace-nowrap"
+              className="px-2 xl:px-4 h-full flex items-center text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-400 hover:text-white transition-colors border-b-2 border-transparent hover:border-[#9b1515]"
             >
-              Tous les deals
+              Deals
             </Link>
 
             {/* Catégories avec dropdown */}
             {categories.map((category) => (
-              <div key={category.slug} className="relative group">
+              <div key={category.slug} className="relative group h-full flex items-center">
                 <Link
                   href={`/deals?category=${category.slug}`}
-                  className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors whitespace-nowrap"
+                  className="flex items-center gap-1 px-2 xl:px-4 h-full text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-400 hover:text-white transition-colors border-b-2 border-transparent group-hover:border-[#9b1515]"
                 >
                   {category.label}
                   <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </Link>
                 
                 {/* Dropdown menu */}
-                <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="bg-[#151515] border border-white/10 rounded-xl shadow-xl py-2 min-w-[180px]">
+                <div className="absolute top-full left-0 pt-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="bg-[#0a0a0a] border border-white/10 shadow-2xl min-w-[200px] p-2">
                     {/* Voir tout */}
                     <Link
                       href={`/deals?category=${category.slug}`}
-                      className="block px-4 py-2 text-xs text-[#9b1515] hover:bg-white/5 font-medium"
+                      className="block px-4 py-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#d4a855] hover:bg-white/5 transition-colors"
                     >
                       Voir tout {category.label}
                     </Link>
@@ -155,7 +148,7 @@ export default function Header() {
                       <Link
                         key={sub.slug}
                         href={`/deals?category=${category.slug}&subcategory=${sub.slug}`}
-                        className="block px-4 py-2 text-xs text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="block px-4 py-2 text-xs text-neutral-400 hover:text-white hover:bg-white/5 transition-colors font-light tracking-wide"
                       >
                         {sub.label}
                       </Link>
@@ -167,20 +160,11 @@ export default function Header() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <form onSubmit={handleSearch} className="hidden md:block">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher..."
-                  className="w-48 lg:w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#7b0a0a]/50 focus:border-[#7b0a0a] transition-all"
-                />
-              </div>
-            </form>
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Search avec autocomplete */}
+            <div className="hidden md:block">
+              <SearchBar placeholder="Rechercher..." />
+            </div>
 
             {/* User Menu */}
             <UserMenu />
@@ -198,19 +182,14 @@ export default function Header() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="lg:hidden py-6 border-t border-white/5 animate-fade-in">
-            {/* Search Bar - Mobile */}
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher un produit..."
-                  className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#7b0a0a]/50"
-                />
-              </div>
-            </form>
+            {/* Search Bar - Mobile avec autocomplete */}
+            <div className="mb-6">
+              <SearchBar 
+                isMobile 
+                placeholder="Rechercher un produit..." 
+                onClose={() => setIsMenuOpen(false)}
+              />
+            </div>
 
             {/* Navigation Links - Mobile avec accordéon */}
             <nav className="flex flex-col gap-1">
@@ -218,7 +197,7 @@ export default function Header() {
               <Link
                 href="/deals"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 text-neutral-400 hover:text-white hover:bg-white/5 rounded-xl transition-all font-medium"
+                className="px-4 py-4 text-[12px] font-bold tracking-[0.2em] uppercase text-neutral-400 hover:text-white hover:bg-white/5 transition-all border-l-2 border-transparent hover:border-[#9b1515]"
               >
                 Tous les deals
               </Link>
@@ -229,7 +208,7 @@ export default function Header() {
                   {/* Titre catégorie */}
                   <button
                     onClick={() => toggleMobileCategory(category.slug)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-neutral-400 hover:text-white hover:bg-white/5 rounded-xl transition-all font-medium"
+                    className="w-full flex items-center justify-between px-4 py-4 text-[12px] font-bold tracking-[0.2em] uppercase text-neutral-400 hover:text-white hover:bg-white/5 transition-all border-l-2 border-transparent hover:border-[#9b1515]"
                   >
                     {category.label}
                     <ChevronDown 
@@ -239,11 +218,11 @@ export default function Header() {
                   
                   {/* Sous-catégories */}
                   {openMobileCategory === category.slug && (
-                    <div className="ml-4 border-l border-white/10 pl-4 py-2 space-y-1">
+                    <div className="ml-4 border-l border-white/10 pl-4 py-2 space-y-1 bg-white/[0.02]">
                       <Link
                         href={`/deals?category=${category.slug}`}
                         onClick={() => setIsMenuOpen(false)}
-                        className="block px-3 py-2 text-sm text-[#9b1515] hover:bg-white/5 rounded-lg font-medium"
+                        className="block px-3 py-3 text-xs text-[#d4a855] font-bold tracking-wider hover:bg-white/5 uppercase"
                       >
                         Voir tout
                       </Link>
@@ -252,7 +231,7 @@ export default function Header() {
                           key={sub.slug}
                           href={`/deals?category=${category.slug}&subcategory=${sub.slug}`}
                           onClick={() => setIsMenuOpen(false)}
-                          className="block px-3 py-2 text-sm text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                          className="block px-3 py-3 text-sm font-light text-neutral-500 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           {sub.label}
                         </Link>

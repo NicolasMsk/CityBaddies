@@ -92,366 +92,341 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   });
 
   return (
-    <div className="min-h-screen py-8 bg-[#0a0a0a]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Link */}
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back Link - Editorial Style */}
         <Link
           href="/deals"
-          className="inline-flex items-center gap-2 text-bordeaux-400 hover:text-bordeaux-300 transition-colors mb-6"
+          className="group inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 hover:text-white transition-colors mb-16"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Retour aux deals
+          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
+          Retour à la collection
         </Link>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Deal Header */}
-            <div className="bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/10">
-              {/* Image */}
-              <div className="relative h-80 md:h-[450px] bg-[#0f0f0f]">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-24">
+          
+          {/* Left Column: Image (5 cols) */}
+          <div className="lg:col-span-5 relative">
+            <div className="sticky top-12">
+              <div className="relative">
+                {/* Badges - Sharp & Technical */}
+                 <div className="absolute top-0 left-0 z-20">
+                   {deal.discountPercent > 0 && (
+                     <span className="inline-block px-4 py-2 bg-[#9b1515] text-white text-sm font-bold tracking-widest uppercase shadow-xl">
+                        -{deal.discountPercent}%
+                     </span>
+                   )}
+                </div>
+                
+                <div className="relative aspect-[4/5] w-full bg-[#0f0f0f] border border-white/5 group overflow-hidden">
+
                 {deal.product.imageUrl ? (
                   <Image
                     src={deal.product.imageUrl}
                     alt={deal.product.name}
                     fill
-                    className="object-contain p-4"
+                    className="object-contain p-8 group-hover:scale-105 transition-transform duration-700 ease-out"
                     priority
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-bordeaux-900 to-black flex items-center justify-center">
-                    <Tag className="h-20 w-20 text-bordeaux-500" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-neutral-700 italic">No Imagery</span>
                   </div>
                 )}
 
-                {/* Badges */}
-                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                  {deal.isHot && (
-                    <span className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-[#7b0a0a] to-[#8b1212] rounded-full text-white text-sm font-semibold">
-                      <Flame className="h-4 w-4" />
-                      HOT DEAL
-                    </span>
-                  )}
-                  <span className="px-3 py-1.5 bg-[#7b0a0a] rounded-full text-white text-sm font-bold">
-                    -{deal.discountPercent}%
-                  </span>
-                </div>
+                
+              </div>
+            </div>
+              
+              {/* Share Actions - Minimal */}
+              <div className="mt-6 flex justify-between items-center border-t border-white/10 pt-6">
+                 <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">Partager ce deal</p>
+                 <div className="flex gap-4">
+                    <button className="text-white/40 hover:text-white transition-colors uppercase text-[10px] tracking-widest">Lien</button>
+                    <button className="text-white/40 hover:text-white transition-colors uppercase text-[10px] tracking-widest">X / Twitter</button>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Details (7 cols) */}
+          <div className="lg:col-span-7 flex flex-col">
+            
+            {/* Header Info */}
+            <div className="mb-12 border-b border-white/10 pb-12">
+              <div className="flex flex-wrap items-center gap-6 mb-8 text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-500">
+                <span className="text-[#d4a855]">{deal.product.brand || 'Marque Inconnue'}</span>
+                <span className="w-px h-3 bg-white/20" />
+                <span>{deal.product.category.name}</span>
+                <span className="w-px h-3 bg-white/20" />
+                <span>Vérifié il y a {timeAgo}</span>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                {/* Category & Merchant */}
-                <div className="flex flex-wrap items-center gap-4 mb-4">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-bordeaux-600/20 rounded-full text-bordeaux-300 text-sm">
-                    {deal.product.category.icon} {deal.product.category.name}
+              <h1 className="text-4xl md:text-6xl font-thin text-white tracking-tight leading-none mb-6">
+                {deal.refinedTitle || deal.title}
+              </h1>
+
+              {deal.description && (
+                <p className="text-neutral-500 font-light text-base leading-relaxed max-w-2xl mt-4">
+                  {deal.description}
+                </p>
+              )}
+            </div>
+
+            {/* Price Section - Editorial Typography */}
+            <div className="mb-12">
+                <div className="flex items-baseline gap-6 mb-4">
+                  <span className="text-6xl md:text-7xl font-light text-white tracking-tighter">
+                    {deal.dealPrice.toFixed(2)}€
                   </span>
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/5 rounded-full text-white/60 text-sm">
-                    <Store className="h-3 w-3" />
-                    {deal.product.merchant.name}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-white/40 text-sm">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  {deal.refinedTitle || deal.title}
-                </h1>
-
-                {/* Brand */}
-                {deal.product.brand && (
-                  <p className="text-white/50 mb-4">par {deal.product.brand}</p>
-                )}
-
-                {/* Description */}
-                {deal.description && (
-                  <p className="text-white/60 mb-6">{deal.description}</p>
-                )}
-
-                {/* Price */}
-                <div className="flex flex-wrap items-end gap-4 mb-6 p-4 bg-bordeaux-900/30 border border-bordeaux-600/20 rounded-xl">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-white/50 text-sm">Prix actuel</p>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
-                        <BadgeCheck className="h-3 w-3" />
-                        Vérifié il y a {verifiedAgo}
-                      </span>
-                    </div>
-                    <span className="text-4xl font-bold price-premium">
-                      {deal.dealPrice.toFixed(2)}€
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-white/50 text-sm mb-1">Prix barré</p>
-                    <span className="text-2xl text-white/30 line-through">
+                  <div className="flex flex-col items-start">
+                    <span className="text-lg text-neutral-600 line-through decoration-1">
                       {deal.originalPrice.toFixed(2)}€
                     </span>
-                  </div>
-                  <div className="ml-auto text-right">
-                    <p className="text-white/50 text-sm mb-1">Économie</p>
-                    <span className="text-2xl font-bold text-[#9b1515]">
-                      -{deal.discountAmount.toFixed(2)}€
+                    <span className="text-[#9b1515] text-sm font-bold tracking-[0.2em] uppercase mt-2 block">
+                      ÉCONOMIE : {deal.discountAmount.toFixed(2)}€
                     </span>
                   </div>
                 </div>
-
-                {/* Promo Code */}
+                
                 {deal.promoCode && (
-                  <div className="mb-6 p-4 bg-gold/10 border border-gold/30 rounded-xl">
-                    <p className="text-gold text-sm mb-2">Code promo à utiliser :</p>
-                    <div className="flex items-center gap-4">
-                      <code className="text-xl font-mono font-bold text-gold bg-gold/20 px-4 py-2 rounded-lg">
-                        {deal.promoCode}
-                      </code>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(deal.promoCode!)}
-                        className="px-4 py-2 bg-gold/20 text-gold rounded-lg hover:bg-gold/30 transition-colors"
+                  <div className="flex items-center gap-4 py-4 border-y border-white/10 my-6">
+                     <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">Code Promo</span>
+                     <code className="text-[#d4a855] font-mono text-lg">{deal.promoCode}</code>
+                     <button
+                        onClick={() => navigator.clipboard.writeText(deal.promoCode!)} 
+                        className="ml-auto text-xs underline text-neutral-400 hover:text-white"
                       >
-                        Copier
-                      </button>
-                    </div>
+                        COPIER
+                     </button>
                   </div>
                 )}
+            </div>
 
-                {/* Stats & Feedback */}
+            {/* Merchant Access */}
+            <div className="flex items-center gap-6 mb-16">
+               <a
+                  href={deal.product.productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-white text-black h-14 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] uppercase hover:bg-neutral-200 transition-colors"
+                >
+                  <Store className="h-4 w-4" />
+                  ACHETER CHEZ {deal.product.merchant.name.toUpperCase()}
+                </a>
                 <DealFeedback 
                   dealId={deal.id} 
                   initialViews={deal.views} 
                   initialVotes={deal.votes} 
                 />
-
-                {/* CTA */}
-                <a
-                  href={deal.product.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#9b1515] via-[#7b0a0a] to-[#9b1515] rounded-xl text-white font-bold text-lg hover:from-[#8b1212] hover:to-[#6b0808] transition-all shadow-lg shadow-[#7b0a0a]/30"
-                >
-                  Voir l&apos;offre chez {deal.product.merchant.name}
-                  <ExternalLink className="h-5 w-5" />
-                </a>
-
-                {/* Price Comparison - All Merchants */}
-                {(() => {
-                  // Build list of all prices: current deal + competitors
-                  const allPrices = [
-                    {
-                      id: 'current-deal',
-                      merchantName: deal.product.merchant.name,
-                      currentPrice: deal.dealPrice,
-                      originalPrice: deal.originalPrice,
-                      productUrl: deal.product.productUrl,
-                      volume: deal.volume,
-                      isCurrent: true,
-                    },
-                    ...(deal.competitorPrices || []).map((cp: any) => ({
-                      id: cp.id,
-                      merchantName: cp.merchantName || cp.merchant?.name,
-                      currentPrice: cp.currentPrice,
-                      originalPrice: cp.originalPrice,
-                      productUrl: cp.productUrl,
-                      volume: cp.volume || deal.volume,
-                      isCurrent: false,
-                    })),
-                  ].sort((a, b) => a.currentPrice - b.currentPrice);
-
-                  const cheapestPrice = allPrices[0]?.currentPrice;
-
-                  const getMerchantLogo = (name: string) => {
-                    const slug = name.toLowerCase();
-                    if (slug.includes('nocib')) return '/images/nocibe_logo.png';
-                    if (slug.includes('sephora')) return '/images/sephora_logo.png';
-                    return null;
-                  };
-
-                  return (
-                    <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-xl">
-                      <h3 className="text-white/70 text-sm font-medium mb-3 flex items-center gap-2">
-                        <Store className="h-4 w-4" />
-                        Comparer les prix ({allPrices.length} marchands)
-                      </h3>
-                      <div className="space-y-3">
-                        {allPrices.map((merchant, index) => {
-                          const priceDiff = merchant.currentPrice - cheapestPrice;
-                          const isCheapest = index === 0;
-                          const logoSrc = getMerchantLogo(merchant.merchantName);
-
-                          return (
-                            <a
-                              key={merchant.id}
-                              href={merchant.productUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`group flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer ${
-                                isCheapest 
-                                  ? 'bg-[#4ade80]/10 border border-[#4ade80]/30 hover:bg-[#4ade80]/20 hover:scale-[1.02]' 
-                                  : 'bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 hover:scale-[1.02]'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1">
-                                  {logoSrc ? (
-                                    <Image 
-                                      src={logoSrc} 
-                                      alt={merchant.merchantName} 
-                                      width={40} 
-                                      height={40}
-                                      className="object-contain"
-                                    />
-                                  ) : (
-                                    <Store className="h-5 w-5 text-gray-500" />
-                                  )}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-white font-medium group-hover:underline">
-                                      {merchant.merchantName}
-                                    </p>
-                                    {isCheapest && (
-                                      <span className="px-2 py-0.5 bg-[#4ade80] text-black text-xs font-bold rounded">
-                                        MEILLEUR PRIX
-                                      </span>
-                                    )}
-                                    {merchant.isCurrent && (
-                                      <span className="px-2 py-0.5 bg-gold/80 text-black text-xs font-bold rounded">
-                                        CE DEAL
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-white/50 text-sm">
-                                    {merchant.volume}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <div className="flex items-center gap-2 justify-end">
-                                    {merchant.originalPrice && merchant.originalPrice > merchant.currentPrice && (
-                                      <span className="text-white/40 line-through text-sm">
-                                        {merchant.originalPrice.toFixed(2)}€
-                                      </span>
-                                    )}
-                                    <span className={`font-bold text-lg ${isCheapest ? 'text-[#4ade80]' : 'text-white'}`}>
-                                      {merchant.currentPrice.toFixed(2)}€
-                                    </span>
-                                  </div>
-                                  {!isCheapest && priceDiff > 0 && (
-                                    <p className="text-[#f87171] text-sm font-medium">
-                                      +{priceDiff.toFixed(2)}€
-                                    </p>
-                                  )}
-                                </div>
-                                <div className={`p-2 rounded-lg transition-colors ${
-                                  isCheapest 
-                                    ? 'bg-[#4ade80]/20 group-hover:bg-[#4ade80]/40' 
-                                    : 'bg-white/10 group-hover:bg-white/20'
-                                }`}>
-                                  <ExternalLink className={`h-4 w-4 ${isCheapest ? 'text-[#4ade80]' : 'text-white/70'}`} />
-                                </div>
-                              </div>
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
             </div>
 
-            {/* Price Chart */}
-            <PriceChart
-              priceHistory={deal.product.priceHistory as any}
-              priceStats={priceStats}
-              currentPrice={deal.dealPrice}
-            />
+            {/* Additional Sections */}
+            <div className="space-y-16">
 
-            {/* Product Details Section */}
-            <div className="space-y-4">
+
+              {/* Price Comparison - All Merchants */}
+              {(() => {
+                // Fonction pour extraire le volume numérique d'une string (ex: "250 ml" -> 250)
+                const extractVolumeValue = (vol: string | null | undefined): number | null => {
+                  if (!vol) return null;
+                  const match = vol.match(/(\d+(?:[.,]\d+)?)\s*(ml|g|l|kg)/i);
+                  if (!match) return null;
+                  let value = parseFloat(match[1].replace(',', '.'));
+                  const unit = match[2].toLowerCase();
+                  // Convertir en ml/g de base
+                  if (unit === 'l') value *= 1000;
+                  if (unit === 'kg') value *= 1000;
+                  return value;
+                };
+
+                // Calculer le prix par unité
+                const calculatePricePerUnit = (price: number, volume: string | null | undefined): number | null => {
+                  const vol = extractVolumeValue(volume);
+                  if (!vol || vol === 0) return null;
+                  return price / vol;
+                };
+
+                const currentPricePerUnit = calculatePricePerUnit(deal.dealPrice, deal.volume);
+
+                const rawPrices = [
+                  {
+                    id: 'current-deal',
+                    merchantName: deal.product.merchant.name,
+                    merchantSlug: deal.product.merchant.slug,
+                    currentPrice: deal.dealPrice,
+                    originalPrice: deal.originalPrice,
+                    productUrl: deal.product.productUrl,
+                    volume: deal.volume,
+                    pricePerUnit: currentPricePerUnit,
+                    isCurrent: true,
+                  },
+                  ...(deal.competitorPrices || []).map((cp: any) => ({
+                    id: cp.id,
+                    merchantName: cp.merchantName || cp.merchant?.name,
+                    merchantSlug: cp.merchantSlug || cp.merchant?.slug || (cp.merchantName || cp.merchant?.name || '').toLowerCase(),
+                    currentPrice: cp.currentPrice,
+                    originalPrice: cp.originalPrice,
+                    productUrl: cp.productUrl,
+                    volume: cp.volume || deal.volume,
+                    pricePerUnit: calculatePricePerUnit(cp.currentPrice, cp.volume || deal.volume),
+                    isCurrent: false,
+                  })),
+                ].filter(p => p.pricePerUnit !== null); // Exclure ceux sans prix/unité calculable
+
+                // Dédupliquer par marchand (garder le meilleur prix/unité)
+                const dedupeMap = new Map<string, typeof rawPrices[0]>();
+                for (const price of rawPrices) {
+                  const key = price.merchantSlug;
+                  const existing = dedupeMap.get(key);
+                  if (!existing || price.isCurrent || (price.pricePerUnit && existing.pricePerUnit && price.pricePerUnit < existing.pricePerUnit)) {
+                    dedupeMap.set(key, price);
+                  }
+                }
+                
+                // Trier par prix/unité (meilleur rapport qualité/prix en premier)
+                const allPrices = Array.from(dedupeMap.values()).sort((a, b) => (a.pricePerUnit || 999) - (b.pricePerUnit || 999));
+                const uniqueMerchantCount = new Set(allPrices.map(p => p.merchantSlug)).size;
+                const cheapestPricePerUnit = allPrices[0]?.pricePerUnit;
+
+                const getMerchantLogo = (name: string) => {
+                  const slug = name.toLowerCase();
+                  if (slug.includes('nocib')) return '/images/nocibe_logo.png';
+                  if (slug.includes('sephora')) return '/images/sephora_logo.png';
+                  return null;
+                };
+
+                if (uniqueMerchantCount <= 1) return null;
+
+                return (
+                  <div className="border-t border-white/10 pt-12">
+                    <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
+                      Analyse du Marché
+                    </h3>
+                    <div className="flex flex-col border border-white/10 divide-y divide-white/10">
+                      {allPrices.map((merchant, index) => {
+                        const isBestValue = index === 0;
+                        const logoSrc = getMerchantLogo(merchant.merchantName);
+                        const pricePerUnitDiff = merchant.pricePerUnit && cheapestPricePerUnit 
+                          ? ((merchant.pricePerUnit - cheapestPricePerUnit) / cheapestPricePerUnit * 100)
+                          : 0;
+
+                        return (
+                          <a
+                            key={merchant.id}
+                            href={merchant.productUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-6">
+                              <div className="w-10 h-10 flex items-center justify-center bg-white rounded">
+                                {logoSrc ? (
+                                  <Image 
+                                    src={logoSrc} 
+                                    alt={merchant.merchantName} 
+                                    width={36} 
+                                    height={36}
+                                    className="object-contain"
+                                  />
+                                ) : (
+                                  <Store className="h-5 w-5 text-black" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <p className="text-sm font-medium text-white tracking-widest uppercase">
+                                    {merchant.merchantName}
+                                  </p>
+                                  {isBestValue && (
+                                    <span className="text-[9px] font-bold text-[#d4a855] border border-[#d4a855] px-2 py-0.5 tracking-wider">
+                                      MEILLEUR RAPPORT
+                                    </span>
+                                  )}
+                                </div>
+                                {merchant.volume && (
+                                  <p className="text-xs text-neutral-500 mt-1">
+                                    Format: {merchant.volume}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="flex items-center gap-3 justify-end">
+                                {merchant.originalPrice && merchant.originalPrice > merchant.currentPrice && (
+                                  <span className="text-neutral-600 line-through text-xs decoration-white/20">
+                                    {merchant.originalPrice.toFixed(2)}€
+                                  </span>
+                                )}
+                                <span className={`text-xl font-light tracking-tight ${isBestValue ? 'text-white' : 'text-neutral-400'}`}>
+                                  {merchant.currentPrice.toFixed(2)}€
+                                </span>
+                              </div>
+                              {merchant.pricePerUnit && (
+                                <p className={`text-[10px] font-medium mt-1 ${isBestValue ? 'text-[#d4a855]' : 'text-neutral-500'}`}>
+                                  {(merchant.pricePerUnit * 100).toFixed(2)}€ / 100ml
+                                  {!isBestValue && pricePerUnitDiff > 0 && (
+                                    <span className="text-[#9b1515] ml-2">+{pricePerUnitDiff.toFixed(0)}%</span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Price Chart */}
+              <div className="border-t border-white/10 pt-12">
+                 <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
+                    Historique des Prix
+                 </h3>
+                 <PriceChart
+                   priceHistory={deal.product.priceHistory as any}
+                   priceStats={priceStats}
+                   currentPrice={deal.dealPrice}
+                 />
+              </div>
+
               {/* Product Description */}
               {deal.product.description && (
-                <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/10">
-                  <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#9b1515] to-[#7b0a0a] rounded-full"></span>
-                    À propos de ce produit
-                  </h2>
-                  <p className="text-white/70 leading-relaxed">{deal.product.description}</p>
+                <div className="border-t border-white/10 pt-12">
+                  <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
+                    Aperçu du Produit
+                  </h3>
+                  <div className="prose prose-invert max-w-none prose-p:font-light prose-p:text-neutral-400 prose-p:leading-relaxed">
+                    <p>{deal.product.description}</p>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Comments Section */}
-            <CommentSection dealId={deal.id} />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Similar Deals */}
-            {similarDeals.length > 0 && (
-              <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/10">
-                <h2 className="text-lg font-semibold text-white mb-4">Deals similaires</h2>
-                <div className="space-y-4">
-                  {similarDeals.map((similarDeal: typeof similarDeals[number]) => (
-                    <Link
-                      key={similarDeal.id}
-                      href={`/deals/${similarDeal.id}`}
-                      className="block p-3 bg-white/5 rounded-xl hover:bg-bordeaux-600/20 transition-colors"
-                    >
-                      <div className="flex gap-3">
-                        <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden">
-                          {similarDeal.product.imageUrl ? (
-                            <Image
-                              src={similarDeal.product.imageUrl}
-                              alt={similarDeal.product.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-bordeaux-900/50 flex items-center justify-center">
-                              <Tag className="h-6 w-6 text-bordeaux-500" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium line-clamp-2">
-                            {similarDeal.product.name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="price-premium font-bold">
-                              {similarDeal.dealPrice.toFixed(2)}€
-                            </span>
-                            <span className="text-xs text-[#ff6b6b]">
-                              -{similarDeal.discountPercent}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+              {/* Comments Section */}
+              <div className="border-t border-white/10 pt-12">
+                <CommentSection dealId={deal.id} />
               </div>
-            )}
 
-            {/* Share */}
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-white/10">
-              <h2 className="text-lg font-semibold text-white mb-4">Partager ce deal</h2>
-              <div className="flex gap-3">
-                <button className="flex-1 py-2 bg-[#1da1f2]/20 text-[#1da1f2] rounded-lg hover:bg-[#1da1f2]/30 transition-colors">
-                  Twitter
-                </button>
-                <button className="flex-1 py-2 bg-[#4267B2]/20 text-[#4267B2] rounded-lg hover:bg-[#4267B2]/30 transition-colors">
-                  Facebook
-                </button>
-                <button className="flex-1 py-2 bg-bordeaux-600/20 text-bordeaux-300 rounded-lg hover:bg-bordeaux-600/30 transition-colors">
-                  Copier
-                </button>
-              </div>
             </div>
           </div>
         </div>
+
+        {/* Similar Deals - Bottom Carousel Layout */}
+        {similarDeals.length > 0 && (
+          <div className="mt-32 pt-16 border-t border-white/10">
+            <h2 className="text-3xl font-thin text-white mb-12 flex items-center gap-6">
+              VOUS AIMEREZ AUSSI <span className="h-px flex-1 bg-white/10"></span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {similarDeals.map((similarDeal: any) => (
+                <DealCard key={similarDeal.id} deal={similarDeal} />
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

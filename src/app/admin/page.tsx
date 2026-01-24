@@ -185,8 +185,8 @@ export default function AdminPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <div className="p-3 bg-[#7b0a0a]/20 rounded-xl">
             <Crown className="w-6 h-6 text-[#7b0a0a]" />
           </div>
@@ -195,6 +195,13 @@ export default function AdminPage() {
             <p className="text-neutral-400">Gestion du site City Baddies</p>
           </div>
         </div>
+        <Link
+          href="/admin/dashboard"
+          className="flex items-center gap-2 px-4 py-2 bg-[#7b0a0a] hover:bg-[#9b1a1a] text-white rounded-xl transition-colors"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Dashboard Stats
+        </Link>
       </div>
 
       {/* Stats */}

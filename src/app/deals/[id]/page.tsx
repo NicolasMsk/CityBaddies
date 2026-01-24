@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
+
+// Force dynamic - pas de pré-rendu au build
+export const dynamic = 'force-dynamic';
 import PriceChart from '@/components/deals/PriceChart';
 import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';

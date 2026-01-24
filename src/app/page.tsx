@@ -7,6 +7,9 @@ import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 
+// Force dynamic - pas de pré-rendu au build
+export const dynamic = 'force-dynamic';
+
 async function getHomeData() {
   // D'abord récupérer les catégories avec le compte de deals actifs
   const categoriesWithDeals = await prisma.category.findMany({

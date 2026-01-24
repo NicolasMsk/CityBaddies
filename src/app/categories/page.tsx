@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import CategoryCard from '@/components/categories/CategoryCard';
 
+// Force dynamic - pas de pré-rendu au build
+export const dynamic = 'force-dynamic';
+
 async function getCategories() {
   // Récupérer les catégories avec le nombre de deals actifs
   const categoriesWithDeals = await prisma.category.findMany({

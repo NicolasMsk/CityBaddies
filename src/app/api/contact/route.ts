@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // 1. Envoi à l'admin (toi)
     const adminEmail = await resend.emails.send({
       from: emailConfig.from,
-      to: 'nicolas.musicki@gmail.com', // Adresse liée au compte Resend (obligatoire en mode test)
+      to: 'citybaddies068@gmail.com', // Boîte mail du site
       replyTo: email, // Pour pouvoir répondre directement à l'utilisateur
       subject: `[Contact] ${subject || 'Nouveau message'}`,
       html: `

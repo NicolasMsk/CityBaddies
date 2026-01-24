@@ -22,9 +22,8 @@ export const resend = {
 
 // Configuration des emails
 export const emailConfig = {
-  // Utilise onboarding@resend.dev pour les tests (domaine vérifié par défaut)
-  // Remplace par ton domaine vérifié en production (ex: noreply@citybaddies.fr)
-  from: 'City Baddies <onboarding@resend.dev>',
+  // Email pour les notifications automatiques (inscription, newsletter, etc.)
+  from: 'City Baddies <noreply@citybaddies.com>',
   
   // Nom de l'application pour les emails
   appName: 'City Baddies',

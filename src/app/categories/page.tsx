@@ -1,8 +1,33 @@
 import prisma from '@/lib/prisma';
 import CategoryCard from '@/components/categories/CategoryCard';
+import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
 export const dynamic = 'force-dynamic';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
+export const metadata: Metadata = {
+  title: "Catégories Beauté | Maquillage, Skincare, Parfums",
+  description: "Explorez toutes les catégories beauté : maquillage, soins du visage, parfums, corps et cheveux. Trouvez les meilleurs deals par catégorie avec des réductions jusqu'à -70%.",
+  keywords: [
+    "catégories beauté",
+    "maquillage deals",
+    "skincare promotion",
+    "parfum réduction",
+    "soins visage pas cher",
+    "cosmétiques promo",
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/categories`,
+  },
+  openGraph: {
+    title: "Catégories Beauté | City Baddies",
+    description: "Explorez toutes les catégories beauté et trouvez les meilleurs deals.",
+    url: `${BASE_URL}/categories`,
+    type: "website",
+  },
+};
 
 async function getCategories() {
   // Récupérer les catégories avec le nombre de deals actifs

@@ -6,9 +6,36 @@ import DealCard from '@/components/deals/DealCard';
 import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
+import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
 export const dynamic = 'force-dynamic';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
+export const metadata: Metadata = {
+  title: "City Baddies | Bons Plans Beauté & Promos Maquillage jusqu'à -70%",
+  description: "Découvrez les meilleures promos beauté sur Sephora et Nocibé. Deals maquillage, skincare et parfums vérifiés quotidiennement. Économisez jusqu'à 70% sur vos produits préférés.",
+  keywords: [
+    "bons plans beauté",
+    "promo sephora",
+    "code promo nocibé",
+    "réduction maquillage",
+    "deals cosmétiques",
+    "soldes beauté",
+    "parfum pas cher",
+    "skincare promotion",
+  ],
+  alternates: {
+    canonical: BASE_URL,
+  },
+  openGraph: {
+    title: "City Baddies | Bons Plans Beauté & Promos Maquillage",
+    description: "Les meilleures promos beauté jusqu'à -70% sur Sephora et Nocibé.",
+    url: BASE_URL,
+    type: "website",
+  },
+};
 
 async function getHomeData() {
   // D'abord récupérer les catégories avec le compte de deals actifs
@@ -246,7 +273,7 @@ export default async function HomePage() {
 
             <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 border-t border-white/10 pt-12 mt-12">
               <p className="max-w-sm text-neutral-400 font-light leading-relaxed">
-                Nocibé, Sephora, Marionnaud. Nous suivons les baisses de prix pour vous. Seulement les vrais deals.
+                Sephora, Nocibé. Nous suivons les baisses de prix pour vous. Seulement les vrais deals.
               </p>
               
               <div className="flex items-center gap-6">
@@ -566,12 +593,8 @@ export default async function HomePage() {
                           <p className="text-sm text-neutral-500 pl-4.5">Partenaire Officiel • 1200+ Réfs</p>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-white font-medium border-l-2 border-neutral-700 pl-4">Sephora</p>
+                          <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Sephora</p>
                           <p className="text-sm text-neutral-500 pl-4.5">Leader Mondial • Marques Exclusives</p>
-                        </div>
-                        <div className="space-y-2 opacity-50">
-                          <p className="text-neutral-400 border-l-2 border-transparent pl-4">Marionnaud</p>
-                          <p className="text-sm text-neutral-600 pl-4.5">Intégration...</p>
                         </div>
                       </div>
                     </div>

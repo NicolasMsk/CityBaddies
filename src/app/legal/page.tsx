@@ -1,8 +1,25 @@
 import { Scale, Shield, FileText, Mail, Cookie, Link2, Users, AlertTriangle, Heart } from 'lucide-react';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: 'Mentions légales | City Baddies',
-  description: 'Mentions légales, conditions d\'utilisation et politique de confidentialité de City Baddies.',
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
+export const metadata: Metadata = {
+  title: 'Mentions Légales & CGU',
+  description: 'Mentions légales, conditions générales d\'utilisation et politique de confidentialité de City Baddies. Informations sur la collecte de données et vos droits.',
+  keywords: [
+    "mentions légales city baddies",
+    "CGU",
+    "conditions utilisation",
+    "politique confidentialité",
+    "RGPD",
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/legal`,
+  },
+  robots: {
+    index: true,
+    follow: false, // Pas besoin de suivre les liens sur une page légale
+  },
 };
 
 export default function LegalPage() {
@@ -332,7 +349,7 @@ export default function LegalPage() {
                     d&apos;auteur. Toute reproduction sans autorisation est interdite.
                   </p>
                   <p>
-                    Les marques et logos des enseignes (Sephora, Nocibé, Marionnaud, etc.) appartiennent 
+                    Les marques et logos des enseignes (Sephora, Nocibé, etc.) appartiennent 
                     à leurs propriétaires respectifs.
                   </p>
                 </div>

@@ -2,9 +2,14 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
+import type { Metadata } from 'next';
+import Script from 'next/script';
 
 // Force dynamic - pas de pré-rendu au build
 export const dynamic = 'force-dynamic';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
 import PriceChart from '@/components/deals/PriceChart';
 import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';
@@ -12,6 +17,77 @@ import CommentSection from '@/components/comments/CommentSection';
 import { ArrowLeft, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Génération dynamique des métadonnées SEO
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  
+  const deal = await prisma.deal.findUnique({
+    where: { id },
+    include: {
+      product: {
+        include: {
+          category: true,
+          merchant: true,
+        },
+      },
+    },
+  });
+
+  if (!deal) {
+    return {
+      title: "Deal non trouvé",
+      description: "Ce deal n'existe pas ou a expiré.",
+    };
+  }
+
+  const productName = deal.refinedTitle || deal.title;
+  const brandName = deal.product.brand || '';
+  const categoryName = deal.product.category?.name || 'Beauté';
+  const merchantName = deal.product.merchant?.name || '';
+  const discountText = deal.discountPercent > 0 ? `-${deal.discountPercent}%` : '';
+
+  const title = `${productName} ${discountText} | ${brandName}`.trim();
+  const description = `${productName} à ${deal.dealPrice.toFixed(2)}€ au lieu de ${deal.originalPrice.toFixed(2)}€ ${discountText}. ${categoryName} ${brandName} chez ${merchantName}. Deal vérifié sur City Baddies.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      productName,
+      brandName,
+      categoryName,
+      `promo ${brandName}`,
+      `${categoryName} pas cher`,
+      merchantName,
+      "deal beauté",
+      "promotion cosmétique",
+    ].filter(Boolean),
+    alternates: {
+      canonical: `${BASE_URL}/deals/${id}`,
+    },
+    openGraph: {
+      title: `${productName} ${discountText}`,
+      description,
+      url: `${BASE_URL}/deals/${id}`,
+      type: "website",
+      images: deal.product.imageUrl ? [
+        {
+          url: deal.product.imageUrl,
+          width: 800,
+          height: 600,
+          alt: productName,
+        },
+      ] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${productName} ${discountText}`,
+      description: `À ${deal.dealPrice.toFixed(2)}€ au lieu de ${deal.originalPrice.toFixed(2)}€`,
+      images: deal.product.imageUrl ? [deal.product.imageUrl] : [],
+    },
+  };
+}
 
 async function getDealData(id: string) {
   const deal = await prisma.deal.findUnique({
@@ -94,14 +170,84 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
     locale: fr,
   });
 
+  // Schema.org JSON-LD pour le produit (Rich Snippets)
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: deal.refinedTitle || deal.title,
+    description: deal.description || `${deal.product.brand || ''} ${deal.product.category?.name || 'Beauté'}`.trim(),
+    image: deal.product.imageUrl || undefined,
+    brand: deal.product.brand ? {
+      "@type": "Brand",
+      name: deal.product.brand,
+    } : undefined,
+    category: deal.product.category?.name,
+    sku: deal.id,
+    offers: {
+      "@type": "Offer",
+      url: `${BASE_URL}/deals/${deal.id}`,
+      priceCurrency: "EUR",
+      price: deal.dealPrice,
+      priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : undefined,
+      availability: deal.isExpired ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      seller: deal.product.merchant ? {
+        "@type": "Organization",
+        name: deal.product.merchant.name,
+      } : undefined,
+    },
+  };
+
+  // Schema BreadcrumbList pour la navigation
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: BASE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Deals",
+        item: `${BASE_URL}/deals`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: deal.product.category?.name || "Catégorie",
+        item: `${BASE_URL}/deals?category=${deal.product.category?.slug || ''}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: deal.refinedTitle || deal.title,
+        item: `${BASE_URL}/deals/${deal.id}`,
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Back Link - Editorial Style */}
-        <Link
-          href="/deals"
-          className="group inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 hover:text-white transition-colors mb-16"
-        >
+    <>
+      <Script
+        id="product-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <Script
+        id="breadcrumb-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Back Link - Editorial Style */}
+          <Link
+            href="/deals"
+            className="group inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 hover:text-white transition-colors mb-16"
+          >
           <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
           Retour à la collection
         </Link>
@@ -432,5 +578,6 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
 
       </div>
     </div>
+    </>
   );
 }

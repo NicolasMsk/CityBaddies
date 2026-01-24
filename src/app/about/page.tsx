@@ -1,14 +1,80 @@
 import { Sparkles, Shield, Users, Star } from 'lucide-react';
 import NewsletterSection from '@/components/layout/NewsletterSection';
+import type { Metadata } from 'next';
+import Script from 'next/script';
 
-export const metadata = {
-  title: 'Manifesto | City Baddies',
-  description: 'City Baddies - Plus qu\'un comparateur, un club privé.',
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
+export const metadata: Metadata = {
+  title: 'Manifesto | Notre Mission Beauté',
+  description: 'City Baddies - Plus qu\'un comparateur de prix beauté, un club privé. Découvrez notre mission : transparence totale sur les prix, deals curatés et communauté de passionnées.',
+  keywords: [
+    "city baddies manifesto",
+    "comparateur beauté",
+    "bons plans communauté",
+    "transparence prix cosmétiques",
+    "club beauté",
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/about`,
+  },
+  openGraph: {
+    title: 'Manifesto | City Baddies',
+    description: 'Plus qu\'un comparateur, un club privé. Découvrez notre mission.',
+    url: `${BASE_URL}/about`,
+    type: 'website',
+  },
+};
+
+// FAQ Schema pour les rich snippets Google
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Qu'est-ce que City Baddies ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "City Baddies est une plateforme communautaire de bons plans beauté. Notre algorithme scanne Sephora, Nocibé et d'autres sites 24/7 pour trouver les meilleures promotions sur le maquillage, skincare et parfums.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Comment City Baddies trouve les meilleurs deals ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Nous utilisons un algorithme qui analyse les prix en temps réel sur les sites partenaires comme Sephora et Nocibé. Nous vérifions l'historique des prix pour s'assurer que les promotions sont réelles et pas des faux rabais.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Est-ce que City Baddies est gratuit ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Oui, City Baddies est 100% gratuit. Nous ne vendons rien directement, nous redirigeons vers les sites officiels des enseignes partenaires.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Comment savoir si un deal est vraiment intéressant ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Chaque deal affiche le pourcentage de réduction réel calculé sur l'historique des prix. Nous n'affichons que les offres avec au moins 20% de réduction vérifiée.",
+      },
+    },
+  ],
 };
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black overflow-hidden relative">
+    <>
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black overflow-hidden relative">
       {/* Background Texture */}
       <div 
         className="fixed inset-0 opacity-[0.03] pointer-events-none z-0 mix-blend-overlay"
@@ -102,5 +168,6 @@ export default function AboutPage() {
         <NewsletterSection />
       </main>
     </div>
+    </>
   );
 }

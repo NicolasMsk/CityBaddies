@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { ImportEngine } from '@/lib/scraping/ImportEngine';
-import { NocibeScraper } from '@/lib/scraping/nocibe';
-import { SephoraScraper } from '@/lib/scraping/sephora';
-import { Scraper } from '@/lib/scraping/types';
 
+// Force dynamic - pas de pré-rendu au build
+export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max pour scraping
-
-// Registre des scrapers disponibles
-const SCRAPERS: Record<string, () => Scraper> = {
-  nocibe: () => new NocibeScraper({ headless: true, delayBetweenRequests: 2000 }),
-  sephora: () => new SephoraScraper({ headless: true, delayBetweenRequests: 2000 }),
-};
 
 // GET - Status du scraping
 export async function GET() {
@@ -33,7 +25,7 @@ export async function GET() {
 
   return NextResponse.json({
     status: 'ready',
-    availableMerchants: Object.keys(SCRAPERS),
+    availableMerchants: ['nocibe', 'sephora'],
     recentImports: recentProducts.length,
     products: recentProducts,
     sources: scrapingSources,
@@ -43,6 +35,16 @@ export async function GET() {
 // POST - Lancer le scraping via ImportEngine
 export async function POST(request: NextRequest) {
   try {
+    // Import dynamique pour éviter les erreurs au build
+    const { ImportEngine } = await import('@/lib/scraping/ImportEngine');
+    const { NocibeScraper } = await import('@/lib/scraping/nocibe');
+    const { SephoraScraper } = await import('@/lib/scraping/sephora');
+    
+    const SCRAPERS: Record<string, () => any> = {
+      nocibe: () => new NocibeScraper({ headless: true, delayBetweenRequests: 2000 }),
+      sephora: () => new SephoraScraper({ headless: true, delayBetweenRequests: 2000 }),
+    };
+
     const body = await request.json();
     const { 
       merchant = 'nocibe',

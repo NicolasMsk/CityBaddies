@@ -94,7 +94,7 @@ export default function ContactPage() {
           <div className="bg-[#0a0a0a] border border-white/5 p-8 flex flex-col items-center text-center group hover:border-[#d4a855]/30 transition-all duration-500 hover:bg-white/[0.02]">
             <Mail className="w-5 h-5 text-neutral-500 mb-4 group-hover:text-[#d4a855] transition-colors duration-500" />
             <p className="text-[#d4a855] text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Email</p>
-            <p className="text-white text-sm font-light tracking-wide select-all">citybaddies068@gmail.com</p>
+            <p className="text-white text-sm font-light tracking-wide select-all">contact@citybaddies.com</p>
           </div>
 
           {/* Response Time Card - Minimalist */}

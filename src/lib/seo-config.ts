@@ -26,7 +26,7 @@ export const SEO_CONFIG = {
   
   // Contact
   contact: {
-    email: 'citybaddies068@gmail.com',
+    email: 'contact@citybaddies.com',
   },
   
   // Enseignes partenaires

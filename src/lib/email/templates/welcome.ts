@@ -165,7 +165,7 @@ export function getWelcomeEmailHtml({ username }: WelcomeEmailProps): string {
             <td style="text-align: center;">
               <p style="margin: 0; font-size: 10px; color: #333333; line-height: 1.6;">
                 Tu reçois cet email car tu as créé un compte sur City Baddies.<br>
-                Pour toute question : citybaddies068@gmail.com
+                Pour toute question : contact@citybaddies.com
               </p>
             </td>
           </tr>

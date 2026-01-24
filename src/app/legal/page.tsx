@@ -276,8 +276,8 @@ export default function LegalPage() {
                   </ul>
                   <p className="mt-4">
                     Pour exercer ces droits, contacte-nous à : 
-                    <a href="mailto:citybaddies068@gmail.com" className="text-[#d4a855] hover:underline ml-1">
-                      citybaddies068@gmail.com
+                    <a href="mailto:contact@citybaddies.com" className="text-[#d4a855] hover:underline ml-1">
+                      contact@citybaddies.com
                     </a>
                   </p>
                 </div>
@@ -319,7 +319,7 @@ export default function LegalPage() {
                 <div className="text-neutral-400 space-y-2 text-sm">
                   <p><strong className="text-white">Nom du site :</strong> City Baddies</p>
                   <p><strong className="text-white">URL :</strong> citybaddies.com</p>
-                  <p><strong className="text-white">Email :</strong> <a href="mailto:citybaddies068@gmail.com" className="text-[#d4a855] hover:underline">citybaddies068@gmail.com</a></p>
+                  <p><strong className="text-white">Email :</strong> <a href="mailto:contact@citybaddies.com" className="text-[#d4a855] hover:underline">contact@citybaddies.com</a></p>
                   <p className="text-neutral-500 text-xs mt-4">
                     Ce site est édité par un particulier dans le cadre d&apos;un projet personnel.
                   </p>
@@ -385,11 +385,11 @@ export default function LegalPage() {
                     ou pour exercer tes droits sur tes données :
                   </p>
                   <a 
-                    href="mailto:citybaddies068@gmail.com" 
+                    href="mailto:contact@citybaddies.com" 
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#d4a855] hover:bg-white text-black font-bold rounded-lg transition-all text-xs tracking-widest uppercase mt-2"
                   >
                     <Mail className="w-4 h-4" />
-                    citybaddies068@gmail.com
+                    contact@citybaddies.com
                   </a>
                 </div>
               </div>

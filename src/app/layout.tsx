@@ -105,7 +105,7 @@ const organizationSchema = {
   ],
   contactPoint: {
     "@type": "ContactPoint",
-    email: "citybaddies068@gmail.com",
+    email: "contact@citybaddies.com",
     contactType: "customer service",
     availableLanguage: "French",
   },

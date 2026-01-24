@@ -1,8 +1,17 @@
 import OpenAI from 'openai';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization pour éviter erreur au build
+let _client: OpenAI | null = null;
+const getClient = () => {
+  if (!_client) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not defined');
+    }
+    _client = new OpenAI({ apiKey });
+  }
+  return _client;
+};
 
 interface Subcategory {
   name: string;
@@ -381,7 +390,7 @@ Exemples:
 4|parfums|eau-de-parfum|edp-femme|3|Nina Ricci - Eau de Parfum Nina (80ml)`;
 
       // Utiliser l'API Chat Completions avec gpt-4o-mini
-      const response = await client.chat.completions.create({
+      const response = await getClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },

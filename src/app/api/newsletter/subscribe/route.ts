@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Envoyer l'email de confirmation
+    // 1. Envoyer l'email de confirmation à l'utilisateur
     const { error: emailError } = await resend.emails.send({
       from: emailConfig.from,
       to: email,
@@ -64,6 +64,19 @@ export async function POST(request: NextRequest) {
       console.error('Erreur envoi email newsletter:', emailError);
       // On ne bloque pas l'inscription si l'email échoue
     }
+
+    // 2. Notification admin - Nouvelle inscription
+    await resend.emails.send({
+      from: emailConfig.from,
+      to: 'citybaddies068@gmail.com',
+      subject: '🎉 Nouvelle inscription à la newsletter',
+      html: `
+        <h2>Nouvelle inscription à la newsletter</h2>
+        <p><strong>Email :</strong> ${email}</p>
+        <p><strong>Source :</strong> ${source}</p>
+        <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR')}</p>
+      `,
+    });
 
     return NextResponse.json({
       success: true,

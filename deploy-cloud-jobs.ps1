@@ -104,12 +104,42 @@ gcloud run jobs update scrape-nocibe `
     --set-env-vars=$nocibeEnvVars `
     --quiet 2>$null
 
+# Étape 8: Build et push Marionnaud
+Write-Host "🏗️ Build image Marionnaud..." -ForegroundColor Yellow
+docker build -f Dockerfile.marionnaud -t "$REGISTRY/scrape-marionnaud:latest" .
+Write-Host "⬆️ Push image Marionnaud..." -ForegroundColor Yellow
+docker push "$REGISTRY/scrape-marionnaud:latest"
+
+Write-Host "☁️ Création du job Marionnaud..." -ForegroundColor Yellow
+$marionnaudEnvVars = "DATABASE_URL=$DATABASE_URL,OPENAI_API_KEY=$OpenAIKey"
+if ($SerperKey) { $marionnaudEnvVars += ",SERPER_API_KEY=$SerperKey" }
+
+gcloud run jobs create scrape-marionnaud `
+    --image="$REGISTRY/scrape-marionnaud:latest" `
+    --region=$Region `
+    --memory=1Gi `
+    --cpu=1 `
+    --max-retries=1 `
+    --task-timeout=20m `
+    --set-env-vars=$marionnaudEnvVars `
+    --quiet 2>$null
+
+# Update si existe déjà
+gcloud run jobs update scrape-marionnaud `
+    --image="$REGISTRY/scrape-marionnaud:latest" `
+    --region=$Region `
+    --memory=1Gi `
+    --cpu=1 `
+    --set-env-vars=$marionnaudEnvVars `
+    --quiet 2>$null
+
 Write-Host ""
 Write-Host "✅ Déploiement terminé!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📋 Pour tester les jobs:" -ForegroundColor Cyan
 Write-Host "  gcloud run jobs execute scrape-sephora --region=$Region"
 Write-Host "  gcloud run jobs execute scrape-nocibe --region=$Region"
+Write-Host "  gcloud run jobs execute scrape-marionnaud --region=$Region"
 Write-Host ""
 Write-Host "📋 Pour créer les schedulers (cron):" -ForegroundColor Cyan
 Write-Host "  Voir docs/GOOGLE_CLOUD_DEPLOY.md - Étape 4"

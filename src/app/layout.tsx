@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/auth";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import Script from "next/script";
 
 const inter = Inter({
@@ -150,6 +151,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0a] text-neutral-100 min-h-screen flex flex-col`}>
+        <GoogleAnalytics />
         <AuthProvider>
           <Header />
           <main className="flex-1">{children}</main>

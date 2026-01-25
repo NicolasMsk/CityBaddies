@@ -1,69 +1,79 @@
 import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
 
-// URLs de scraping pour Sephora
-const SEPHORA_SOURCES = [
-  // Catégories principales (catalogue complet)
-  { url: 'https://www.sephora.fr/shop/maquillage-c302/', category: 'maquillage', name: 'Catalogue Maquillage', type: 'catalogue', priority: 5 },
-  { url: 'https://www.sephora.fr/shop/parfum-c301/', category: 'parfums', name: 'Catalogue Parfums', type: 'catalogue', priority: 5 },
-  { url: 'https://www.sephora.fr/shop/soin-visage-c303/', category: 'soins-visage', name: 'Catalogue Soins Visage', type: 'catalogue', priority: 5 },
-  { url: 'https://www.sephora.fr/shop/corps-et-bain-c304/', category: 'soins-corps', name: 'Catalogue Corps & Bain', type: 'catalogue', priority: 5 },
-  { url: 'https://www.sephora.fr/shop/cheveux-c307/', category: 'cheveux', name: 'Catalogue Cheveux', type: 'catalogue', priority: 5 },
-  // Promos/Bons plans
-  { url: 'https://www.sephora.fr/promotion-exclu-web-maquillage/', category: 'maquillage', name: 'Promos Maquillage', type: 'promo', priority: 10 },
-  { url: 'https://www.sephora.fr/promotion-exclu-web-parfum/', category: 'parfums', name: 'Promos Parfums', type: 'promo', priority: 10 },
-  { url: 'https://www.sephora.fr/promotion-exclu-web-soin-cheveux-mup/', category: 'soins-visage', name: 'Promos Soins', type: 'promo', priority: 10 },
-  { url: 'https://www.sephora.fr/promotion-exclu-web-cheveux/', category: 'cheveux', name: 'Promos Cheveux', type: 'promo', priority: 10 },
-  { url: 'https://www.sephora.fr/haircare-heroes/', category: 'cheveux', name: 'Haircare Heroes', type: 'promo', priority: 5 },
-  // Tendances réseaux sociaux
-  { url: 'https://www.sephora.fr/tous-produits-stars-reseaux-sociaux/', category: 'maquillage', name: 'Stars Réseaux Sociaux', type: 'trending', priority: 15 },
-];
+// Charger les URLs depuis le fichier JSON
+const categoryLinksPath = path.join(process.cwd(), 'data', 'category-links.json');
+const categoryLinks = JSON.parse(fs.readFileSync(categoryLinksPath, 'utf-8'));
 
-// URLs de scraping pour Nocibé
-const NOCIBE_SOURCES = [
-  // Bons plans par catégorie
-  { url: 'https://www.nocibe.fr/fr/c/bons-plans/parfum/0501', category: 'parfums', name: 'Bons plans Parfum', type: 'promo', priority: 10 },
-  { url: 'https://www.nocibe.fr/fr/c/bons-plans/maquillages/0510', category: 'maquillage', name: 'Bons plans Maquillage', type: 'promo', priority: 10 },
-  { url: 'https://www.nocibe.fr/fr/c/bons-plans/soin-visage/0502', category: 'soins-visage', name: 'Bons plans Soin Visage', type: 'promo', priority: 10 },
-  { url: 'https://www.nocibe.fr/fr/c/bons-plans/cheveux/0512', category: 'cheveux', name: 'Bons plans Cheveux', type: 'promo', priority: 10 },
-  // Nouveautés par catégorie
-  { url: 'https://www.nocibe.fr/fr/c/nouveautes/parfums/0901', category: 'parfums', name: 'Nouveautés Parfums', type: 'nouveaute', priority: 8 },
-  { url: 'https://www.nocibe.fr/fr/c/nouveautes/maquillage/0903', category: 'maquillage', name: 'Nouveautés Maquillage', type: 'nouveaute', priority: 8 },
-  { url: 'https://www.nocibe.fr/fr/c/nouveautes/soin-visage/0912', category: 'soins-visage', name: 'Nouveautés Soin Visage', type: 'nouveaute', priority: 8 },
-  { url: 'https://www.nocibe.fr/fr/c/nouveautes/soin-corps/0913', category: 'soins-corps', name: 'Nouveautés Soin Corps', type: 'nouveaute', priority: 8 },
-  { url: 'https://www.nocibe.fr/fr/c/nouveautes/cheveux/0904', category: 'cheveux', name: 'Nouveautés Cheveux', type: 'nouveaute', priority: 8 },
-];
+// Fonction pour détecter la catégorie depuis l'URL
+function detectCategory(url: string): string {
+  const urlLower = url.toLowerCase();
+  if (urlLower.includes('parfum') || urlLower.includes('/p/') || urlLower.includes('/p0')) return 'parfums';
+  if (urlLower.includes('maquillage') || urlLower.includes('/m/') || urlLower.includes('/m0')) return 'maquillage';
+  if (urlLower.includes('soin-visage') || urlLower.includes('/v/') || urlLower.includes('/v0')) return 'soins-visage';
+  if (urlLower.includes('soin-corps') || urlLower.includes('corps') || urlLower.includes('/s0') || urlLower.includes('/b0')) return 'soins-corps';
+  if (urlLower.includes('cheveux') || urlLower.includes('/c0')) return 'cheveux';
+  if (urlLower.includes('accessoire') || urlLower.includes('/a0')) return 'accessoires';
+  if (urlLower.includes('parapharmacie') || urlLower.includes('/f0')) return 'parapharmacie';
+  if (urlLower.includes('solaire') || urlLower.includes('/uv')) return 'solaires';
+  if (urlLower.includes('solde') || urlLower.includes('/so')) return 'soldes';
+  return 'autres';
+}
 
-// URLs de scraping pour Marionnaud
-const MARIONNAUD_SOURCES = [
-  // Parfums - Bons plans et meilleures ventes
-  { url: 'https://www.marionnaud.fr/parfums/femme/c/P0100', category: 'parfums', name: 'Parfums Femme', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/parfums/homme/c/P0200', category: 'parfums', name: 'Parfums Homme', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/parfums/nos-selections/meilleures-ventes/c/P0502', category: 'parfums', name: 'Parfums Meilleures Ventes', type: 'trending', priority: 10 },
-  
-  // Maquillage
-  { url: 'https://www.marionnaud.fr/maquillage/teint/c/M0100', category: 'maquillage', name: 'Maquillage Teint', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/maquillage/yeux/c/M0200', category: 'maquillage', name: 'Maquillage Yeux', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/maquillage/levres/c/M0300', category: 'maquillage', name: 'Maquillage Lèvres', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/maquillage/nos-selections/meilleures-ventes/c/M0902', category: 'maquillage', name: 'Maquillage Meilleures Ventes', type: 'trending', priority: 10 },
-  
-  // Soins visage
-  { url: 'https://www.marionnaud.fr/soin-visage/type-de-produit/serum/c/V0105', category: 'soins-visage', name: 'Sérums Visage', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/soin-visage/type-de-produit/creme-hydratante/c/V0101', category: 'soins-visage', name: 'Crèmes Hydratantes', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/soin-visage/type-de-produit/masque/c/V0106', category: 'soins-visage', name: 'Masques Visage', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/soin-visage/nos-selections/meilleures-ventes/c/V0802', category: 'soins-visage', name: 'Soins Visage Meilleures Ventes', type: 'trending', priority: 10 },
-  
-  // Soins corps
-  { url: 'https://www.marionnaud.fr/soin-corps/hydratant-et-nourrissant/lait-et-creme/c/B0201', category: 'soins-corps', name: 'Laits & Crèmes Corps', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/soin-corps/hygiene-et-bain/gel-douche/c/B0102', category: 'soins-corps', name: 'Gels Douche', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/soin-corps/nos-selections/meilleures-ventes/c/B0602', category: 'soins-corps', name: 'Soins Corps Meilleures Ventes', type: 'trending', priority: 10 },
-  
-  // Cheveux
-  { url: 'https://www.marionnaud.fr/cheveux/type-de-produit/shampooing/c/C0101', category: 'cheveux', name: 'Shampoings', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/cheveux/type-de-produit/masque/c/C0103', category: 'cheveux', name: 'Masques Cheveux', type: 'catalogue', priority: 5 },
-  { url: 'https://www.marionnaud.fr/cheveux/nos-selections/meilleures-ventes/c/C0902', category: 'cheveux', name: 'Cheveux Meilleures Ventes', type: 'trending', priority: 10 },
-];
+// Fonction pour détecter le type depuis l'URL
+function detectType(url: string): string {
+  const urlLower = url.toLowerCase();
+  if (urlLower.includes('meilleures-ventes') || urlLower.includes('best-seller')) return 'trending';
+  if (urlLower.includes('promo') || urlLower.includes('bons-plans') || urlLower.includes('solde') || urlLower.includes('black-friday')) return 'promo';
+  if (urlLower.includes('nouveaute') || urlLower.includes('nouveau')) return 'nouveaute';
+  return 'catalogue';
+}
+
+// Fonction pour générer un nom depuis l'URL
+function generateName(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/').filter(p => p && p !== 'c' && p !== 'fr' && !p.match(/^[A-Z0-9]+$/));
+    if (pathParts.length === 0) return 'Catalogue';
+    // Prendre les 2-3 derniers segments et les formater
+    const relevantParts = pathParts.slice(-3);
+    return relevantParts
+      .map(p => p.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+      .join(' > ');
+  } catch {
+    return 'Source';
+  }
+}
+
+// Fonction pour déterminer la priorité
+function detectPriority(url: string, type: string): number {
+  if (type === 'promo' || type === 'trending') return 10;
+  if (type === 'nouveaute') return 8;
+  // Les URLs courtes (catégories principales) ont plus de priorité
+  const depth = url.split('/').filter(p => p).length;
+  if (depth <= 5) return 7;
+  if (depth <= 6) return 5;
+  return 3;
+}
+
+// Générer les sources depuis le JSON pour chaque marchand
+function generateSourcesFromJson(merchantSlug: string, urls: string[]) {
+  return urls.map(url => ({
+    url,
+    category: detectCategory(url),
+    name: generateName(url),
+    type: detectType(url),
+    priority: detectPriority(url, detectType(url)),
+  }));
+}
+
+// Sources générées automatiquement depuis le JSON
+const SEPHORA_SOURCES = generateSourcesFromJson('sephora', categoryLinks.sephora || []);
+const NOCIBE_SOURCES = generateSourcesFromJson('nocibe', categoryLinks.nocibe || []);
+const MARIONNAUD_SOURCES = generateSourcesFromJson('marionnaud', categoryLinks.marionnaud || []);
 
 async function seedScrapingSources() {
   console.log('🌱 Seeding des sources de scraping...\n');

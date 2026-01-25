@@ -31,7 +31,7 @@ export default function DealImage({ imageUrl, productName, discountPercent }: De
             fill
             className="object-contain p-8 group-hover:scale-105 transition-transform duration-700 ease-out"
             priority
-            unoptimized={imageUrl.includes('sephora.eu') || imageUrl.includes('sephora.fr')}
+            unoptimized
             onError={() => setImageError(true)}
           />
         ) : (

@@ -39,15 +39,42 @@ export interface MarionnaudConfig {
 
 const DEFAULT_CONFIG: MarionnaudConfig = {
   headless: true,
-  timeout: 15000,
-  delayBetweenRequests: 500,
+  timeout: 30000,
+  delayBetweenRequests: 2000,
 };
 
-const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-  'Accept-Language': 'fr-FR,fr;q=0.9',
-};
+// Rotation de User-Agents pour éviter la détection
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+];
+
+function getRandomUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+function getHeaders(referer?: string): Record<string, string> {
+  return {
+    'User-Agent': getRandomUserAgent(),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Sec-Ch-Ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': referer ? 'same-origin' : 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1',
+    'Referer': referer || 'https://www.marionnaud.fr/',
+  };
+}
 
 export class MarionnaudScraper implements Scraper {
   private config: MarionnaudConfig;
@@ -122,6 +149,7 @@ export class MarionnaudScraper implements Scraper {
 
     try {
       const maxPages = 3;
+      let referer = 'https://www.marionnaud.fr/';
       
       for (let pageNum = 0; pageNum < maxPages; pageNum++) {
         // Marionnaud utilise ?currentPage=0 pour page 1, ?currentPage=1 pour page 2, etc.
@@ -129,44 +157,67 @@ export class MarionnaudScraper implements Scraper {
         
         console.log(`[Marionnaud] Page ${pageNum + 1}/${maxPages}: ${pageUrl}`);
         
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-        
-        try {
-          const response = await fetch(pageUrl, { headers: HEADERS, signal: controller.signal });
-          clearTimeout(timeout);
+        // Retry logic avec backoff
+        let html: string | null = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), this.config.timeout);
           
-          if (!response.ok) {
-            errors.push(`HTTP ${response.status} pour ${pageUrl}`);
-            continue;
-          }
-          
-          const html = await response.text();
-          const pageProducts = this.extractProductsFromHtml(html, category);
-          
-          console.log(`[Marionnaud] Page ${pageNum + 1}: ${pageProducts.length} produits trouvés`);
-
-          for (const p of pageProducts) {
-            if (!products.find(existing => existing.productUrl === p.productUrl)) {
-              products.push(p);
+          try {
+            const response = await fetch(pageUrl, { 
+              headers: getHeaders(referer), 
+              signal: controller.signal 
+            });
+            clearTimeout(timeout);
+            
+            if (response.status === 403 || response.status === 429) {
+              console.log(`[Marionnaud] Bloqué (${response.status}), attente ${attempt * 5}s...`);
+              await this.delay(attempt * 5000);
+              continue;
+            }
+            
+            if (!response.ok) {
+              errors.push(`HTTP ${response.status} pour ${pageUrl}`);
+              break;
+            }
+            
+            html = await response.text();
+            referer = pageUrl; // Mise à jour du referer pour la prochaine requête
+            break;
+            
+          } catch (fetchErr) {
+            clearTimeout(timeout);
+            if ((fetchErr as Error).name === 'AbortError') {
+              console.log(`[Marionnaud] Timeout attempt ${attempt}/3, retry...`);
+              await this.delay(attempt * 2000);
+            } else {
+              throw fetchErr;
             }
           }
-          
-          // Si on n'a pas trouvé de produits, on arrête
-          if (pageProducts.length === 0) break;
-          
-        } catch (fetchErr) {
-          clearTimeout(timeout);
-          if ((fetchErr as Error).name === 'AbortError') {
-            console.log(`[Marionnaud] Timeout page ${pageNum + 1}, skip...`);
-            errors.push(`Timeout pour ${pageUrl}`);
-          } else {
-            throw fetchErr;
+        }
+        
+        if (!html) {
+          errors.push(`Échec après 3 tentatives pour ${pageUrl}`);
+          continue;
+        }
+        
+        const pageProducts = this.extractProductsFromHtml(html, category);
+        
+        console.log(`[Marionnaud] Page ${pageNum + 1}: ${pageProducts.length} produits trouvés`);
+
+        for (const p of pageProducts) {
+          if (!products.find(existing => existing.productUrl === p.productUrl)) {
+            products.push(p);
           }
         }
+        
+        // Si on n'a pas trouvé de produits, on arrête
+        if (pageProducts.length === 0) break;
 
         if (pageNum < maxPages - 1) {
-          await this.delay(this.config.delayBetweenRequests);
+          // Délai aléatoire entre 2 et 4 secondes pour paraître plus humain
+          const randomDelay = this.config.delayBetweenRequests + Math.random() * 2000;
+          await this.delay(randomDelay);
         }
       }
 

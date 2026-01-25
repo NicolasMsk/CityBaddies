@@ -208,6 +208,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
             quality={90}
+            unoptimized
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
           />
         ) : (

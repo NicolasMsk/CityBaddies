@@ -15,11 +15,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
   title: "City Baddies | Bons Plans Beauté & Promos Maquillage jusqu'à -70%",
-  description: "Découvrez les meilleures promos beauté sur Sephora et Nocibé. Deals maquillage, skincare et parfums vérifiés quotidiennement. Économisez jusqu'à 70% sur vos produits préférés.",
+  description: "Découvrez les meilleures promos beauté sur Sephora, Nocibé et Marionnaud. Deals maquillage, skincare et parfums vérifiés quotidiennement. Économisez jusqu'à 70% sur vos produits préférés.",
   keywords: [
     "bons plans beauté",
     "promo sephora",
     "code promo nocibé",
+    "promo marionnaud",
     "réduction maquillage",
     "deals cosmétiques",
     "soldes beauté",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "City Baddies | Bons Plans Beauté & Promos Maquillage",
-    description: "Les meilleures promos beauté jusqu'à -70% sur Sephora et Nocibé.",
+    description: "Les meilleures promos beauté jusqu'à -70% sur Sephora, Nocibé et Marionnaud.",
     url: BASE_URL,
     type: "website",
   },
@@ -285,7 +286,7 @@ export default async function HomePage() {
 
             <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 border-t border-white/10 pt-12 mt-12">
               <p className="max-w-sm text-neutral-400 font-light leading-relaxed">
-                Sephora, Nocibé. Nous suivons les baisses de prix pour vous. Seulement les vrais deals.
+                Sephora, Nocibé, Marionnaud. Nous suivons les baisses de prix pour vous. Seulement les vrais deals.
               </p>
               
               <div className="flex items-center gap-6">
@@ -574,7 +575,7 @@ export default async function HomePage() {
                     <div>
                       <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Curation Algorithmique</h4>
                       <p className="text-neutral-500 font-light leading-relaxed">
-                        Nos robots surveillent des milliers de produits chez Sephora, Nocibé et autres 24/7. Seules les réductions de 20%+ sont retenues. Pas de remplissage.
+                        Nos robots surveillent des milliers de produits chez Sephora, Nocibé, Marionnaud et autres 24/7. Seules les réductions de 20%+ sont retenues. Pas de remplissage.
                       </p>
                     </div>
                   </div>
@@ -599,7 +600,7 @@ export default async function HomePage() {
                     <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">03</span>
                     <div className="w-full">
                       <h4 className="text-lg font-medium text-white mb-6 uppercase tracking-wide">Sources Élite</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Nocibé</p>
                           <p className="text-sm text-neutral-500 pl-4.5">Partenaire Officiel • 1200+ Réfs</p>
@@ -607,6 +608,10 @@ export default async function HomePage() {
                         <div className="space-y-2">
                           <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Sephora</p>
                           <p className="text-sm text-neutral-500 pl-4.5">Leader Mondial • Marques Exclusives</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Marionnaud</p>
+                          <p className="text-sm text-neutral-500 pl-4.5">Expert Beauté • 800+ Références</p>
                         </div>
                       </div>
                     </div>

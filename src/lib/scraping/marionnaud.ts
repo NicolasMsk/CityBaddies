@@ -249,9 +249,40 @@ export class MarionnaudScraper implements Scraper {
         const productUrl = href ? 'https://www.marionnaud.fr' + href : '';
         if (!productUrl) return;
 
-        // Image
+        // Image - prioriser les URLs haute qualité
         const $img = $tile.find('.product-list-item__image img, e2core-media img');
-        const imageUrl = $img.attr('src') || '';
+        let imageUrl = '';
+        
+        // 1. Essayer srcset (généralement contient des URLs haute résolution)
+        const srcset = $img.attr('srcset');
+        if (srcset) {
+          // Prendre la plus haute résolution disponible dans srcset
+          const sources = srcset.split(',').map(s => s.trim());
+          const highestRes = sources[sources.length - 1]; // Dernière = plus haute résolution
+          imageUrl = highestRes.split(' ')[0]; // Extraire juste l'URL
+        }
+        
+        // 2. Sinon essayer data-src ou data-image (lazy loading)
+        if (!imageUrl) {
+          imageUrl = $img.attr('data-src') || $img.attr('data-image') || '';
+        }
+        
+        // 3. Fallback sur src classique
+        if (!imageUrl) {
+          imageUrl = $img.attr('src') || '';
+        }
+        
+        // 4. Nettoyer l'URL et forcer HTTPS si besoin
+        if (imageUrl) {
+          imageUrl = imageUrl.trim();
+          if (imageUrl.startsWith('//')) {
+            imageUrl = 'https:' + imageUrl;
+          } else if (imageUrl.startsWith('/')) {
+            imageUrl = 'https://www.marionnaud.fr' + imageUrl;
+          }
+          // Retirer les paramètres de redimensionnement pour avoir la meilleure qualité
+          imageUrl = imageUrl.replace(/[?&](w|h|width|height)=\d+/gi, '');
+        }
 
         // Marque
         const brand = $tile.find('.product-list-item__brand').text().trim();

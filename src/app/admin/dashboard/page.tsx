@@ -111,32 +111,43 @@ function StatCard({
   trend?: { value: number; label: string };
   color?: 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'pink';
 }) {
-  const colorClasses = {
-    red: 'bg-red-500/10 text-red-400',
-    green: 'bg-green-500/10 text-green-400',
-    blue: 'bg-blue-500/10 text-blue-400',
-    purple: 'bg-purple-500/10 text-purple-400',
-    orange: 'bg-orange-500/10 text-orange-400',
-    pink: 'bg-pink-500/10 text-pink-400',
+  const colorStyles = {
+    red: 'text-[#7b0a0a] bg-[#7b0a0a]/10',
+    green: 'text-emerald-500 bg-emerald-500/10',
+    blue: 'text-blue-500 bg-blue-500/10',
+    purple: 'text-violet-500 bg-violet-500/10',
+    orange: 'text-amber-500 bg-amber-500/10',
+    pink: 'text-pink-500 bg-pink-500/10',
   };
 
   return (
-    <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`p-2.5 rounded-xl ${colorClasses[color]}`}>
-          <Icon className="w-5 h-5" />
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 group shadow-sm">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-3 rounded-lg ${colorStyles[color]} transition-transform group-hover:scale-110 duration-300`}>
+          <Icon className="w-6 h-6" />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {trend.value >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
+            trend.value >= 0 
+              ? 'text-emerald-400 border-emerald-950/50 bg-emerald-950/20' 
+              : 'text-rose-400 border-rose-950/50 bg-rose-950/20'
+          }`}>
+            {trend.value >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
             <span>{Math.abs(trend.value)}</span>
-            <span className="text-neutral-500">{trend.label}</span>
+            <span className="opacity-70 hidden sm:inline">{trend.label}</span>
           </div>
         )}
       </div>
-      <div className="text-2xl font-bold text-white mb-1">{value}</div>
-      <div className="text-sm text-neutral-400">{label}</div>
-      {subValue && <div className="text-xs text-neutral-500 mt-1">{subValue}</div>}
+      <div>
+        <div className="text-3xl font-bold text-white tracking-tight mb-1">{value}</div>
+        <div className="text-sm font-medium text-zinc-400">{label}</div>
+        {subValue && (
+          <div className="mt-3 pt-3 border-t border-zinc-800/50 text-xs text-zinc-500 flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${colorStyles[color].split(' ')[1]}`} />
+            {subValue}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -155,23 +166,25 @@ function GrowthCard({
   icon: React.ElementType;
 }) {
   return (
-    <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="w-5 h-5 text-[#7b0a0a]" />
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all shadow-sm">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-zinc-800 rounded-lg">
+          <Icon className="w-5 h-5 text-white" />
+        </div>
         <h3 className="font-semibold text-white">{title}</h3>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="text-center p-3 bg-neutral-800/50 rounded-xl">
-          <div className="text-xl font-bold text-white">{today}</div>
-          <div className="text-xs text-neutral-400">Aujourd&apos;hui</div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center group">
+          <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#7b0a0a] transition-colors">{today}</div>
+          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">24h</div>
         </div>
-        <div className="text-center p-3 bg-neutral-800/50 rounded-xl">
-          <div className="text-xl font-bold text-white">{week}</div>
-          <div className="text-xs text-neutral-400">7 jours</div>
+        <div className="text-center group border-l border-zinc-800">
+          <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#7b0a0a] transition-colors">{week}</div>
+          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">7j</div>
         </div>
-        <div className="text-center p-3 bg-neutral-800/50 rounded-xl">
-          <div className="text-xl font-bold text-white">{month}</div>
-          <div className="text-xs text-neutral-400">30 jours</div>
+        <div className="text-center group border-l border-zinc-800">
+          <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#7b0a0a] transition-colors">{month}</div>
+          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">30j</div>
         </div>
       </div>
     </div>
@@ -241,305 +254,238 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-[1600px] mx-auto px-6 py-10 space-y-10">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#7b0a0a]/20 rounded-xl">
-            <BarChart3 className="w-6 h-6 text-[#7b0a0a]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="text-neutral-400">Statistiques en temps réel</p>
-          </div>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Tableau de bord</h1>
+          <p className="text-zinc-400">Vue d&apos;ensemble de l&apos;activité et des performances.</p>
         </div>
-        <Link
-          href="/admin"
-          className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors"
-        >
-          <Crown className="w-4 h-4" />
-          Gestion
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-400 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span suppressHydrationWarning>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          </div>
+          <Link
+            href="/admin"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white text-black hover:bg-zinc-200 font-medium rounded-lg transition-colors shadow-lg shadow-white/5"
+          >
+            <Crown className="w-4 h-4" />
+            Administration
+          </Link>
+        </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      {/* Key Metrics - Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={Tag}
-          label="Deals actifs"
+          label="Deals Actifs"
           value={data.overview.activeDeals}
           subValue={`${data.overview.expiredDeals} expirés`}
-          trend={{ value: data.growth.deals.today, label: "auj." }}
+          trend={{ value: data.growth.deals.today, label: "ce jour" }}
           color="red"
         />
         <StatCard
-          icon={Flame}
-          label="Deals HOT"
-          value={data.overview.hotDeals}
-          color="orange"
-        />
-        <StatCard
           icon={Users}
-          label="Utilisateurs"
+          label="Utilisateurs Total"
           value={data.overview.totalUsers}
-          trend={{ value: data.growth.users.today, label: "auj." }}
+          trend={{ value: data.growth.users.today, label: "nouveaux" }}
           color="blue"
         />
         <StatCard
-          icon={Mail}
-          label="Newsletter"
-          value={data.overview.confirmedNewsletterSubscribers}
-          subValue={`${data.overview.totalNewsletterSubscribers} total`}
-          trend={{ value: data.growth.newsletter.today, label: "auj." }}
+          icon={Euro}
+          label="Économies Générées"
+          value={`${Math.round(data.overview.totalSavings).toLocaleString('fr-FR')} €`}
+          subValue="Sur deals actifs"
           color="green"
         />
         <StatCard
-          icon={Heart}
-          label="Favoris"
-          value={data.overview.totalFavorites}
-          color="pink"
-        />
-        <StatCard
-          icon={MessageSquare}
-          label="Commentaires"
-          value={data.overview.totalComments}
+          icon={Mail}
+          label="Abonnés Newsletter"
+          value={data.overview.confirmedNewsletterSubscribers}
+          subValue={`${data.overview.totalNewsletterSubscribers - data.overview.confirmedNewsletterSubscribers} en attente`}
+          trend={{ value: data.growth.newsletter.today, label: "ce jour" }}
           color="purple"
         />
       </div>
 
-      {/* Financial Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {/* Secondary Metrics - Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          icon={Euro}
-          label="Économies générées"
-          value={`${data.overview.totalSavings.toLocaleString('fr-FR')} €`}
-          subValue="Total sur deals actifs"
-          color="green"
-        />
-        <StatCard
-          icon={Percent}
-          label="Réduction moyenne"
-          value={`-${data.overview.averageDiscount}%`}
+          icon={Flame}
+          label="Deals Populaires (HOT)"
+          value={data.overview.hotDeals}
+          subValue="Haute température"
           color="orange"
         />
         <StatCard
-          icon={Package}
-          label="Produits"
-          value={data.overview.totalProducts}
-          subValue={`${data.overview.totalBrands} marques • ${data.overview.totalCategories} catégories`}
-          color="blue"
+          icon={Percent}
+          label="Réduction Moyenne"
+          value={`-${data.overview.averageDiscount.toFixed(1)}%`}
+          subValue="Sur l'ensemble du catalogue"
+          color="red"
+        />
+        <StatCard
+          icon={Heart}
+          label="Favoris Utilisateurs"
+          value={data.overview.totalFavorites}
+          subValue="Deals sauvegardés"
+          color="pink"
         />
       </div>
 
-      {/* Growth Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <GrowthCard
-          title="Nouveaux Deals"
-          icon={Tag}
-          today={data.growth.deals.today}
-          week={data.growth.deals.week}
-          month={data.growth.deals.month}
-        />
-        <GrowthCard
-          title="Inscriptions"
-          icon={Users}
-          today={data.growth.users.today}
-          week={data.growth.users.week}
-          month={data.growth.users.month}
-        />
-        <GrowthCard
-          title="Newsletter"
-          icon={Mail}
-          today={data.growth.newsletter.today}
-          week={data.growth.newsletter.week}
-          month={data.growth.newsletter.month}
-        />
+      {/* Growth Analysis */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-[#7b0a0a]" />
+          Analyse de la croissance
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <GrowthCard
+            title="Nouveaux Deals"
+            icon={Tag}
+            today={data.growth.deals.today}
+            week={data.growth.deals.week}
+            month={data.growth.deals.month}
+          />
+          <GrowthCard
+            title="Inscriptions"
+            icon={Users}
+            today={data.growth.users.today}
+            week={data.growth.users.week}
+            month={data.growth.users.month}
+          />
+          <GrowthCard
+            title="Newsletter"
+            icon={Mail}
+            today={data.growth.newsletter.today}
+            week={data.growth.newsletter.week}
+            month={data.growth.newsletter.month}
+          />
+        </div>
       </div>
 
-      {/* Top Deals & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Top Deals */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#7b0a0a]" />
-            Top 10 Deals (par votes)
-          </h3>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {data.topDeals.map((deal, index) => (
-              <Link
-                key={deal.id}
-                href={`/deals/${deal.id}`}
-                className="flex items-center gap-3 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl transition-colors"
-              >
-                <span className="text-lg font-bold text-neutral-500 w-6">#{index + 1}</span>
-                {deal.product.imageUrl ? (
-                  <Image
-                    src={deal.product.imageUrl}
-                    alt={deal.product.name}
-                    width={40}
-                    height={40}
-                    className="rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-neutral-700 rounded-lg" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{deal.title}</p>
-                  <p className="text-xs text-neutral-400">{deal.product.merchant.name}</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-green-400">
-                    <TrendingUp className="w-3 h-3" />
-                    <span className="text-sm font-bold">{deal.votes}</span>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Top Deals List */}
+        <div className="xl:col-span-2 space-y-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 h-[500px] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Crown className="w-5 h-5 text-amber-500" />
+                Top 10 Deals
+              </h3>
+              <div className="flex gap-2">
+                <div className="text-xs font-medium px-2 py-1 rounded bg-zinc-800 text-zinc-400">Par votes</div>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto pr-2 space-y-1 [scrollbar-width:thin] [scrollbar-color:theme(colors.zinc.700)_transparent] flex-1">
+              {data.topDeals.map((deal, index) => (
+                <Link
+                  key={deal.id}
+                  href={`/deals/${deal.id}`}
+                  className="group flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-800"
+                >
+                  <div className="flex-shrink-0 w-8 text-center font-bold text-zinc-600 font-mono">
+                    #{index + 1}
                   </div>
-                  {deal.isHot && <Flame className="w-4 h-4 text-orange-500 ml-auto" />}
-                </div>
-              </Link>
-            ))}
+                  
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 border border-zinc-700">
+                    {deal.product.imageUrl ? (
+                      <Image
+                        src={deal.product.imageUrl}
+                        alt={deal.product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-5 h-5 text-zinc-600" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-white truncate group-hover:text-[#7b0a0a] transition-colors">
+                      {deal.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
+                      <span className="text-zinc-300">{deal.product.merchant.name}</span>
+                      <span>•</span>
+                      <span>{deal.product.category.name}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right flex-shrink-0">
+                     <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-bold">
+                        <TrendingUp className="w-3 h-3" />
+                        {deal.votes}
+                     </div>
+                     <div className="text-xs text-zinc-500 mt-0.5">
+                        {deal.isHot && <span className="text-orange-500 flex items-center justify-end gap-1"><Flame className="w-3 h-3" /> Hot</span>}
+                     </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Top Favoris */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-pink-500" />
-            Top 10 Deals (par favoris)
-          </h3>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {data.topFavorites.map((deal, index) => (
-              <Link
-                key={deal.id}
-                href={`/deals/${deal.id}`}
-                className="flex items-center gap-3 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl transition-colors"
-              >
-                <span className="text-lg font-bold text-neutral-500 w-6">#{index + 1}</span>
-                {deal.product.imageUrl ? (
-                  <Image
-                    src={deal.product.imageUrl}
-                    alt={deal.product.name}
-                    width={40}
-                    height={40}
-                    className="rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-neutral-700 rounded-lg" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{deal.title}</p>
-                  <p className="text-xs text-neutral-400">{deal.product.merchant.name}</p>
-                </div>
-                <div className="flex items-center gap-1 text-pink-400">
-                  <Heart className="w-3 h-3 fill-current" />
-                  <span className="text-sm font-bold">{deal.favoritesCount}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Category & Merchant Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Categories */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+        {/* Categories Distribution */}
+        <div className="space-y-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 h-[500px] flex flex-col">
+          <h3 className="font-semibold text-white mb-6 flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-purple-500" />
-            Produits par catégorie
+            Top Catégories
           </h3>
-          <div className="space-y-2">
-            {data.categoryStats.slice(0, 8).map((cat) => {
+          <div className="flex-1 overflow-y-auto pr-2 space-y-5 [scrollbar-width:thin] [scrollbar-color:theme(colors.zinc.700)_transparent]">
+            {data.categoryStats.slice(0, 10).map((cat) => {
               const maxCount = Math.max(...data.categoryStats.map(c => c.productsCount));
               const percentage = (cat.productsCount / maxCount) * 100;
               return (
-                <div key={cat.slug} className="flex items-center gap-3">
-                  <span className="text-sm text-neutral-300 w-32 truncate">{cat.name}</span>
-                  <div className="flex-1 h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <div key={cat.slug} className="group">
+                  <div className="flex justify-between items-center mb-2 text-sm">
+                     <span className="text-zinc-300 font-medium truncate pr-4">{cat.name}</span>
+                     <span className="text-zinc-500 font-mono">{cat.productsCount}</span>
+                  </div>
+                  <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-purple-500 rounded-full transition-all"
+                      className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out group-hover:bg-purple-400"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <span className="text-sm text-neutral-400 w-12 text-right">{cat.productsCount}</span>
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* Merchants */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-blue-500" />
-            Produits par marchand
-          </h3>
-          <div className="space-y-2">
-            {data.merchantStats.slice(0, 8).map((merchant) => {
-              const maxCount = Math.max(...data.merchantStats.map(m => m.productsCount));
-              const percentage = (merchant.productsCount / maxCount) * 100;
-              return (
-                <div key={merchant.slug} className="flex items-center gap-3">
-                  <span className="text-sm text-neutral-300 w-32 truncate">{merchant.name}</span>
-                  <div className="flex-1 h-2 bg-neutral-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-neutral-400 w-12 text-right">{merchant.productsCount}</span>
-                </div>
-              );
-            })}
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Newsletter Signups */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <Mail className="w-5 h-5 text-green-500" />
-            Dernières inscriptions newsletter
-          </h3>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {data.recentNewsletterSignups.map((signup, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-xl">
-                <div>
-                  <p className="text-sm font-medium text-white">{signup.email}</p>
-                  <p className="text-xs text-neutral-400">{signup.source}</p>
-                </div>
-                <div className="text-right">
-                  <div className={`text-xs px-2 py-1 rounded-full ${signup.isConfirmed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                    {signup.isConfirmed ? 'Confirmé' : 'En attente'}
-                  </div>
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {new Date(signup.subscribedAt).toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-              </div>
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Recent Activity: Users */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+             <h3 className="font-semibold text-white flex items-center gap-2">
+               <Users className="w-5 h-5 text-blue-500" />
+               Derniers Inscrits
+             </h3>
+             <Link href="/admin/users" className="text-xs text-blue-400 hover:text-blue-300">Voir tout</Link>
           </div>
-        </div>
-
-        {/* Recent Users */}
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
-          <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-500" />
-            Derniers utilisateurs inscrits
-          </h3>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          <div className="space-y-4">
             {data.recentUsers.map((user) => (
-              <div key={user.id} className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-xl">
+              <div key={user.id} className="flex items-center gap-4 p-3 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
                 {user.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
                     alt={user.displayName || user.email}
-                    width={36}
-                    height={36}
-                    className="rounded-full"
+                    width={40}
+                    height={40}
+                    className="rounded-full border border-zinc-700"
                   />
                 ) : (
-                  <div className="w-9 h-9 bg-gradient-to-br from-[#7b0a0a] to-[#9b1a1a] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#7b0a0a] to-zinc-800 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-inner">
                     {(user.displayName || user.email).charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -547,11 +493,39 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-white truncate">
                     {user.displayName || user.username || 'Utilisateur'}
                   </p>
-                  <p className="text-xs text-neutral-400 truncate">{user.email}</p>
+                  <p className="text-xs text-zinc-500 truncate">{user.email}</p>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-neutral-500">
-                  <Calendar className="w-3 h-3" />
-                  {new Date(user.createdAt).toLocaleDateString('fr-FR')}
+                <div className="text-xs text-zinc-500 whitespace-nowrap bg-zinc-900 px-2 py-1 rounded">
+                   {new Date(user.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Newsletter Activity */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+             <h3 className="font-semibold text-white flex items-center gap-2">
+               <Mail className="w-5 h-5 text-green-500" />
+               Activité Newsletter
+             </h3>
+             <span className="text-xs text-zinc-500">Derniers abonnés</span>
+          </div>
+          <div className="space-y-4">
+            {data.recentNewsletterSignups.map((signup, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
+                <div className="flex items-center gap-3 overflow-hidden">
+                   <div className="p-2 rounded-full bg-zinc-900 text-zinc-500">
+                      <Mail className="w-4 h-4" />
+                   </div>
+                   <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate max-w-[200px]">{signup.email}</p>
+                      <p className="text-xs text-zinc-500 capitalize">{signup.source}</p>
+                   </div>
+                </div>
+                <div className={`text-xs px-2.5 py-1 rounded-full font-medium ${signup.isConfirmed ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                   {signup.isConfirmed ? 'Confirmé' : 'En attente'}
                 </div>
               </div>
             ))}

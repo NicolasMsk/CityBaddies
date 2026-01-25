@@ -121,8 +121,8 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
         </div>
       )}
 
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[300px] w-full min-w-[200px]">
+        <ResponsiveContainer width="100%" height={300} minWidth={200}>
           {hasSingleObservation ? (
             // Scatter chart pour un point unique
             <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>

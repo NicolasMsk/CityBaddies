@@ -276,6 +276,19 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                     fill
                     className="object-contain p-8 group-hover:scale-105 transition-transform duration-700 ease-out"
                     priority
+                    unoptimized={deal.product.imageUrl.includes('sephora.eu') || deal.product.imageUrl.includes('sephora.fr')}
+                    onError={(e) => {
+                      // Hide broken image and show placeholder
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'absolute inset-0 flex items-center justify-center bg-[#0f0f0f]';
+                        placeholder.innerHTML = '<span class="text-neutral-600 italic">Image indisponible</span>';
+                        parent.appendChild(placeholder);
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

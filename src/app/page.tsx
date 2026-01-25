@@ -73,106 +73,118 @@ async function getHomeData() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [hotDeals, luxeDeals, latestDeals, stats, dealsToday, topBrands] = await Promise.all([
-    // Hot deals classiques - Top 8 par score
-    prisma.deal.findMany({
-      where: { 
-        isExpired: false,
-        discountPercent: { gte: 20 },
-      },
-      include: {
-        product: {
-          include: {
-            category: true,
-            merchant: true,
-          },
+  // Récupération séquentielle pour éviter les doublons entre sections
+  // 1. D'abord les hotDeals (Sélection Virale)
+  const hotDeals = await prisma.deal.findMany({
+    where: { 
+      isExpired: false,
+      discountPercent: { gte: 20 },
+    },
+    include: {
+      product: {
+        include: {
+          category: true,
+          merchant: true,
         },
       },
-      orderBy: [
-        { score: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      take: 8, // 8 pour le carousel
-    }),
-    // Deals Luxe (brandTier = 1) - Plus de deals pour le carousel
-    prisma.deal.findMany({
-      where: { 
-        isExpired: false,
-        discountPercent: { gte: 20 },
-        brandTier: 1, // Marques luxe
-      },
-      include: {
-        product: {
-          include: {
-            category: true,
-            merchant: true,
-          },
+    },
+    orderBy: [
+      { score: 'desc' },
+      { createdAt: 'desc' },
+    ],
+    take: 8,
+  });
+  
+  const hotDealIds = hotDeals.map(d => d.id);
+  
+  // 2. Ensuite les luxeDeals (Archives de Luxe) - en excluant les hotDeals
+  const luxeDeals = await prisma.deal.findMany({
+    where: { 
+      isExpired: false,
+      discountPercent: { gte: 20 },
+      brandTier: 1,
+      id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
+    },
+    include: {
+      product: {
+        include: {
+          category: true,
+          merchant: true,
         },
       },
-      orderBy: [
-        { discountPercent: 'desc' },
-        { score: 'desc' },
-      ],
-      take: 8, // Plus pour le carousel
-    }),
-    // Derniers deals ajoutés - Récupérer par marchand pour mélanger
-    (async () => {
-      // Récupérer tous les marchands actifs (via leurs produits qui ont des deals)
-      const merchants = await prisma.merchant.findMany({
-        where: {
-          products: {
-            some: {
-              deals: {
-                some: {
-                  isExpired: false,
-                  discountPercent: { gte: 15 },
-                },
+    },
+    orderBy: [
+      { discountPercent: 'desc' },
+      { score: 'desc' },
+    ],
+    take: 8,
+  });
+  
+  const luxeDealIds = luxeDeals.map(d => d.id);
+  const excludedIds = [...hotDealIds, ...luxeDealIds];
+  
+  // 3. Derniers deals (Derniers Ajouts) - en excluant hotDeals ET luxeDeals
+  const latestDeals = await (async () => {
+    // Récupérer tous les marchands actifs
+    const merchants = await prisma.merchant.findMany({
+      where: {
+        products: {
+          some: {
+            deals: {
+              some: {
+                isExpired: false,
+                discountPercent: { gte: 15 },
+                id: { notIn: excludedIds }, // Exclure les deals des autres sections
               },
             },
           },
         },
-      });
-      
-      const totalDeals = 10;
-      const dealsPerMerchant = Math.ceil(totalDeals / Math.max(merchants.length, 1));
-      
-      // Récupérer les derniers deals de chaque marchand
-      const dealsByMerchant = await Promise.all(
-        merchants.map(merchant =>
-          prisma.deal.findMany({
-            where: {
-              isExpired: false,
-              discountPercent: { gte: 15 },
-              product: { merchantId: merchant.id },
-            },
-            include: {
-              product: {
-                include: {
-                  category: true,
-                  merchant: true,
-                },
+      },
+    });
+    
+    const totalDeals = 10;
+    const dealsPerMerchant = Math.ceil(totalDeals / Math.max(merchants.length, 1));
+    
+    // Récupérer les derniers deals de chaque marchand
+    const dealsByMerchant = await Promise.all(
+      merchants.map(merchant =>
+        prisma.deal.findMany({
+          where: {
+            isExpired: false,
+            discountPercent: { gte: 15 },
+            product: { merchantId: merchant.id },
+            id: { notIn: excludedIds }, // Exclure les deals des autres sections
+          },
+          include: {
+            product: {
+              include: {
+                category: true,
+                merchant: true,
               },
             },
-            orderBy: { createdAt: 'desc' },
-            take: dealsPerMerchant,
-          })
-        )
-      );
-      
-      // Mélanger en alternance (round-robin)
-      const mixedDeals: any[] = [];
-      const maxLength = Math.max(...dealsByMerchant.map(d => d.length));
-      
-      for (let i = 0; i < maxLength; i++) {
-        for (const merchantDeals of dealsByMerchant) {
-          if (merchantDeals[i] && mixedDeals.length < totalDeals) {
-            mixedDeals.push(merchantDeals[i]);
-          }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: dealsPerMerchant,
+        })
+      )
+    );
+    
+    // Mélanger en alternance (round-robin)
+    const mixedDeals: any[] = [];
+    const maxLength = Math.max(...dealsByMerchant.map(d => d.length));
+    
+    for (let i = 0; i < maxLength; i++) {
+      for (const merchantDeals of dealsByMerchant) {
+        if (merchantDeals[i] && mixedDeals.length < totalDeals) {
+          mixedDeals.push(merchantDeals[i]);
         }
       }
-      
-      return mixedDeals;
-    })(),
+    }
+    
+    return mixedDeals;
+  })();
+
+  const [stats, dealsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
       prisma.deal.count({ where: { isExpired: false, discountPercent: { gte: 20 } } }),

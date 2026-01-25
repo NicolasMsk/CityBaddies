@@ -1,6 +1,10 @@
 import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -150,11 +150,13 @@ async function main() {
     let totalUpdated = 0;
     let priceChanges = 0;
 
-    // Mettre à jour les existants
+    // Mettre à jour les existants (TOUJOURS mettre à jour lastSeenAt pour tracker les deals actifs)
     for (const product of existingProducts) {
       const existingDeal = (product as any)._existingDeal;
 
-      if (existingDeal && existingDeal.dealPrice !== product.currentPrice) {
+      if (existingDeal) {
+        const priceChanged = existingDeal.dealPrice !== product.currentPrice;
+        
         await prisma.deal.update({
           where: { id: existingDeal.id },
           data: {
@@ -162,10 +164,14 @@ async function main() {
             originalPrice: product.originalPrice || product.currentPrice,
             discountPercent: product.discountPercent || 0,
             discountAmount: (product.originalPrice || product.currentPrice) - product.currentPrice,
+            lastSeenAt: new Date(),
             updatedAt: new Date(),
           }
         });
-        priceChanges++;
+        
+        if (priceChanged) {
+          priceChanges++;
+        }
         totalUpdated++;
       }
     }
@@ -240,6 +246,7 @@ async function main() {
               tags: tagsToString(scoreResult.tags),
               sourceUrl: (product as any).sourceUrl,
               isTrending: (product as any).isTrending || false,
+              lastSeenAt: new Date(),
               type: 'scraped',
             }
           });

@@ -392,6 +392,7 @@ export class ImportEngine {
               isTrending,
               isExpired: false,
               isHot: existingDeal.votes >= 20,
+              lastSeenAt: new Date(),
               updatedAt: new Date(),
             },
           });
@@ -548,6 +549,7 @@ export class ImportEngine {
                 isHot: false,
                 isTrending,
                 isExpired: false,
+                lastSeenAt: new Date(),
                 votes: 0,
                 views: 0,
               },

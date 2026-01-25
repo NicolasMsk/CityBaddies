@@ -153,11 +153,12 @@ async function main() {
     let totalUpdated = 0;
     let priceChanges = 0;
 
-    // Mettre à jour les existants
+    // Mettre à jour les existants (TOUJOURS mettre à jour lastSeenAt pour tracker les deals actifs)
     for (const product of existingProducts) {
       const existingDeal = (product as any)._existingDeal;
 
-      if (existingDeal && existingDeal.dealPrice !== product.currentPrice) {
+      if (existingDeal) {
+        const priceChanged = existingDeal.dealPrice !== product.currentPrice;
         const priceInfo = calculatePricePerUnit(product.currentPrice, product.volume);
         const isTrending = (product as any).isTrending || false;
         
@@ -180,10 +181,14 @@ async function main() {
             score: scoreResult.score,
             tags: tagsToString(scoreResult.tags),
             isTrending,
+            lastSeenAt: new Date(),
             updatedAt: new Date(),
           }
         });
-        priceChanges++;
+        
+        if (priceChanged) {
+          priceChanges++;
+        }
         totalUpdated++;
       }
     }
@@ -258,6 +263,7 @@ async function main() {
               tags: tagsToString(scoreResult.tags),
               sourceUrl: (product as any).sourceUrl,
               isTrending: (product as any).isTrending || false,
+              lastSeenAt: new Date(),
               type: 'scraped',
             }
           });

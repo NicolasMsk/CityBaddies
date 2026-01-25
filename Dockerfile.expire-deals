@@ -1,0 +1,29 @@
+# Dockerfile pour Cloud Run Job - Expire Deals
+FROM node:20-slim
+
+WORKDIR /app
+
+# Installer OpenSSL et les dépendances nécessaires pour Prisma
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY tsconfig.json ./
+
+# Installer les dépendances
+RUN npm ci
+RUN npm install -g tsx
+
+# Générer le client Prisma
+RUN npx prisma generate
+
+# Copier le code source nécessaire (juste le script d'expiration)
+COPY src/scripts/cloud-jobs/expire-deals.ts ./src/scripts/cloud-jobs/
+
+# Variables d'environnement (seront override par Cloud Run)
+ENV NODE_ENV=production
+ENV DAYS_BEFORE_EXPIRATION=3
+
+# Commande d'exécution
+CMD ["npx", "tsx", "src/scripts/cloud-jobs/expire-deals.ts"]

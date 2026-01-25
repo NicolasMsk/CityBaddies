@@ -14,6 +14,7 @@ import PriceChart from '@/components/deals/PriceChart';
 import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';
 import CommentSection from '@/components/comments/CommentSection';
+import DealImage from '@/components/deals/DealImage';
 import { ArrowLeft, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -257,48 +258,11 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           {/* Left Column: Image (5 cols) */}
           <div className="lg:col-span-5 relative">
             <div className="sticky top-12">
-              <div className="relative">
-                {/* Badges - Sharp & Technical */}
-                 <div className="absolute top-0 left-0 z-20">
-                   {deal.discountPercent > 0 && (
-                     <span className="inline-block px-4 py-2 bg-[#9b1515] text-white text-sm font-bold tracking-widest uppercase shadow-xl">
-                        -{deal.discountPercent}%
-                     </span>
-                   )}
-                </div>
-                
-                <div className="relative aspect-[4/5] w-full bg-[#0f0f0f] border border-white/5 group overflow-hidden">
-
-                {deal.product.imageUrl ? (
-                  <Image
-                    src={deal.product.imageUrl}
-                    alt={deal.product.name}
-                    fill
-                    className="object-contain p-8 group-hover:scale-105 transition-transform duration-700 ease-out"
-                    priority
-                    unoptimized={deal.product.imageUrl.includes('sephora.eu') || deal.product.imageUrl.includes('sephora.fr')}
-                    onError={(e) => {
-                      // Hide broken image and show placeholder
-                      const target = e.currentTarget;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'absolute inset-0 flex items-center justify-center bg-[#0f0f0f]';
-                        placeholder.innerHTML = '<span class="text-neutral-600 italic">Image indisponible</span>';
-                        parent.appendChild(placeholder);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-neutral-700 italic">No Imagery</span>
-                  </div>
-                )}
-
-                
-              </div>
-            </div>
+              <DealImage
+                imageUrl={deal.product.imageUrl}
+                productName={deal.product.name}
+                discountPercent={deal.discountPercent}
+              />
               
               {/* Share Actions - Minimal */}
               <div className="mt-6 flex justify-between items-center border-t border-white/10 pt-6">

@@ -1,9 +1,10 @@
 /**
- * Cloud Run Job - Expirer les deals inactifs
- * Exécuté quotidiennement à 7h du matin
+ * Cloud Job: Expire Deals
  * 
- * Supprime les deals qui n'ont pas été vus depuis 3 jours
- * (absents des pages de promotions lors des scrapes)
+ * Ce script analyse les deals affichés sur le site et détecte :
+ * 1. Les deals qui n'ont plus de promo (originalPrice = dealPrice)
+ * 2. Les changements de prix significatifs
+ * 3. Les deals non vus depuis X jours (suppression)
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -11,98 +12,220 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Configuration
-const DAYS_BEFORE_EXPIRATION = parseInt(process.env.DAYS_BEFORE_EXPIRATION || '3');
+const DAYS_BEFORE_DELETION = parseInt(process.env.DAYS_BEFORE_DELETION || '7');
+const PRICE_CHANGE_THRESHOLD = 0.05; // 5% de changement pour être significatif
 
-async function main() {
-  const startTime = Date.now();
-  console.log('🧹 [CLOUD JOB] Nettoyage des deals expirés...');
-  console.log(`📅 Date: ${new Date().toISOString()}`);
-  console.log(`⚙️ Seuil d'expiration: ${DAYS_BEFORE_EXPIRATION} jours`);
-
-  try {
-    // Calculer la date limite (maintenant - 3 jours)
-    const expirationThreshold = new Date();
-    expirationThreshold.setDate(expirationThreshold.getDate() - DAYS_BEFORE_EXPIRATION);
-    
-    console.log(`📆 Suppression des deals non vus depuis: ${expirationThreshold.toISOString()}`);
-
-    // Compter d'abord combien de deals vont être supprimés
-    const dealsToDelete = await prisma.deal.findMany({
-      where: {
-        isExpired: false, // Seulement les deals actifs
-        lastSeenAt: {
-          lt: expirationThreshold, // Non vu depuis 3+ jours
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        lastSeenAt: true,
-        product: {
-          select: {
-            merchant: {
-              select: { name: true },
-            },
-          },
-        },
-      },
-    });
-
-    console.log(`\n🔍 ${dealsToDelete.length} deals à supprimer:`);
-
-    // Afficher un résumé par merchant
-    const byMerchant = new Map<string, number>();
-    for (const deal of dealsToDelete) {
-      const merchant = deal.product?.merchant?.name || 'Inconnu';
-      byMerchant.set(merchant, (byMerchant.get(merchant) || 0) + 1);
-    }
-    
-    Array.from(byMerchant.entries()).forEach(([merchant, count]) => {
-      console.log(`   📦 ${merchant}: ${count} deals`);
-    });
-
-    // Afficher quelques exemples
-    console.log('\n📋 Exemples de deals à supprimer:');
-    dealsToDelete.slice(0, 5).forEach(deal => {
-      console.log(`   ❌ "${deal.title?.substring(0, 50)}..." (lastSeen: ${deal.lastSeenAt?.toISOString()})`);
-    });
-
-    if (dealsToDelete.length === 0) {
-      console.log('\n✅ Aucun deal à supprimer!');
-      process.exit(0);
-    }
-
-    // SUPPRIMER les deals expirés (pas seulement marquer isExpired)
-    // On supprime car on ne veut pas polluer la DB
-    const deleteResult = await prisma.deal.deleteMany({
-      where: {
-        isExpired: false,
-        lastSeenAt: {
-          lt: expirationThreshold,
-        },
-      },
-    });
-
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log('\n' + '='.repeat(50));
-    console.log('📊 RÉSUMÉ NETTOYAGE');
-    console.log('='.repeat(50));
-    console.log(`🗑️ Deals supprimés: ${deleteResult.count}`);
-    console.log(`⏱️ Durée: ${elapsed}s`);
-    console.log(`📅 Terminé: ${new Date().toISOString()}`);
-
-    console.log('\n✅ [CLOUD JOB] Nettoyage terminé!');
-    process.exit(0);
-
-  } catch (error) {
-    console.error('❌ [CLOUD JOB] Erreur fatale:', error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
-  }
+interface DealChange {
+  id: string;
+  name: string;
+  merchant: string;
+  changeType: 'PROMO_ENDED' | 'PRICE_INCREASE' | 'PRICE_DECREASE' | 'NOT_SEEN';
+  oldPrice?: number;
+  newPrice?: number;
+  originalPrice?: number;
 }
 
-main().catch(err => {
-  console.error('❌ [CLOUD JOB] Erreur non gérée:', err);
-  process.exit(1);
-});
+async function main() {
+  console.log('========================================');
+  console.log('   EXPIRE DEALS - Analyse des promos   ');
+  console.log('========================================\n');
+
+  const now = new Date();
+  const deletionThreshold = new Date(now.getTime() - DAYS_BEFORE_DELETION * 24 * 60 * 60 * 1000);
+
+  const changes: DealChange[] = [];
+  
+  // 1. Récupérer tous les deals actifs
+  const activeDeals = await prisma.deal.findMany({
+    include: {
+      product: {
+        include: {
+          merchant: true,
+          priceHistory: {
+            orderBy: { date: 'desc' },
+            take: 2, // Dernier prix et avant-dernier
+          }
+        }
+      }
+    }
+  });
+
+  console.log(`[INFO] ${activeDeals.length} deals actifs trouvés\n`);
+
+  // 2. Analyser chaque deal
+  for (const deal of activeDeals) {
+    const merchantName = deal.product?.merchant?.name || 'Unknown';
+    const dealName = deal.title;
+    
+    // Vérifier si le deal n'a plus de promo (originalPrice = dealPrice)
+    if (deal.originalPrice && deal.dealPrice) {
+      const priceDiff = Math.abs(deal.originalPrice - deal.dealPrice);
+      const isNoLongerOnSale = priceDiff < 0.01; // Moins de 1 centime de différence
+      
+      if (isNoLongerOnSale) {
+        changes.push({
+          id: deal.id,
+          name: dealName,
+          merchant: merchantName,
+          changeType: 'PROMO_ENDED',
+          oldPrice: deal.dealPrice,
+          newPrice: deal.originalPrice,
+          originalPrice: deal.originalPrice,
+        });
+        continue; // Pas besoin d'analyser plus
+      }
+    }
+
+    // Vérifier les changements de prix significatifs via l'historique du produit
+    if (deal.product?.priceHistory && deal.product.priceHistory.length >= 2) {
+      const latestPrice = deal.product.priceHistory[0].price;
+      const previousPrice = deal.product.priceHistory[1].price;
+      
+      if (previousPrice > 0) {
+        const priceChange = (latestPrice - previousPrice) / previousPrice;
+        
+        if (Math.abs(priceChange) >= PRICE_CHANGE_THRESHOLD) {
+          changes.push({
+            id: deal.id,
+            name: dealName,
+            merchant: merchantName,
+            changeType: priceChange > 0 ? 'PRICE_INCREASE' : 'PRICE_DECREASE',
+            oldPrice: previousPrice,
+            newPrice: latestPrice,
+            originalPrice: deal.originalPrice || undefined,
+          });
+        }
+      }
+    }
+
+    // Vérifier si le deal n'a pas été vu depuis longtemps
+    if (deal.lastSeenAt && deal.lastSeenAt < deletionThreshold) {
+      changes.push({
+        id: deal.id,
+        name: dealName,
+        merchant: merchantName,
+        changeType: 'NOT_SEEN',
+      });
+    }
+  }
+
+  // 3. Afficher les résultats
+  console.log('========================================');
+  console.log('        RESULTATS DE L\'ANALYSE         ');
+  console.log('========================================\n');
+
+  // Promos terminées
+  const promoEnded = changes.filter(c => c.changeType === 'PROMO_ENDED');
+  if (promoEnded.length > 0) {
+    console.log(`\n[PROMO TERMINEE] ${promoEnded.length} deal(s) sans promo:\n`);
+    for (const change of promoEnded) {
+      console.log(`  - ${change.merchant} | ${change.name}`);
+      console.log(`    Prix actuel: ${change.newPrice}EUR = Prix original: ${change.originalPrice}EUR (plus de remise)`);
+    }
+  }
+
+  // Augmentations de prix
+  const priceIncreases = changes.filter(c => c.changeType === 'PRICE_INCREASE');
+  if (priceIncreases.length > 0) {
+    console.log(`\n[HAUSSE DE PRIX] ${priceIncreases.length} deal(s) avec augmentation:\n`);
+    for (const change of priceIncreases) {
+      const increase = change.newPrice && change.oldPrice 
+        ? ((change.newPrice - change.oldPrice) / change.oldPrice * 100).toFixed(1) 
+        : '?';
+      console.log(`  - ${change.merchant} | ${change.name}`);
+      console.log(`    ${change.oldPrice}EUR -> ${change.newPrice}EUR (+${increase}%)`);
+    }
+  }
+
+  // Baisses de prix
+  const priceDecreases = changes.filter(c => c.changeType === 'PRICE_DECREASE');
+  if (priceDecreases.length > 0) {
+    console.log(`\n[BAISSE DE PRIX] ${priceDecreases.length} deal(s) avec baisse:\n`);
+    for (const change of priceDecreases) {
+      const decrease = change.newPrice && change.oldPrice 
+        ? ((change.oldPrice - change.newPrice) / change.oldPrice * 100).toFixed(1) 
+        : '?';
+      console.log(`  - ${change.merchant} | ${change.name}`);
+      console.log(`    ${change.oldPrice}EUR -> ${change.newPrice}EUR (-${decrease}%)`);
+    }
+  }
+
+  // Deals non vus
+  const notSeen = changes.filter(c => c.changeType === 'NOT_SEEN');
+  if (notSeen.length > 0) {
+    console.log(`\n[NON VU] ${notSeen.length} deal(s) non vus depuis ${DAYS_BEFORE_DELETION} jours:\n`);
+    for (const change of notSeen) {
+      console.log(`  - ${change.merchant} | ${change.name}`);
+    }
+  }
+
+  // 4. Actions à effectuer
+  console.log('\n========================================');
+  console.log('            ACTIONS                    ');
+  console.log('========================================\n');
+
+  // Marquer comme expiré les deals avec promo terminée
+  if (promoEnded.length > 0) {
+    console.log(`[ACTION] Marquage expire de ${promoEnded.length} deal(s) sans promo...`);
+    await prisma.deal.updateMany({
+      where: {
+        id: { in: promoEnded.map(c => c.id) }
+      },
+      data: {
+        isExpired: true
+      }
+    });
+    console.log(`[OK] ${promoEnded.length} deal(s) sans promo marques comme expires`);
+  }
+
+  // Marquer comme expiré les deals avec hausse de prix significative (promo terminée)
+  if (priceIncreases.length > 0) {
+    console.log(`[ACTION] Marquage expire de ${priceIncreases.length} deal(s) avec hausse de prix (promo terminee)...`);
+    await prisma.deal.updateMany({
+      where: {
+        id: { in: priceIncreases.map(c => c.id) }
+      },
+      data: {
+        isExpired: true
+      }
+    });
+    console.log(`[OK] ${priceIncreases.length} deal(s) avec hausse de prix marques comme expires`);
+  }
+
+  // Marquer comme expiré les deals non vus
+  if (notSeen.length > 0) {
+    console.log(`[ACTION] Marquage expire de ${notSeen.length} deal(s) non vus...`);
+    await prisma.deal.updateMany({
+      where: {
+        id: { in: notSeen.map(c => c.id) }
+      },
+      data: {
+        isExpired: true
+      }
+    });
+    console.log(`[OK] ${notSeen.length} deal(s) non vus marques comme expires`);
+  }
+
+  // Résumé final
+  const totalExpired = promoEnded.length + priceIncreases.length + notSeen.length;
+  console.log('\n========================================');
+  console.log('            RESUME                     ');
+  console.log('========================================');
+  console.log(`  Promos terminees:    ${promoEnded.length}`);
+  console.log(`  Hausses de prix:     ${priceIncreases.length} (expires)`);
+  console.log(`  Baisses de prix:     ${priceDecreases.length} (gardes)`);
+  console.log(`  Non vus (${DAYS_BEFORE_DELETION}j):       ${notSeen.length}`);
+  console.log(`  ----------------------------`);
+  console.log(`  Total expire:        ${totalExpired}`);
+  console.log(`  Deals restants:      ${activeDeals.length - totalExpired}`);
+  console.log('========================================\n');
+}
+
+main()
+  .catch((error) => {
+    console.error('[ERREUR]', error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

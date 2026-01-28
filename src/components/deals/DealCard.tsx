@@ -15,6 +15,7 @@ const getMerchantLogo = (slug: string): string | null => {
   const logoMap: Record<string, string> = {
     'nocibe': '/images/nocibe_logo.png',
     'sephora': '/images/sephora_logo.png',
+    'marionnaud': '/images/marionnaud_logo.png',
   };
   return logoMap[slug] || null;
 };

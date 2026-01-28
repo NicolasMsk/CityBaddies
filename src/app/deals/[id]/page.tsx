@@ -134,7 +134,7 @@ async function getDealData(id: string) {
     where: {
       id: { not: id },
       isExpired: false,
-      discountPercent: { gte: 15 },
+      score: { gte: 50 }, // Score minimum pour les deals similaires
       product: {
         brand: deal.product.brand,
       },
@@ -156,7 +156,7 @@ async function getDealData(id: string) {
     where: {
       id: { not: id, notIn: sameBrandDeals.map(d => d.id) },
       isExpired: false,
-      discountPercent: { gte: 15 },
+      score: { gte: 50 },
       dealPrice: { gte: priceRange.min, lte: priceRange.max },
       product: {
         categoryId: deal.product.categoryId,

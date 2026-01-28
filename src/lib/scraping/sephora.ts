@@ -1,6 +1,18 @@
 /**
- * Sephora Scraper - Version avec Playwright pour contourner les protections
- * Implémente l'interface Scraper pour le Strategy Pattern
+ * =============================================================================
+ * SEPHORA.TS - SCRAPING EN MASSE DES PAGES CATÉGORIES
+ * =============================================================================
+ * 
+ * FONCTION : Parcourir les pages catégories Sephora pour récupérer TOUS les
+ *            produits en promotion (scraping en masse)
+ * 
+ * UTILISÉ PAR : import-sephora.ts, ImportEngine.ts
+ * 
+ * TECHNOLOGIE : Playwright (navigateur headless) - nécessaire car Sephora
+ *               a des protections anti-bot
+ * 
+ * NE PAS CONFONDRE AVEC : sephora-search.ts (recherche d'UN produit spécifique)
+ * =============================================================================
  */
 import { chromium, Browser, Page } from 'playwright';
 import { chromium as playwrightExtra } from 'playwright-extra';

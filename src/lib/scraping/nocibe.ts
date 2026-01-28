@@ -1,7 +1,18 @@
 ﻿/**
- * Nocibé Scraper - Version optimisée avec fetch + cheerio (pas de Playwright)
- * Beaucoup plus rapide car le HTML est rendu côté serveur
- * Implémente l'interface Scraper pour le Strategy Pattern
+ * =============================================================================
+ * NOCIBE.TS - SCRAPING EN MASSE DES PAGES CATÉGORIES
+ * =============================================================================
+ * 
+ * FONCTION : Parcourir les pages catégories Nocibé pour récupérer TOUS les
+ *            produits en promotion (scraping en masse)
+ * 
+ * UTILISÉ PAR : import-nocibe.ts, ImportEngine.ts
+ * 
+ * TECHNOLOGIE : Cheerio + fetch (HTML statique) - possible car Nocibé
+ *               rend le HTML côté serveur (pas de JavaScript nécessaire)
+ * 
+ * NE PAS CONFONDRE AVEC : nocibe-search.ts (recherche d'UN produit spécifique)
+ * =============================================================================
  */
 import * as cheerio from 'cheerio';
 import { Scraper, ScrapedProduct, ScrapingResult, ScraperConfig, DEFAULT_SCRAPER_CONFIG } from './types';

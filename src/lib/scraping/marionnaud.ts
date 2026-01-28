@@ -1,6 +1,18 @@
 /**
- * Marionnaud Scraper - Version optimisée avec fetch + cheerio (pas de Playwright)
- * Implémente l'interface Scraper pour le Strategy Pattern
+ * =============================================================================
+ * MARIONNAUD.TS - SCRAPING EN MASSE DES PAGES CATÉGORIES
+ * =============================================================================
+ * 
+ * FONCTION : Parcourir les pages catégories Marionnaud pour récupérer TOUS les
+ *            produits en promotion (scraping en masse)
+ * 
+ * UTILISÉ PAR : import-marionnaud.ts, ImportEngine.ts
+ * 
+ * TECHNOLOGIE : Cheerio + fetch (HTML statique) - fonctionne car les pages
+ *               catégories Marionnaud rendent le HTML côté serveur
+ * 
+ * NE PAS CONFONDRE AVEC : marionnaud-search.ts (recherche d'UN produit spécifique)
+ * =============================================================================
  */
 import * as cheerio from 'cheerio';
 import { Scraper, ScrapedProduct, ScrapingResult } from './types';
@@ -101,6 +113,9 @@ export class MarionnaudScraper implements Scraper {
   async scrape(url: string, maxProducts: number = 100): Promise<ScrapingResult> {
     const result = await this.scrapeCategoryPage(url, maxProducts);
     
+    // NOTE: Les images HD sont récupérées APRÈS le filtrage des deals valides
+    // via la méthode publique enrichProductsWithHDImages()
+    
     // Convertir MarionnaudProduct -> ScrapedProduct
     const standardProducts: ScrapedProduct[] = result.products.map(p => ({
       name: p.name,
@@ -128,6 +143,100 @@ export class MarionnaudScraper implements Scraper {
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Récupère l'image haute résolution depuis la page produit individuelle
+   * Les pages produits ont des images en 380x380 ou 2000x2000 dans le srcset
+   */
+  private async fetchHDImage(productUrl: string): Promise<string | null> {
+    try {
+      // Extraire le SKU de l'URL (ex: /p/BP_100234912 -> 100234912)
+      const skuMatch = productUrl.match(/\/p\/(?:BP_)?(\d+)/);
+      const sku = skuMatch ? skuMatch[1] : null;
+      
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(productUrl, {
+        headers: getHeaders('https://www.marionnaud.fr/'),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      
+      if (!response.ok) return null;
+      
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // Chercher l'image qui correspond au SKU du produit
+      let hdUrl: string | null = null;
+      
+      $('img[srcset]').each((_, img) => {
+        const $img = $(img);
+        const srcset = $img.attr('srcset') || '';
+        const src = $img.attr('src') || '';
+        
+        // Vérifier si cette image correspond au SKU du produit
+        if (sku && (srcset.includes(sku) || src.includes(sku))) {
+          // Extraire la plus haute résolution du srcset (2000x2000)
+          if (srcset.includes('2000x2000')) {
+            const sources = srcset.split(',').map(s => s.trim());
+            for (const source of sources) {
+              if (source.includes('2000x2000')) {
+                hdUrl = source.split(' ')[0];
+                if (hdUrl.startsWith('//')) hdUrl = 'https:' + hdUrl;
+                return false; // break
+              }
+            }
+          }
+          // Fallback sur src si pas de 2000x2000
+          if (!hdUrl && src.includes('2000x2000')) {
+            hdUrl = src.startsWith('//') ? 'https:' + src : src;
+            return false;
+          }
+        }
+      });
+      
+      return hdUrl;
+    } catch (error) {
+      // Silently fail - on gardera l'image catalogue
+      return null;
+    }
+  }
+
+  /**
+   * Enrichit les produits avec leurs images HD depuis les pages produits
+   * Traite en parallèle par batch pour optimiser le temps
+   * 
+   * @param products - Liste de ScrapedProduct à enrichir (modifiés in-place)
+   */
+  async enrichProductsWithHDImages(products: ScrapedProduct[]): Promise<void> {
+    const BATCH_SIZE = 5; // 5 requêtes en parallèle
+    const DELAY_BETWEEN_BATCHES = 1000; // 1s entre chaque batch
+    
+    console.log(`[Marionnaud] Récupération des images HD pour ${products.length} produits...`);
+    
+    for (let i = 0; i < products.length; i += BATCH_SIZE) {
+      const batch = products.slice(i, i + BATCH_SIZE);
+      
+      await Promise.all(batch.map(async (product: ScrapedProduct) => {
+        const hdImageUrl = await this.fetchHDImage(product.productUrl);
+        if (hdImageUrl) {
+          product.imageUrl = hdImageUrl;
+        }
+      }));
+      
+      // Progress log
+      if ((i + BATCH_SIZE) % 50 === 0 || i + BATCH_SIZE >= products.length) {
+        console.log(`[Marionnaud] ${Math.min(i + BATCH_SIZE, products.length)}/${products.length} images HD récupérées`);
+      }
+      
+      // Delay entre batches pour éviter le rate limiting
+      if (i + BATCH_SIZE < products.length) {
+        await this.delay(DELAY_BETWEEN_BATCHES);
+      }
+    }
   }
 
   private getCategoryFromUrl(url: string): string {
@@ -280,8 +389,12 @@ export class MarionnaudScraper implements Scraper {
           } else if (imageUrl.startsWith('/')) {
             imageUrl = 'https://www.marionnaud.fr' + imageUrl;
           }
-          // Retirer les paramètres de redimensionnement pour avoir la meilleure qualité
+          // Retirer les paramètres de redimensionnement
           imageUrl = imageUrl.replace(/[?&](w|h|width|height)=\d+/gi, '');
+          
+          // Note: Les images Marionnaud catalogue sont en 195x195 pixels
+          // Les images haute résolution (380x380, 2000x2000) existent mais avec des chemins différents
+          // qu'on ne peut pas déduire de l'URL catalogue. On garde donc le 195x195.
         }
 
         // Marque

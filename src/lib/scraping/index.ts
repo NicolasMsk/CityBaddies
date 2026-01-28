@@ -19,12 +19,12 @@ export type { SephoraProduct, SephoraScrapingResult, SephoraConfig } from './sep
 export { MarionnaudScraper } from './marionnaud';
 export type { MarionnaudProduct, MarionnaudScrapingResult, MarionnaudConfig } from './marionnaud';
 
-// Recherche de prix concurrents
-export { searchNocibeProduct, compareWithNocibe } from './nocibe-search';
-export type { NocibeSearchResult } from './nocibe-search';
+// Recherche de prix concurrents (nouveau système modulaire)
+export { searchCompetitorPrice, searchAllCompetitors, closeBrowser } from './competitor-price-search';
+export type { CompetitorSite } from './competitor-price-search';
+export type { CompetitorPriceResult } from './search-utils';
 
-export { searchSephoraProduct, compareWithSephora } from './sephora-search';
-export type { SephoraSearchResult } from './sephora-search';
-
-export { searchMarionnaudProduct, compareWithMarionnaud } from './marionnaud-search';
-export type { MarionnaudSearchResult } from './marionnaud-search';
+// Fonctions spécifiques par site (si besoin d'appeler directement)
+export { searchSephoraPrice } from './sephora-search';
+export { searchNocibePrice } from './nocibe-search';
+export { searchMarionnaudPrice } from './marionnaud-search';

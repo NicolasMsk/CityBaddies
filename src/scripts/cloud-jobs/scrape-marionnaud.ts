@@ -8,7 +8,7 @@
 import { ImportEngine, MarionnaudScraper } from '../../lib/scraping';
 
 // Configuration Cloud Run
-const MAX_PRODUCTS = parseInt(process.env.MAX_PRODUCTS || '500');
+const MAX_PRODUCTS = parseInt(process.env.MAX_PRODUCTS || '5000');
 
 async function main() {
   const startTime = Date.now();

@@ -1,273 +1,198 @@
 /**
- * Recherche de produits Marionnaud pour comparaison de prix
- * Utilise Serper API pour Google Search puis parse HTML
+ * =============================================================================
+ * MARIONNAUD-SEARCH.TS - Recherche de prix sur Marionnaud.fr
+ * =============================================================================
  */
 
-import * as cheerio from 'cheerio';
+import {
+  CompetitorPriceResult,
+  SiteConfig,
+  getBrowser,
+  createStealthPage,
+  closePage,
+  findProductUrl,
+  analyzeScreenshotWithVision,
+  saveScreenshot,
+  closeCookiePopup,
+  simulateHumanBehavior,
+} from './search-utils';
 
-const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
+const SITE_CONFIG: SiteConfig = {
+  domain: 'marionnaud.fr',
+  excludePatterns: ['/recherche', '/search', '/c/', '/b/', '/v/'],
+  productPattern: '/p/'
+};
 
-interface ProductVariant {
-  volume: string;
-  price: number;
-  originalPrice?: number;
-  available: boolean;
-}
-
-export interface MarionnaudSearchResult {
-  found: boolean;
-  productName?: string;
-  productUrl?: string;
-  brand?: string;
-  currentPrice?: number;
-  originalPrice?: number;
-  volume?: string;
-  inStock?: boolean;
-  allVariants?: ProductVariant[];
-  error?: string;
-}
-
-function normalizeVolume(vol: string): number {
-  // Normaliser "100ml", "100 ml", "100ML" -> 100
-  const match = vol?.match(/([\d,.]+)\s*(ml|g|l)/i);
-  if (!match) return 0;
-  let value = parseFloat(match[1].replace(',', '.'));
-  const unit = match[2].toLowerCase();
-  // Convertir L en ml
-  if (unit === 'l') value *= 1000;
-  return Math.round(value);
-}
-
-async function googleSearchMarionnaud(query: string): Promise<string | null> {
-  if (!SERPER_API_KEY) {
-    console.log('[MARIONNAUD] Pas de clé API Serper');
-    return null;
-  }
-
-  try {
-    const response = await fetch('https://google.serper.dev/search', {
-      method: 'POST',
-      headers: {
-        'X-API-KEY': SERPER_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        q: query,
-        gl: 'fr',
-        hl: 'fr',
-        num: 5,
-      }),
-    });
-
-    if (!response.ok) {
-      console.log(`[MARIONNAUD] Erreur Serper: ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    
-    // Trouver le premier résultat Marionnaud
-    for (const result of data.organic || []) {
-      if (result.link?.includes('marionnaud.fr') && 
-          result.link.includes('/p/') && 
-          !result.link.includes('/c/')) {
-        return result.link;
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('[MARIONNAUD] Erreur recherche:', error);
-    return null;
-  }
-}
-
-async function fetchProductPage(url: string): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'fr-FR,fr;q=0.9',
-      },
-    });
-    
-    clearTimeout(timeout);
-    
-    if (!response.ok) {
-      console.log(`[MARIONNAUD] Erreur HTTP ${response.status}`);
-      return null;
-    }
-    
-    return await response.text();
-  } catch (error) {
-    if ((error as Error).name === 'AbortError') {
-      console.log('[MARIONNAUD] Timeout');
-    } else {
-      console.error('[MARIONNAUD] Erreur fetch:', error);
-    }
-    return null;
-  }
-}
-
-export async function searchMarionnaudProduct(
-  productName: string, 
-  targetVolume: string
-): Promise<MarionnaudSearchResult> {
-  console.log(`\n[MARIONNAUD] Recherche: "${productName}" (${targetVolume})`);
+/**
+ * Prend un screenshot de la page produit Marionnaud
+ */
+async function takeScreenshot(url: string, targetVolume?: string): Promise<Buffer | null> {
+  const browser = await getBrowser();
+  const page = await createStealthPage(browser);
   
-  const targetVolumeNum = normalizeVolume(targetVolume);
-  if (targetVolumeNum === 0) {
-    return { found: false, error: 'Volume invalide' };
-  }
-
   try {
-    // 1. Recherche Google
-    const searchQuery = `${productName} ${targetVolume} site:marionnaud.fr`;
-    const productUrl = await googleSearchMarionnaud(searchQuery);
+    console.log(`[SCREENSHOT] Chargement: ${url}`);
     
-    if (!productUrl) {
-      return { found: false, error: 'Produit non trouvé sur Marionnaud' };
-    }
+    await simulateHumanBehavior(page);
     
-    console.log(`[MARIONNAUD] URL trouvée: ${productUrl}`);
-
-    // 2. Récupérer la page produit
-    const html = await fetchProductPage(productUrl);
-    if (!html) {
-      return { found: false, productUrl, error: 'Impossible de charger la page' };
-    }
-
-    // 3. Parser le HTML
-    const $ = cheerio.load(html);
-    const variants: ProductVariant[] = [];
-
-    // Chercher les variantes de taille (sélecteur de volume)
-    // Structure Marionnaud: .product-variant-selector ou boutons de taille
-    $('.product-variant-selector__item, .size-selector__item').each((_, el) => {
-      const $el = $(el);
-      const vol = $el.find('.variant-size, .size-label').text().trim() || 
-                  $el.attr('data-size') || '';
-      
-      const priceText = $el.find('.variant-price, .price').text().trim();
-      const priceMatch = priceText.match(/([\d]+[,.]?[\d]*)\s*€/);
-      const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
-      
-      if (vol && price > 0) {
-        variants.push({ volume: vol, price, available: !$el.hasClass('disabled') });
-      }
+    await page.goto(url, { 
+      waitUntil: 'domcontentloaded',
+      timeout: 30000 
     });
-
-    // Si pas de variantes trouvées, essayer la structure principale
-    if (variants.length === 0) {
-      // Prix principal
-      const priceText = $('.product-detail__price .price__default-value, .pdp-price__current').text().trim();
-      const priceMatch = priceText.match(/([\d]+[,.]?[\d]*)\s*€/);
-      const currentPrice = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
-      
-      // Prix barré
-      const wasPriceText = $('.product-detail__price .price__was, .pdp-price__was').text().trim();
-      const wasMatch = wasPriceText.match(/([\d]+[,.]?[\d]*)\s*€/);
-      const originalPrice = wasMatch ? parseFloat(wasMatch[1].replace(',', '.')) : undefined;
-      
-      // Volume depuis le titre ou l'attribut
-      const sizeText = $('.product-detail__size, .pdp-size').text().trim() ||
-                       $('h1.product-detail__title').text().match(/(\d+(?:[,.]?\d+)?\s*(?:ml|g|L))/i)?.[1] || '';
-
-      if (currentPrice > 0) {
-        variants.push({ 
-          volume: sizeText || targetVolume, 
-          price: currentPrice, 
-          originalPrice,
-          available: true 
-        });
+    
+    await page.waitForTimeout(2000);
+    await closeCookiePopup(page);
+    
+    // Marionnaud: Cliquer sur le bon contenant si targetVolume spécifié
+    if (targetVolume) {
+      try {
+        await page.waitForTimeout(1500);
+        
+        // Normaliser le volume (ex: "50ml" -> "50")
+        const targetNum = targetVolume.replace(/[^\d]/g, '');
+        
+        const slides = page.locator('.product-carousel-variant__size-name');
+        const count = await slides.count();
+        
+        for (let i = 0; i < count; i++) {
+          const slideText = await slides.nth(i).textContent() || '';
+          const slideNum = slideText.replace(/[^\d]/g, '');
+          
+          if (slideNum === targetNum) {
+            console.log(`[MARIONNAUD] Clic sur contenance ${slideText.trim()}...`);
+            await slides.nth(i).click();
+            await page.waitForTimeout(1000);
+            break;
+          }
+        }
+      } catch {
+        console.log(`[MARIONNAUD] Pas de sélecteur de contenance trouvé`);
       }
     }
+    
+    const screenshot = await page.screenshot({ type: 'jpeg', quality: 80 });
+    saveScreenshot(screenshot, 'marionnaud');
+    console.log(`[SCREENSHOT] Capturé (${Math.round(screenshot.length / 1024)}KB)`);
+    
+    return screenshot;
+    
+  } catch (error) {
+    console.error('[SCREENSHOT] Erreur:', error);
+    return null;
+  } finally {
+    await closePage(page);
+  }
+}
 
-    // Extraire marque et nom
-    const brand = $('.product-detail__brand, .pdp-brand').text().trim() || '';
-    const name = $('h1.product-detail__title, h1.pdp-title').text().trim() || '';
-
-    console.log(`[MARIONNAUD] ${brand || name}`);
-    console.log(`[MARIONNAUD] ${variants.length} variante(s)`);
-
-    if (variants.length === 0) {
-      return { found: false, productUrl, error: 'Aucune variante trouvée' };
+/**
+ * Fallback: Extraire le prix directement depuis le HTML
+ */
+async function extractPriceFromHTML(url: string): Promise<number | null> {
+  const browser = await getBrowser();
+  const page = await createStealthPage(browser);
+  
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(2000);
+    
+    const priceSelectors = [
+      '.product-price .current-price',
+      '[data-testid="product-price"]',
+      '.price-current',
+    ];
+    
+    for (const selector of priceSelectors) {
+      try {
+        const element = page.locator(selector).first();
+        if (await element.isVisible({ timeout: 500 }).catch(() => false)) {
+          const text = await element.textContent() || '';
+          const priceMatch = text.match(/(\d+)[,.](\d{2})/);
+          if (priceMatch) {
+            const price = parseFloat(`${priceMatch[1]}.${priceMatch[2]}`);
+            console.log(`[HTML] Prix trouvé via ${selector}: ${price}€`);
+            return price;
+          }
+        }
+      } catch {
+        continue;
+      }
     }
+    
+    return null;
+    
+  } catch (error) {
+    console.error('[HTML] Erreur extraction:', error);
+    return null;
+  } finally {
+    await closePage(page);
+  }
+}
 
-    for (const v of variants) {
-      const marker = normalizeVolume(v.volume) === targetVolumeNum ? '>>>' : '   ';
-      console.log(`${marker} ${v.volume}: ${v.price}€`);
-    }
-
-    // 4. Trouver le volume exact
-    const exactMatch = variants.find(v => normalizeVolume(v.volume) === targetVolumeNum);
-
-    if (!exactMatch) {
+/**
+ * Recherche le prix d'un produit sur Marionnaud
+ */
+export async function searchMarionnaudPrice(
+  searchQuery: string,
+  targetVolume?: string
+): Promise<CompetitorPriceResult> {
+  console.log(`\n[MARIONNAUD] Recherche: "${searchQuery}"${targetVolume ? ` (${targetVolume})` : ''}`);
+  
+  // 1. Trouver l'URL via Google
+  const productUrl = await findProductUrl(searchQuery, SITE_CONFIG);
+  
+  if (!productUrl) {
+    return { found: false, site: 'marionnaud', error: 'Produit non trouvé sur Google' };
+  }
+  
+  // 2. Prendre un screenshot
+  const screenshot = await takeScreenshot(productUrl, targetVolume);
+  
+  if (!screenshot) {
+    return { found: false, site: 'marionnaud', productUrl, error: 'Impossible de charger la page' };
+  }
+  
+  // 3. Analyser avec GPT-4o-mini
+  const analysis = await analyzeScreenshotWithVision(screenshot, 'marionnaud', targetVolume);
+  
+  // 4. Fallback HTML si LLM échoue
+  if (!analysis.currentPrice) {
+    console.log(`[MARIONNAUD] LLM n'a pas trouvé le prix, tentative fallback HTML...`);
+    const htmlPrice = await extractPriceFromHTML(productUrl);
+    
+    if (htmlPrice) {
+      console.log(`[MARIONNAUD] ✓ Fallback HTML: ${htmlPrice}€`);
       return {
-        found: false,
+        found: true,
+        site: 'marionnaud',
         productUrl,
-        productName: `${brand} ${name}`.trim(),
-        brand,
-        allVariants: variants,
-        error: `Volume ${targetVolume} non disponible`,
+        currentPrice: htmlPrice,
+        volume: analysis.volume,
+        rawLLMResponse: analysis.raw
       };
     }
-
-    console.log(`[MARIONNAUD] ✓ ${exactMatch.volume}: ${exactMatch.price}€`);
-
+    
     return {
-      found: true,
-      productName: `${brand} ${name}`.trim(),
+      found: false,
+      site: 'marionnaud',
       productUrl,
-      brand,
-      currentPrice: exactMatch.price,
-      originalPrice: exactMatch.originalPrice,
-      volume: exactMatch.volume,
-      inStock: exactMatch.available,
-      allVariants: variants,
+      productName: analysis.productName,
+      volume: analysis.volume,
+      error: 'Prix non détecté',
+      rawLLMResponse: analysis.raw
     };
-
-  } catch (error) {
-    console.error('[MARIONNAUD] Erreur:', error);
-    return { found: false, error: error instanceof Error ? error.message : 'Erreur' };
   }
-}
-
-export async function compareWithMarionnaud(deal: {
-  title: string;
-  brand?: string;
-  volume: string;
-  dealPrice: number;
-}): Promise<{
-  marionnaudResult: MarionnaudSearchResult;
-  comparison?: {
-    priceDifference: number;
-    percentageDifference: number;
-    cheaperAt: 'source' | 'marionnaud' | 'equal';
-  };
-}> {
-  const searchQuery = deal.brand && !deal.title.toLowerCase().includes(deal.brand.toLowerCase())
-    ? `${deal.brand} ${deal.title}`
-    : deal.title;
-
-  const marionnaudResult = await searchMarionnaudProduct(searchQuery, deal.volume);
-
-  if (!marionnaudResult.found || !marionnaudResult.currentPrice) {
-    return { marionnaudResult };
-  }
-
-  const diff = deal.dealPrice - marionnaudResult.currentPrice;
+  
+  console.log(`[MARIONNAUD] ✓ ${analysis.volume || '?'}: ${analysis.currentPrice}€`);
+  
   return {
-    marionnaudResult,
-    comparison: {
-      priceDifference: Math.round(diff * 100) / 100,
-      percentageDifference: Math.round((diff / marionnaudResult.currentPrice) * 100),
-      cheaperAt: Math.abs(diff) < 0.5 ? 'equal' : diff < 0 ? 'source' : 'marionnaud',
-    },
+    found: true,
+    site: 'marionnaud',
+    productUrl,
+    productName: analysis.productName,
+    currentPrice: analysis.currentPrice,
+    originalPrice: analysis.originalPrice,
+    volume: analysis.volume,
+    inStock: analysis.inStock,
+    rawLLMResponse: analysis.raw
   };
 }

@@ -631,6 +631,69 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="relative z-10 py-24 border-t border-white/5 bg-[#0a0a0a]">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-light text-white mb-4 tracking-tight">
+              QUESTIONS <span className="font-semibold text-[#d4a855]">FRÉQUENTES</span>
+            </h2>
+            <p className="text-neutral-500 text-sm tracking-widest uppercase">Tout ce que tu dois savoir</p>
+          </div>
+
+          <div className="space-y-4">
+            {/*
+              {
+                q: "Comment dénichez-vous ces prix ?",
+                a: "Notre algorithme propriétaire scanne Sephora, Nocibé, Marionnaud et d'autres partenaires 24h/24. Nous comparons les prix catalogues avec les prix remisés en temps réel pour isoler les vraies bonnes affaires des fausses promos."
+              },
+              {
+                q: "Est-ce que je commande chez vous ?",
+                a: "Non, City Baddies est un comparateur intelligent. Nous vous redirigeons directement vers le site officiel du marchand (Sephora, etc.) pour finaliser votre achat en toute sécurité. Vous profitez de leurs garanties et service client."
+              },
+              {
+                q: "Pourquoi City Baddies est gratuit ?",
+                a: "L'accès au site est 100% gratuit. Nous nous rémunérons grâce à l'affiliation : les marques nous versent une petite commission quand vous passez par nos liens, sans que cela ne change le prix pour vous (c'est transparent)."
+              },
+              {
+                q: "À quelle fréquence les deals sont mis à jour ?",
+                a: "En temps réel. Dès qu'un prix change ou qu'un stock s'épuise, notre base de données est mise à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
+              }
+            */}
+            { [
+              {
+                q: "Comment dénichez-vous ces prix ?",
+                a: "Notre algorithme propriétaire scanne Sephora, Nocibé, Marionnaud et d'autres partenaires 24h/24. Nous comparons les prix catalogues avec les prix remisés en temps réel pour isoler les vraies bonnes affaires des fausses promos."
+              },
+              {
+                q: "Est-ce que je commande chez vous ?",
+                a: "Non, City Baddies est un comparateur intelligent. Nous vous redirigeons directement vers le site officiel du marchand (Sephora, etc.) pour finaliser votre achat en toute sécurité. Vous profitez de leurs garanties et service client."
+              },
+              {
+                q: "Pourquoi City Baddies est gratuit ?",
+                a: "L'accès au site est 100% gratuit. Nous nous rémunérons grâce à l'affiliation : les marques nous versent une petite commission quand vous passez par nos liens, sans que cela ne change le prix pour vous (c'est transparent)."
+              },
+              {
+                q: "À quelle fréquence les deals sont mis à jour ?",
+                a: "En temps réel. Dès qu'un prix change ou qu'un stock s'épuise, notre base de données est mise à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
+              }
+            ].map((item, i) => (
+              <div key={i} className="group border border-white/10 bg-white/5 rounded-none overflow-hidden transition-all hover:bg-white/10">
+                <details className="group [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex items-center justify-between p-6 cursor-pointer text-white">
+                    <span className="text-lg font-light tracking-wide">{item.q}</span>
+                    <span className="text-[#d4a855] text-2xl font-light transition-transform duration-300 group-open:rotate-45">+</span>
+                  </summary>
+                  <div className="px-6 pb-6 text-neutral-400 font-light leading-relaxed border-t border-white/5 pt-4">
+                    {item.a}
+                  </div>
+                </details>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Newsletter - Club Privé */}
       <NewsletterSection />
     </div>

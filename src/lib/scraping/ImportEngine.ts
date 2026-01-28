@@ -15,9 +15,6 @@ import { categorizeProductsBatch } from '../ai/categorize';
 import { findOrCreateBrand } from '../brands';
 import { calculatePricePerUnit, findOrCreateVariant } from '../utils/volume';
 import { calculateDealScore, tagsToString } from '../utils/scoring';
-import { searchNocibeProduct } from './nocibe-search';
-import { searchSephoraProduct } from './sephora-search';
-import { searchMarionnaudProduct } from './marionnaud-search';
 
 const prisma = new PrismaClient() as any;
 
@@ -129,6 +126,18 @@ export class ImportEngine {
       return stats;
     }
 
+    // 6.5 Filtrer les produits avec discount suffisant pour être des deals valides
+    const validDeals = productsWithVolume.filter(p => p.discountPercent >= this.options.minDiscountPercent);
+    log(`🏷️ ${validDeals.length} deals valides (discount >= ${this.options.minDiscountPercent}%)`, this.options.verbose);
+
+    // 6.6 Enrichir les images HD pour Marionnaud (uniquement les deals valides)
+    if (scraper.merchantSlug === 'marionnaud' && validDeals.length > 0) {
+      const marionnaudScraper = scraper as any;
+      if (typeof marionnaudScraper.enrichProductsWithHDImages === 'function') {
+        await marionnaudScraper.enrichProductsWithHDImages(validDeals);
+      }
+    }
+
     // 7. Séparer existants vs nouveaux (batch queries)
     const { existing, newProducts } = await this.separateExistingAndNew(productsWithVolume, merchant.id);
     stats.existing = existing.length;
@@ -147,10 +156,7 @@ export class ImportEngine {
       stats.errors.push(...createResult.errors);
     }
 
-    // 10. Enrichir les prix concurrents pour les deals avec score > 0.7
-    await this.enrichCompetitorPrices(merchant.slug);
-
-    // 11. Rapport final
+    // 10. Rapport final
     stats.duration = (Date.now() - startTime) / 1000;
     this.printReport(stats);
 
@@ -588,160 +594,6 @@ export class ImportEngine {
     const brandId = await findOrCreateBrand(brandName);
     this.brandCache.set(brandName, brandId);
     return brandId;
-  }
-
-  // ============================================
-  // ENRICHISSEMENT PRIX CONCURRENTS
-  // ============================================
-
-  /**
-   * Enrichit les prix concurrents pour les deals avec score > 70
-   * Nocibé → cherche sur Sephora et Marionnaud
-   * Sephora → cherche sur Nocibé et Marionnaud
-   * Marionnaud → cherche sur Sephora et Nocibé
-   */
-  private async enrichCompetitorPrices(merchantSlug: string) {
-    log(`\n🔍 Enrichissement des prix concurrents (score >= 70)...`, this.options.verbose);
-
-    // Récupérer les deals récents avec score >= 70 (score en pourcentage)
-    const highScoreDeals = await prisma.deal.findMany({
-      where: {
-        isExpired: false,
-        score: { gte: 70 },
-        product: {
-          merchant: { slug: merchantSlug },
-        },
-      },
-      include: {
-        product: {
-          include: {
-            brandRef: true,
-            merchant: true,
-          },
-        },
-        competitorPrices: true,
-      },
-      take: 50, // Limiter pour éviter trop d'appels API
-    });
-
-    log(`📊 ${highScoreDeals.length} deals avec score >= 70 trouvés`, this.options.verbose);
-
-    if (highScoreDeals.length === 0) return;
-
-    // Définir les concurrents à chercher selon le marchand source
-    const competitorSlugs = this.getCompetitorSlugs(merchantSlug);
-    const competitors = await Promise.all(
-      competitorSlugs.map(slug => prisma.merchant.findUnique({ where: { slug } }))
-    );
-
-    const validCompetitors = competitors.filter(c => c !== null);
-    if (validCompetitors.length === 0) {
-      log(`⚠️ Aucun concurrent trouvé`, this.options.verbose);
-      return;
-    }
-
-    let enriched = 0;
-    let errors = 0;
-
-    for (const deal of highScoreDeals) {
-      for (const competitor of validCompetitors) {
-        try {
-          // Skip si comparaison existe déjà
-          const existingComparison = deal.competitorPrices.find(
-            (c: any) => c.merchantId === competitor.id
-          );
-          if (existingComparison) {
-            log(`  ⏭️ ${deal.product.name.substring(0, 40)} - ${competitor.slug} existe déjà`, this.options.verbose);
-            continue;
-          }
-
-          // Construire la requête de recherche
-          const brandName = deal.product.brandRef?.name || deal.product.brand || '';
-          const productName = deal.product.name;
-          // Volume est sur Deal, pas sur Product !
-          const volume = deal.volume || '';
-          
-          let searchQuery = brandName ? `${brandName} ${productName}` : productName;
-          searchQuery = searchQuery.substring(0, 100); // Limiter la longueur
-
-          if (!volume) {
-            log(`  ⚠️ ${deal.product.name.substring(0, 40)} - pas de volume, skip`, this.options.verbose);
-            continue;
-          }
-
-          log(`\n🔎 Recherche ${competitor.slug}: "${searchQuery}" (${volume})`, this.options.verbose);
-          log(`   Score: ${deal.score} | Prix actuel: ${deal.currentPrice}€`, this.options.verbose);
-
-          // Chercher chez le concurrent selon son slug
-          let competitorResult;
-          switch (competitor.slug) {
-            case 'sephora':
-              competitorResult = await searchSephoraProduct(searchQuery, volume);
-              break;
-            case 'nocibe':
-              competitorResult = await searchNocibeProduct(searchQuery, volume);
-              break;
-            case 'marionnaud':
-              competitorResult = await searchMarionnaudProduct(searchQuery, volume);
-              break;
-            default:
-              log(`  ⚠️ Recherche non supportée pour ${competitor.slug}`, this.options.verbose);
-              continue;
-          }
-
-          // Log détaillé du résultat
-          log(`   Résultat ${competitor.slug}: found=${competitorResult.found}`, this.options.verbose);
-          if (competitorResult.productUrl) {
-            log(`   URL: ${competitorResult.productUrl}`, this.options.verbose);
-          }
-          if (competitorResult.currentPrice) {
-            log(`   Prix: ${competitorResult.currentPrice}€`, this.options.verbose);
-          }
-          if (competitorResult.error) {
-            log(`   Erreur: ${competitorResult.error}`, this.options.verbose);
-          }
-
-          // Si trouvé, créer la comparaison
-          if (competitorResult.found && competitorResult.currentPrice) {
-            await prisma.competitorPrice.create({
-              data: {
-                dealId: deal.id,
-                merchantId: competitor.id,
-                merchantName: competitor.name,
-                productName: competitorResult.productName || productName,
-                productUrl: competitorResult.productUrl || '',
-                currentPrice: competitorResult.currentPrice,
-                originalPrice: competitorResult.originalPrice,
-                volume: competitorResult.volume || volume,
-                inStock: competitorResult.inStock ?? true,
-                lastChecked: new Date(),
-              },
-            });
-            enriched++;
-            log(`  ✅ ENRICHI: ${deal.product.name.substring(0, 50)} → ${competitor.slug}: ${competitorResult.currentPrice}€`, this.options.verbose);
-          } else {
-            log(`  ❌ NON TROUVÉ: ${deal.product.name.substring(0, 50)} sur ${competitor.slug}`, this.options.verbose);
-          }
-
-          // Délai entre recherches pour éviter rate limit
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (err) {
-          errors++;
-          log(`  ❌ Erreur: ${err instanceof Error ? err.message : String(err)}`, this.options.verbose);
-        }
-      }
-    }
-
-    log(`✅ ${enriched} prix concurrents enrichis (${errors} erreurs)`, this.options.verbose);
-  }
-
-  /**
-   * Retourne les slugs des concurrents pour un marchand donné
-   */
-  private getCompetitorSlugs(merchantSlug: string): string[] {
-    const allMerchants = ['sephora', 'nocibe', 'marionnaud'];
-    return allMerchants.filter(slug => slug !== merchantSlug);
   }
 
   // ============================================

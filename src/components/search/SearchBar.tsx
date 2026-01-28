@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Search, X, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -328,11 +327,11 @@ export default function SearchBar({
                   {/* Image */}
                   <div className="relative w-12 h-12 bg-white/5 overflow-hidden flex-shrink-0">
                     {result.imageUrl ? (
-                      <Image
+                      <img
                         src={result.imageUrl}
                         alt={result.title}
-                        fill
-                        className="object-contain p-1"
+                        className="w-full h-full object-contain p-1"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-neutral-600">

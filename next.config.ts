@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'media.marionnaud.fr',
+      },
+      {
+        protocol: 'https',
         hostname: '**.marionnaud.fr',
       },
       {

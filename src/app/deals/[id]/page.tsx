@@ -176,7 +176,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
     "@context": "https://schema.org",
     "@type": "Product",
     name: deal.refinedTitle || deal.title,
-    description: deal.description || `${deal.product.brand || ''} ${deal.product.category?.name || 'Beauté'}`.trim(),
+    description: deal.description || deal.product.description || `${deal.product.brand || ''} ${deal.product.category?.name || 'Beauté'} - Promotion exceptionnelle`.trim(),
     image: deal.product.imageUrl || undefined,
     brand: deal.product.brand ? {
       "@type": "Brand",
@@ -189,13 +189,29 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       url: `${BASE_URL}/deals/${deal.id}`,
       priceCurrency: "EUR",
       price: deal.dealPrice,
-      priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : undefined,
+      priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       availability: deal.isExpired ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
       seller: deal.product.merchant ? {
         "@type": "Organization",
         name: deal.product.merchant.name,
       } : undefined,
+      priceSpecification: {
+        "@type": "PriceSpecification",
+        price: deal.dealPrice,
+        priceCurrency: "EUR",
+        valueAddedTaxIncluded: true,
+      },
     },
+    // Prix de référence (prix barré)
+    ...(deal.originalPrice > deal.dealPrice && {
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        priceType: "https://schema.org/ListPrice",
+        price: deal.originalPrice,
+        priceCurrency: "EUR",
+      },
+    }),
   };
 
   // Schema BreadcrumbList pour la navigation
@@ -244,10 +260,50 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       />
       <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          
+          {/* Breadcrumb Navigation */}
+          <nav aria-label="Fil d'Ariane" className="mb-8">
+            <ol className="flex items-center gap-2 text-[10px] font-medium tracking-[0.15em] uppercase">
+              <li>
+                <Link href="/" className="text-neutral-500 hover:text-white transition-colors">
+                  Accueil
+                </Link>
+              </li>
+              <li className="text-neutral-600">/</li>
+              <li>
+                <Link href="/deals" className="text-neutral-500 hover:text-white transition-colors">
+                  Deals
+                </Link>
+              </li>
+              <li className="text-neutral-600">/</li>
+              <li>
+                <Link 
+                  href={`/categories/${deal.product.category?.slug || ''}`} 
+                  className="text-neutral-500 hover:text-white transition-colors"
+                >
+                  {deal.product.category?.name || 'Catégorie'}
+                </Link>
+              </li>
+              {deal.product.brand && (
+                <>
+                  <li className="text-neutral-600">/</li>
+                  <li>
+                    <Link 
+                      href={`/deals?brand=${encodeURIComponent(deal.product.brand)}`} 
+                      className="text-[#d4a855] hover:text-white transition-colors"
+                    >
+                      {deal.product.brand}
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ol>
+          </nav>
+
           {/* Back Link - Editorial Style */}
           <Link
             href="/deals"
-            className="group inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 hover:text-white transition-colors mb-16"
+            className="group inline-flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 hover:text-white transition-colors mb-12"
           >
           <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
           Retour à la collection
@@ -526,6 +582,29 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   </h3>
                   <div className="prose prose-invert max-w-none prose-p:font-light prose-p:text-neutral-400 prose-p:leading-relaxed">
                     <p>{deal.product.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Brand Section */}
+              {deal.product.brand && (
+                <div className="border-t border-white/10 pt-12">
+                  <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-6">
+                    À Propos de la Marque
+                  </h3>
+                  <div className="flex items-center justify-between p-6 bg-[#111111] rounded-lg border border-white/5">
+                    <div>
+                      <p className="text-xl font-light text-white mb-2">{deal.product.brand}</p>
+                      <p className="text-sm text-neutral-500">
+                        Découvrez tous les deals {deal.product.brand} disponibles
+                      </p>
+                    </div>
+                    <Link
+                      href={`/deals?brand=${encodeURIComponent(deal.product.brand)}`}
+                      className="px-6 py-3 border border-[#d4a855]/30 text-[#d4a855] text-xs font-bold tracking-[0.15em] uppercase hover:bg-[#d4a855] hover:text-black transition-all"
+                    >
+                      Voir les deals {deal.product.brand}
+                    </Link>
                   </div>
                 </div>
               )}

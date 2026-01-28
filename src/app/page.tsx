@@ -6,6 +6,7 @@ import DealCard from '@/components/deals/DealCard';
 import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
+import { AIAssistant } from '@/components/ai';
 import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
@@ -333,6 +334,13 @@ export default async function HomePage() {
               </>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* AI Shopping Assistant */}
+      <section className="relative z-10 py-16 md:py-20 bg-gradient-to-b from-transparent via-[#0a0a0a]/50 to-transparent">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AIAssistant />
         </div>
       </section>
 

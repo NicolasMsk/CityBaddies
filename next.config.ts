@@ -13,19 +13,23 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.sephora.fr',
+        hostname: '**.sephora.fr',
       },
       {
         protocol: 'https',
-        hostname: '*.nocibe.fr',
+        hostname: 'media.nocibe.fr',
       },
       {
         protocol: 'https',
-        hostname: '*.marionnaud.fr',
+        hostname: '**.nocibe.fr',
       },
       {
         protocol: 'https',
-        hostname: '*.amazon.fr',
+        hostname: '**.marionnaud.fr',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazon.fr',
       },
       {
         protocol: 'https',
@@ -33,7 +37,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.googleusercontent.com',
+        hostname: '**.googleusercontent.com',
       },
     ],
   },

@@ -119,12 +119,45 @@ async function getDealData(id: string) {
     data: { views: { increment: 1 } },
   });
 
-  // Récupérer des deals similaires
-  const similarDeals = await prisma.deal.findMany({
+  // Récupérer des deals similaires avec un meilleur algorithme
+  // Priorité 1: Même marque + même catégorie
+  // Priorité 2: Même catégorie + gamme de prix similaire
+  // Priorité 3: Même catégorie
+  
+  const priceRange = {
+    min: deal.dealPrice * 0.5,
+    max: deal.dealPrice * 1.5,
+  };
+
+  // D'abord chercher les deals de la même marque
+  const sameBrandDeals = deal.product.brand ? await prisma.deal.findMany({
     where: {
       id: { not: id },
       isExpired: false,
-      discountPercent: { gte: 20 }, // Minimum 20% de réduction
+      discountPercent: { gte: 15 },
+      product: {
+        brand: deal.product.brand,
+      },
+    },
+    include: {
+      product: {
+        include: {
+          category: true,
+          merchant: true,
+        },
+      },
+    },
+    orderBy: { score: 'desc' },
+    take: 3,
+  }) : [];
+
+  // Ensuite compléter avec la même catégorie + gamme de prix
+  const sameCategoryDeals = await prisma.deal.findMany({
+    where: {
+      id: { not: id, notIn: sameBrandDeals.map(d => d.id) },
+      isExpired: false,
+      discountPercent: { gte: 15 },
+      dealPrice: { gte: priceRange.min, lte: priceRange.max },
       product: {
         categoryId: deal.product.categoryId,
       },
@@ -137,8 +170,12 @@ async function getDealData(id: string) {
         },
       },
     },
-    take: 3,
+    orderBy: { score: 'desc' },
+    take: 6 - sameBrandDeals.length,
   });
+
+  // Combiner les résultats (max 6)
+  const similarDeals = [...sameBrandDeals, ...sameCategoryDeals].slice(0, 6);
 
   // Calculer les stats de prix
   const prices = deal.product.priceHistory.map((ph: { price: number }) => ph.price);

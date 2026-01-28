@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DealCard from '@/components/deals/DealCard';
 import DealFilters, { FilterState } from '@/components/deals/DealFilters';
 import { Deal, Category } from '@/types';
@@ -73,13 +74,19 @@ export default function DealsPage() {
     };
   }, [searchParams]);
 
+  // Lire la page depuis l'URL
+  const getPageFromURL = useCallback(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? parseInt(pageParam, 10) : 1;
+  }, [searchParams]);
+
   const [filters, setFilters] = useState<FilterState>(getFiltersFromURL);
 
-  // Synchroniser les filtres avec l'URL quand elle change
+  // Synchroniser les filtres et la page avec l'URL quand elle change
   useEffect(() => {
     setFilters(getFiltersFromURL());
-    setPagination(prev => ({ ...prev, page: 1 }));
-  }, [searchParams, getFiltersFromURL]);
+    setPagination(prev => ({ ...prev, page: getPageFromURL() }));
+  }, [searchParams, getFiltersFromURL, getPageFromURL]);
 
   // Charger les catégories et marchands
   useEffect(() => {
@@ -177,7 +184,31 @@ export default function DealsPage() {
     window.history.replaceState({}, '', `/deals${queryString ? `?${queryString}` : ''}`);
   };
 
+  // Générer l'URL pour une page donnée (SEO-friendly)
+  const getPageUrl = useCallback((page: number): string => {
+    const params = new URLSearchParams();
+    if (filters.categories.length > 0) params.set('categories', filters.categories.join(','));
+    if (filters.subcategories.length > 0) params.set('subcategories', filters.subcategories.join(','));
+    if (filters.subsubcategories.length > 0) params.set('subsubcategories', filters.subsubcategories.join(','));
+    if (filters.merchants.length > 0) params.set('merchants', filters.merchants.join(','));
+    if (filters.brands.length > 0) params.set('brands', filters.brands.join(','));
+    if (filters.tags.length > 0) params.set('tags', filters.tags.join(','));
+    if (filters.minPrice !== undefined) params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice !== undefined) params.set('maxPrice', filters.maxPrice.toString());
+    if (filters.search) params.set('search', filters.search);
+    if (filters.sortBy !== 'createdAt') params.set('sortBy', filters.sortBy);
+    if (filters.sortOrder !== 'desc') params.set('sortOrder', filters.sortOrder);
+    if (filters.hotOnly) params.set('hotOnly', 'true');
+    if (page > 1) params.set('page', page.toString());
+    
+    const queryString = params.toString();
+    return `/deals${queryString ? `?${queryString}` : ''}`;
+  }, [filters]);
+
   const handlePageChange = (newPage: number) => {
+    // Mettre à jour l'URL avec le nouveau numéro de page
+    const url = getPageUrl(newPage);
+    window.history.pushState({}, '', url);
     setPagination(prev => ({ ...prev, page: newPage }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -235,24 +266,27 @@ export default function DealsPage() {
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* Pagination SEO-friendly avec vrais liens */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-12">
-                {/* Previous Button */}
-                <button
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1}
-                  className={`flex items-center gap-1 px-4 py-2 rounded-xl transition-all ${
-                    pagination.page === 1
-                      ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                      : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
-                  }`}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Précédent
-                </button>
+              <nav aria-label="Pagination des deals" className="flex items-center justify-center gap-2 mt-12">
+                {/* Previous Link */}
+                {pagination.page > 1 ? (
+                  <Link
+                    href={getPageUrl(pagination.page - 1)}
+                    onClick={(e) => { e.preventDefault(); handlePageChange(pagination.page - 1); }}
+                    className="flex items-center gap-1 px-4 py-2 rounded-xl transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Précédent
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/5 text-white/20 cursor-not-allowed">
+                    <ChevronLeft className="h-4 w-4" />
+                    Précédent
+                  </span>
+                )}
 
-                {/* Page Numbers */}
+                {/* Page Numbers as Links */}
                 <div className="flex items-center gap-1">
                   {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
                     .filter(page => {
@@ -260,7 +294,7 @@ export default function DealsPage() {
                       return (
                         page === 1 ||
                         page === pagination.totalPages ||
-                        Math.abs(page - pagination.page) <= 1
+                        Math.abs(page - pagination.page) <= 2
                       );
                     })
                     .map((page, index, array) => {
@@ -273,35 +307,44 @@ export default function DealsPage() {
                           {showEllipsis && (
                             <span className="px-2 text-white/30">...</span>
                           )}
-                          <button
-                            onClick={() => handlePageChange(page)}
-                            className={`w-10 h-10 rounded-xl font-medium transition-all ${
-                              page === pagination.page
-                                ? 'bg-[#7b0a0a] text-white'
-                                : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
-                            }`}
-                          >
-                            {page}
-                          </button>
+                          {page === pagination.page ? (
+                            <span
+                              aria-current="page"
+                              className="w-10 h-10 rounded-xl font-medium flex items-center justify-center bg-[#7b0a0a] text-white"
+                            >
+                              {page}
+                            </span>
+                          ) : (
+                            <Link
+                              href={getPageUrl(page)}
+                              onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                              className="w-10 h-10 rounded-xl font-medium flex items-center justify-center transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
+                            >
+                              {page}
+                            </Link>
+                          )}
                         </div>
                       );
                     })}
                 </div>
 
-                {/* Next Button */}
-                <button
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.totalPages}
-                  className={`flex items-center gap-1 px-4 py-2 rounded-xl transition-all ${
-                    pagination.page === pagination.totalPages
-                      ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                      : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
-                  }`}
-                >
-                  Suivant
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+                {/* Next Link */}
+                {pagination.page < pagination.totalPages ? (
+                  <Link
+                    href={getPageUrl(pagination.page + 1)}
+                    onClick={(e) => { e.preventDefault(); handlePageChange(pagination.page + 1); }}
+                    className="flex items-center gap-1 px-4 py-2 rounded-xl transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
+                  >
+                    Suivant
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/5 text-white/20 cursor-not-allowed">
+                    Suivant
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                )}
+              </nav>
             )}
           </>
         ) : (

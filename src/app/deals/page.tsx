@@ -13,6 +13,11 @@ interface Merchant {
   slug: string;
 }
 
+interface Brand {
+  name: string;
+  slug: string;
+}
+
 interface Pagination {
   page: number;
   limit: number;
@@ -31,6 +36,7 @@ export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -45,6 +51,7 @@ export default function DealsPage() {
     const subcategoriesFromUrl = parseArrayParam(searchParams.get('subcategories'));
     const subsubcategoriesFromUrl = parseArrayParam(searchParams.get('subsubcategories'));
     const merchantsFromUrl = parseArrayParam(searchParams.get('merchants'));
+    const brandsFromUrl = parseArrayParam(searchParams.get('brands'));
     const tagsFromUrl = parseArrayParam(searchParams.get('tags'));
     
     return {
@@ -55,6 +62,7 @@ export default function DealsPage() {
       subsubcategories: subsubcategoriesFromUrl,
       merchants: merchantsFromUrl.length > 0 ? merchantsFromUrl :
                  (searchParams.get('merchant') ? [searchParams.get('merchant')!] : []),
+      brands: brandsFromUrl,
       tags: tagsFromUrl,
       minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
       maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
@@ -76,9 +84,10 @@ export default function DealsPage() {
   // Charger les catégories et marchands
   useEffect(() => {
     async function loadFilters() {
-      const [catRes, merchantRes] = await Promise.all([
+      const [catRes, merchantRes, brandsRes] = await Promise.all([
         fetch('/api/categories'),
         fetch('/api/merchants'),
+        fetch('/api/brands'),
       ]);
       
       if (catRes.ok) {
@@ -89,6 +98,11 @@ export default function DealsPage() {
       if (merchantRes.ok) {
         const merchants = await merchantRes.json();
         setMerchants(merchants);
+      }
+      
+      if (brandsRes.ok) {
+        const brands = await brandsRes.json();
+        setBrands(brands);
       }
     }
     
@@ -107,6 +121,7 @@ export default function DealsPage() {
       if (filters.subcategories.length > 0) params.set('subcategories', filters.subcategories.join(','));
       if (filters.subsubcategories.length > 0) params.set('subsubcategories', filters.subsubcategories.join(','));
       if (filters.merchants.length > 0) params.set('merchants', filters.merchants.join(','));
+      if (filters.brands.length > 0) params.set('brands', filters.brands.join(','));
       if (filters.tags.length > 0) params.set('tags', filters.tags.join(','));
       
       // Prix
@@ -149,6 +164,7 @@ export default function DealsPage() {
     if (newFilters.subcategories.length > 0) params.set('subcategories', newFilters.subcategories.join(','));
     if (newFilters.subsubcategories.length > 0) params.set('subsubcategories', newFilters.subsubcategories.join(','));
     if (newFilters.merchants.length > 0) params.set('merchants', newFilters.merchants.join(','));
+    if (newFilters.brands.length > 0) params.set('brands', newFilters.brands.join(','));
     if (newFilters.tags.length > 0) params.set('tags', newFilters.tags.join(','));
     if (newFilters.minPrice !== undefined) params.set('minPrice', newFilters.minPrice.toString());
     if (newFilters.maxPrice !== undefined) params.set('maxPrice', newFilters.maxPrice.toString());
@@ -195,6 +211,7 @@ export default function DealsPage() {
         <DealFilters
           categories={categories}
           merchants={merchants}
+          brands={brands}
           onFilterChange={handleFilterChange}
           currentFilters={filters}
         />

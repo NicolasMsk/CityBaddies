@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const subcategories = searchParams.get('subcategories')?.split(',').filter(Boolean) || [];
     const subsubcategories = searchParams.get('subsubcategories')?.split(',').filter(Boolean) || [];
     const merchants = searchParams.get('merchants')?.split(',').filter(Boolean) || [];
+    const brands = searchParams.get('brands')?.split(',').filter(Boolean) || [];
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
     
     // Filtres simples (rétro-compatibilité)
@@ -67,6 +68,10 @@ export async function GET(request: Request) {
     
     if (merchantFilter.length > 0) {
       productFilter.merchant = { slug: { in: merchantFilter } };
+    }
+    
+    if (brands.length > 0) {
+      productFilter.brand = { in: brands };
     }
 
     if (Object.keys(productFilter).length > 0) {

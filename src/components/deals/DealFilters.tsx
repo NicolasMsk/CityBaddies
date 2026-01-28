@@ -6,10 +6,12 @@ import { SortAsc, X, ChevronDown, Flame, Tag, Store, Check, Search, SlidersHoriz
 import CategoryIcon from '@/components/ui/CategoryIcon';
 
 interface SimpleMerchant { id: string; name: string; slug: string; }
+interface SimpleBrand { name: string; slug: string; }
 
 interface DealFiltersProps {
   categories: Category[];
   merchants: SimpleMerchant[];
+  brands: SimpleBrand[];
   onFilterChange: (filters: FilterState) => void;
   currentFilters: FilterState;
 }
@@ -19,6 +21,7 @@ export interface FilterState {
   subcategories: string[];
   subsubcategories: string[];
   merchants: string[];
+  brands: string[];
   tags: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -313,7 +316,7 @@ function PriceRangeInput({ minPrice, maxPrice, onMinChange, onMaxChange }: { min
   );
 }
 
-export default function DealFilters({ categories, merchants, onFilterChange, currentFilters }: DealFiltersProps) {
+export default function DealFilters({ categories, merchants, brands, onFilterChange, currentFilters }: DealFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(currentFilters.search || '');
 
@@ -341,15 +344,16 @@ export default function DealFilters({ categories, merchants, onFilterChange, cur
 
   const clearFilters = () => {
     setSearchValue('');
-    onFilterChange({ categories: [], subcategories: [], subsubcategories: [], merchants: [], tags: [], minPrice: undefined, maxPrice: undefined, search: '', sortBy: 'createdAt', sortOrder: 'desc', hotOnly: false });
+    onFilterChange({ categories: [], subcategories: [], subsubcategories: [], merchants: [], brands: [], tags: [], minPrice: undefined, maxPrice: undefined, search: '', sortBy: 'createdAt', sortOrder: 'desc', hotOnly: false });
   };
 
-  const activeFilterCount = currentFilters.categories.length + currentFilters.subcategories.length + currentFilters.subsubcategories.length + currentFilters.merchants.length + currentFilters.tags.length + (currentFilters.minPrice !== undefined ? 1 : 0) + (currentFilters.maxPrice !== undefined ? 1 : 0) + (currentFilters.hotOnly ? 1 : 0) + (currentFilters.search ? 1 : 0);
+  const activeFilterCount = currentFilters.categories.length + currentFilters.subcategories.length + currentFilters.subsubcategories.length + currentFilters.merchants.length + currentFilters.brands.length + currentFilters.tags.length + (currentFilters.minPrice !== undefined ? 1 : 0) + (currentFilters.maxPrice !== undefined ? 1 : 0) + (currentFilters.hotOnly ? 1 : 0) + (currentFilters.search ? 1 : 0);
 
   const categoryOptions = categories.map((cat) => ({ value: cat.slug, label: cat.name, icon: cat.icon || 'Circle', count: cat._count?.products || 0 }));
   const subcategoryOptions = currentFilters.categories.flatMap(cat => (SUBCATEGORIES[cat] || []).map(sub => ({ value: sub.slug, label: sub.name })));
   const subsubcategoryOptions = currentFilters.subcategories.flatMap(sub => (SUBSUBCATEGORIES[sub] || []).map(subsub => ({ value: subsub.slug, label: subsub.name })));
   const merchantOptions = merchants.map((m) => ({ value: m.slug, label: m.name }));
+  const brandOptions = brands.map((b) => ({ value: b.name, label: b.name }));
   const tagOptions = TAG_OPTIONS.map(t => ({ value: t.value, label: t.label }));
 
   const getActiveFilterChips = () => {
@@ -359,6 +363,7 @@ export default function DealFilters({ categories, merchants, onFilterChange, cur
     currentFilters.subcategories.forEach(sub => { const subObj = subcategoryOptions.find(s => s.value === sub); chips.push({ key: `sub-${sub}`, label: subObj?.label || sub, onRemove: () => handleChange('subcategories', currentFilters.subcategories.filter(s => s !== sub)), variant: 'default' }); });
     currentFilters.subsubcategories.forEach(subsub => { const subsubObj = subsubcategoryOptions.find(s => s.value === subsub); chips.push({ key: `subsub-${subsub}`, label: subsubObj?.label || subsub, onRemove: () => handleChange('subsubcategories', currentFilters.subsubcategories.filter(s => s !== subsub)), variant: 'default' }); });
     currentFilters.merchants.forEach(merchant => { const merchantObj = merchants.find(m => m.slug === merchant); chips.push({ key: `merchant-${merchant}`, label: merchantObj?.name || merchant, onRemove: () => handleChange('merchants', currentFilters.merchants.filter(m => m !== merchant)), variant: 'default' }); });
+    currentFilters.brands.forEach(brand => { chips.push({ key: `brand-${brand}`, label: brand, onRemove: () => handleChange('brands', currentFilters.brands.filter(b => b !== brand)), variant: 'default' }); });
     currentFilters.tags.forEach(tag => { const tagObj = TAG_OPTIONS.find(t => t.value === tag); chips.push({ key: `tag-${tag}`, label: tagObj?.label || tag, onRemove: () => handleChange('tags', currentFilters.tags.filter(t => t !== tag)), variant: 'default' }); });
     if (currentFilters.minPrice !== undefined || currentFilters.maxPrice !== undefined) chips.push({ key: 'price', label: `${currentFilters.minPrice ?? 0}€ - ${currentFilters.maxPrice ?? '∞'}€`, onRemove: () => onFilterChange({ ...currentFilters, minPrice: undefined, maxPrice: undefined }), variant: 'price' });
     if (currentFilters.search) chips.push({ key: 'search', label: `"${currentFilters.search}"`, onRemove: () => { setSearchValue(''); handleChange('search', ''); }, variant: 'default' });
@@ -452,6 +457,14 @@ export default function DealFilters({ categories, merchants, onFilterChange, cur
                 options={merchantOptions}
                 onChange={(v) => handleChange('merchants', v)}
                 placeholder="MARCHANDS"
+              />
+
+              <MultiSelectDropdown
+                icon={Tag}
+                values={currentFilters.brands}
+                options={brandOptions}
+                onChange={(v) => handleChange('brands', v)}
+                placeholder="MARQUES"
               />
 
               <MultiSelectDropdown

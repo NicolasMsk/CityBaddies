@@ -78,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const deals = await prisma.deal.findMany({
     where: {
       isExpired: false,
-      discountPercent: { gte: 15 },
+      score: { gte: 50 },
     },
     select: {
       id: true,

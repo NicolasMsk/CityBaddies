@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const deals = await prisma.deal.findMany({
       where: {
         isExpired: false,
-        discountPercent: { gte: 15 },
+        score: { gte: 50 },
         OR: [
           // Recherche dans le titre du deal
           { title: { contains: searchQuery } },

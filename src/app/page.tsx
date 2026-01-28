@@ -48,7 +48,7 @@ async function getHomeData() {
           deals: {
             where: {
               isExpired: false,
-              discountPercent: { gte: 20 },
+              score: { gte: 60 },
             },
           },
         },
@@ -80,7 +80,7 @@ async function getHomeData() {
   const hotDeals = await prisma.deal.findMany({
     where: { 
       isExpired: false,
-      discountPercent: { gte: 20 },
+      score: { gte: 60 },
     },
     include: {
       product: {
@@ -103,7 +103,7 @@ async function getHomeData() {
   const luxeDeals = await prisma.deal.findMany({
     where: { 
       isExpired: false,
-      discountPercent: { gte: 20 },
+      score: { gte: 60 },
       brandTier: 1,
       id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
     },
@@ -135,7 +135,7 @@ async function getHomeData() {
             deals: {
               some: {
                 isExpired: false,
-                discountPercent: { gte: 15 },
+                score: { gte: 50 },
                 id: { notIn: excludedIds }, // Exclure les deals des autres sections
               },
             },
@@ -153,7 +153,7 @@ async function getHomeData() {
         prisma.deal.findMany({
           where: {
             isExpired: false,
-            discountPercent: { gte: 15 },
+            score: { gte: 50 },
             product: { merchantId: merchant.id },
             id: { notIn: excludedIds }, // Exclure les deals des autres sections
           },
@@ -189,7 +189,7 @@ async function getHomeData() {
   const [stats, dealsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
-      prisma.deal.count({ where: { isExpired: false, discountPercent: { gte: 20 } } }),
+      prisma.deal.count({ where: { isExpired: false, score: { gte: 60 } } }),
       prisma.product.count(),
       prisma.merchant.count(),
     ]),
@@ -209,7 +209,7 @@ async function getHomeData() {
             deals: {
               some: {
                 isExpired: false,
-                discountPercent: { gte: 20 },
+                score: { gte: 60 },
               },
             },
           },

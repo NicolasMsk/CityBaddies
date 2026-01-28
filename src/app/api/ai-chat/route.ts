@@ -146,7 +146,7 @@ async function executeSearchDeals(params: {
 }) {
   const where: any = {
     isExpired: false,
-    discountPercent: { gte: 15 }, // Réduction du seuil pour plus de résultats
+    score: { gte: 50 }, // Filtrage par score de qualité du deal
   };
 
   const productFilter: any = {};
@@ -216,7 +216,7 @@ async function executeSearchDeals(params: {
   if (deals.length === 0 && params.searchTerms && params.categories && params.categories.length > 0) {
     const fallbackWhere: any = {
       isExpired: false,
-      discountPercent: { gte: 10 },
+      score: { gte: 40 }, // Score plus bas pour le fallback
       product: {
         category: { slug: { in: params.categories } },
       },

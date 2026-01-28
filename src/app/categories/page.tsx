@@ -38,7 +38,7 @@ async function getCategories() {
           deals: {
             where: {
               isExpired: false,
-              discountPercent: { gte: 20 },
+              score: { gte: 60 },
             },
           },
         },

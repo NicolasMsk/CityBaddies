@@ -512,6 +512,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   const slug = name.toLowerCase();
                   if (slug.includes('nocib')) return '/images/nocibe_logo.png';
                   if (slug.includes('sephora')) return '/images/sephora_logo.png';
+                  if (slug.includes('marionnaud')) return '/images/logo_marrionaud.png';
                   return null;
                 };
 

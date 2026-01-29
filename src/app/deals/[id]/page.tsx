@@ -35,12 +35,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     },
   });
 
+  // Deal non trouvé
   if (!deal) {
     return {
       title: "Deal non trouvé",
       description: "Ce deal n'existe pas ou a expiré.",
+      robots: { index: false, follow: false },
     };
   }
+
+  // Deal inactif ou expiré - ne pas indexer
+  const shouldIndex = deal.isActive && !deal.isExpired;
 
   const productName = deal.refinedTitle || deal.title;
   const brandName = deal.product.brand || '';
@@ -54,6 +59,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
+    // Ne pas indexer les deals inactifs/expirés
+    robots: shouldIndex ? { index: true, follow: true } : { index: false, follow: true },
     keywords: [
       productName,
       brandName,
@@ -111,7 +118,9 @@ async function getDealData(id: string) {
     },
   });
 
-  if (!deal) return null;
+  // Deal non trouvé OU deal inactif = 404
+  // Les deals inactifs ne doivent pas être accessibles pour éviter les problèmes SEO
+  if (!deal || !deal.isActive) return null;
 
   // Incrémenter les vues
   await prisma.deal.update({

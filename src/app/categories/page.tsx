@@ -37,8 +37,7 @@ async function getCategories() {
         include: {
           deals: {
             where: {
-              isExpired: false,
-              score: { gte: 60 },
+              isActive: true,
             },
           },
         },

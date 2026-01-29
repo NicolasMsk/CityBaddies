@@ -31,8 +31,7 @@ export async function GET(request: Request) {
 
     // Construire les filtres
     const where: any = {
-      isExpired: false,
-      score: { gte: 60 }, // Score minimum de 60/100 pour garantir la qualité
+      isActive: true, // Deals actifs uniquement
     };
 
     if (hotOnly) {

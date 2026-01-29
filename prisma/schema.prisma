@@ -229,6 +229,7 @@ model Deal {
   endDate         DateTime?
   isHot           Boolean    @default(false) // Validé par la communauté (votes >= 20)
   isExpired       Boolean    @default(false)
+  isActive        Boolean    @default(false) // Deal actif (score >= 60, non expiré, visible sur le site)
   isTrending      Boolean    @default(false) // Produit tendance réseaux sociaux
   lastSeenAt      DateTime   @default(now()) // Dernière fois que le deal a été vu en scraping
   votes           Int        @default(0)
@@ -251,6 +252,7 @@ model Deal {
   @@index([productId])
   @@index([variantId])
   @@index([isExpired])
+  @@index([isActive])
   @@index([isHot])
   @@index([brandTier])
   @@index([pricePerUnit])
@@ -261,11 +263,12 @@ model Deal {
   @@index([lastSeenAt])                    // Pour le job d'expiration
   
   // Index composites pour requêtes fréquentes
-  @@index([isExpired, score])              // Deals actifs triés par score
-  @@index([isExpired, brandTier, score])   // Deals actifs par tier de marque
-  @@index([isExpired, pricePerUnit])       // Deals actifs triés par prix/unité
-  @@index([productId, isExpired])          // Deals actifs d'un produit
-  @@index([isExpired, lastSeenAt])         // Deals actifs par dernière vue
+  @@index([isActive, score])               // Deals actifs triés par score
+  @@index([isActive, brandTier, score])    // Deals actifs par tier de marque
+  @@index([isActive, pricePerUnit])        // Deals actifs triés par prix/unité
+  @@index([productId, isActive])           // Deals actifs d'un produit
+  @@index([isActive, lastSeenAt])          // Deals actifs par dernière vue
+  @@index([isExpired, score])              // Legacy - sera supprimé
 }
 
 // Alertes de prix pour les utilisateurs

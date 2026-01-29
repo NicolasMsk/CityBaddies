@@ -48,14 +48,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Récupérer les catégories actives
+  // Récupérer les catégories actives (avec des deals actifs)
   const categories = await prisma.category.findMany({
     where: {
       products: {
         some: {
           deals: {
             some: {
-              isExpired: false,
+              isActive: true,
             },
           },
         },
@@ -68,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${BASE_URL}/categories?category=${category.slug}`,
+    url: `${BASE_URL}/categories/${category.slug}`,
     lastModified: category.updatedAt || new Date(),
     changeFrequency: 'daily',
     priority: 0.7,
@@ -77,8 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Récupérer les deals actifs (limiter aux plus récents/populaires)
   const deals = await prisma.deal.findMany({
     where: {
-      isExpired: false,
-      score: { gte: 50 },
+      isActive: true,
     },
     select: {
       id: true,

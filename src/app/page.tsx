@@ -47,8 +47,7 @@ async function getHomeData() {
         include: {
           deals: {
             where: {
-              isExpired: false,
-              score: { gte: 60 },
+              isActive: true,
             },
           },
         },
@@ -79,8 +78,7 @@ async function getHomeData() {
   // 1. D'abord les hotDeals (Sélection Virale)
   const hotDeals = await prisma.deal.findMany({
     where: { 
-      isExpired: false,
-      score: { gte: 60 },
+      isActive: true,
     },
     include: {
       product: {
@@ -102,8 +100,7 @@ async function getHomeData() {
   // 2. Ensuite les luxeDeals (Archives de Luxe) - en excluant les hotDeals
   const luxeDeals = await prisma.deal.findMany({
     where: { 
-      isExpired: false,
-      score: { gte: 60 },
+      isActive: true,
       brandTier: 1,
       id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
     },
@@ -134,8 +131,7 @@ async function getHomeData() {
           some: {
             deals: {
               some: {
-                isExpired: false,
-                score: { gte: 50 },
+                isActive: true,
                 id: { notIn: excludedIds }, // Exclure les deals des autres sections
               },
             },
@@ -152,8 +148,7 @@ async function getHomeData() {
       merchants.map(merchant =>
         prisma.deal.findMany({
           where: {
-            isExpired: false,
-            score: { gte: 50 },
+            isActive: true,
             product: { merchantId: merchant.id },
             id: { notIn: excludedIds }, // Exclure les deals des autres sections
           },
@@ -189,7 +184,7 @@ async function getHomeData() {
   const [stats, dealsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
-      prisma.deal.count({ where: { isExpired: false, score: { gte: 60 } } }),
+      prisma.deal.count({ where: { isActive: true } }),
       prisma.product.count(),
       prisma.merchant.count(),
     ]),
@@ -208,8 +203,7 @@ async function getHomeData() {
           some: {
             deals: {
               some: {
-                isExpired: false,
-                score: { gte: 60 },
+                isActive: true,
               },
             },
           },

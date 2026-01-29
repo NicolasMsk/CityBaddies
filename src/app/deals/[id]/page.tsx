@@ -133,8 +133,7 @@ async function getDealData(id: string) {
   const sameBrandDeals = deal.product.brand ? await prisma.deal.findMany({
     where: {
       id: { not: id },
-      isExpired: false,
-      score: { gte: 50 }, // Score minimum pour les deals similaires
+      isActive: true, // Deals actifs uniquement
       product: {
         brand: deal.product.brand,
       },
@@ -155,8 +154,7 @@ async function getDealData(id: string) {
   const sameCategoryDeals = await prisma.deal.findMany({
     where: {
       id: { not: id, notIn: sameBrandDeals.map(d => d.id) },
-      isExpired: false,
-      score: { gte: 50 },
+      isActive: true, // Deals actifs uniquement
       dealPrice: { gte: priceRange.min, lte: priceRange.max },
       product: {
         categoryId: deal.product.categoryId,

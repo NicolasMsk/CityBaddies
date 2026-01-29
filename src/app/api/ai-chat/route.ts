@@ -145,8 +145,7 @@ async function executeSearchDeals(params: {
   luxuryOnly?: boolean;
 }) {
   const where: any = {
-    isExpired: false,
-    score: { gte: 50 }, // Filtrage par score de qualité du deal
+    isActive: true, // Deals actifs uniquement
   };
 
   const productFilter: any = {};
@@ -215,8 +214,7 @@ async function executeSearchDeals(params: {
   // FALLBACK: Si aucun résultat et qu'on avait des searchTerms, réessayer sans eux (juste catégorie + prix)
   if (deals.length === 0 && params.searchTerms && params.categories && params.categories.length > 0) {
     const fallbackWhere: any = {
-      isExpired: false,
-      score: { gte: 40 }, // Score plus bas pour le fallback
+      isActive: true, // Deals actifs uniquement
       product: {
         category: { slug: { in: params.categories } },
       },

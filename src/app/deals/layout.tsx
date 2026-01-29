@@ -3,8 +3,6 @@ import type { Metadata } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
-// Métadonnées de base - les canonicals dynamiques sont gérées via le sitemap
-// et les pages individuelles
 export const metadata: Metadata = {
   title: "Tous les Deals Beauté | Promos Maquillage & Skincare",
   description: "Parcourez tous les bons plans beauté du moment. Filtrez par catégorie, marque ou prix. Deals vérifiés quotidiennement sur Sephora et Nocibé.",
@@ -17,8 +15,9 @@ export const metadata: Metadata = {
     "bons plans sephora",
     "promo nocibé",
   ],
-  // Pas de canonical ici car les pages filtrées ont leur propre canonical
-  // Google utilisera l'URL de la page comme canonical par défaut
+  alternates: {
+    canonical: `${BASE_URL}/deals`,
+  },
   openGraph: {
     title: "Tous les Deals Beauté | City Baddies",
     description: "Parcourez tous les bons plans beauté du moment avec des réductions jusqu'à -70%.",

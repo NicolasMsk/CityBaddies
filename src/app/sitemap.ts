@@ -74,41 +74,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Pages de deals filtrées par catégorie (pour éviter le "canonical mismatch")
-  const dealCategoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${BASE_URL}/deals?category=${category.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily',
-    priority: 0.6,
-  }));
-
-  // Récupérer les sous-catégories avec des deals actifs
-  const subcategories = await prisma.product.groupBy({
-    by: ['subcategory', 'categoryId'],
-    where: {
-      subcategory: { not: null },
-      deals: {
-        some: {
-          isActive: true,
-        },
-      },
-    },
-  });
-
-  // Mapper les categoryIds aux slugs
-  const categoryMap = new Map(categories.map(c => [c.slug, c.slug]));
-  const allCats = await prisma.category.findMany({ select: { id: true, slug: true } });
-  const catIdToSlug = new Map(allCats.map(c => [c.id, c.slug]));
-
-  const subcategoryPages: MetadataRoute.Sitemap = subcategories
-    .filter(sub => sub.subcategory && catIdToSlug.get(sub.categoryId))
-    .map((sub) => ({
-      url: `${BASE_URL}/deals?category=${catIdToSlug.get(sub.categoryId)}&subcategory=${sub.subcategory}`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.5,
-    }));
-
   // Récupérer les deals actifs (limiter aux plus récents/populaires)
   const deals = await prisma.deal.findMany({
     where: {
@@ -133,5 +98,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: deal.score && deal.score > 50 ? 0.8 : 0.6,
   }));
 
-  return [...staticPages, ...categoryPages, ...dealCategoryPages, ...subcategoryPages, ...dealPages];
+  return [...staticPages, ...categoryPages, ...dealPages];
 }

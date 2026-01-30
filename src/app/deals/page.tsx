@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DealCard from '@/components/deals/DealCard';
+import DealCardSkeleton from '@/components/deals/DealCardSkeleton';
 import DealFilters, { FilterState } from '@/components/deals/DealFilters';
 import { Deal, Category } from '@/types';
 import { Loader2, Package, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -249,8 +250,10 @@ export default function DealsPage() {
 
         {/* Results */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 text-[#9b1515] animate-spin" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <DealCardSkeleton key={i} />
+            ))}
           </div>
         ) : deals.length > 0 ? (
           <>

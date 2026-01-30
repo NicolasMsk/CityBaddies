@@ -109,16 +109,17 @@ model Merchant {
 
 // Marques de produits beauté (normalisées)
 model Brand {
-  id          String    @id @default(cuid())
-  name        String    @unique  // Nom normalisé (ex: "Chanel")
-  slug        String    @unique  // slug (ex: "chanel")
-  logoUrl     String?            // Logo de la marque
-  description String?            // Description de la marque
-  aliases     String?            // Variantes séparées par virgules (ex: "YSL,Yves St Laurent")
-  tier        Int       @default(2) // 1=Luxe, 2=Milieu de gamme, 3=Entrée de gamme
-  products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  name           String    @unique  // Nom normalisé (ex: "Chanel")
+  slug           String    @unique  // slug (ex: "chanel")
+  logoUrl        String?            // Logo de la marque
+  description    String?            // Description courte de la marque
+  seoDescription String?   @db.Text // Description longue SEO (histoire, valeurs, produits phares)
+  aliases        String?            // Variantes séparées par virgules (ex: "YSL,Yves St Laurent")
+  tier           Int       @default(2) // 1=Luxe, 2=Milieu de gamme, 3=Entrée de gamme
+  products       Product[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // Produits beauté (fiche produit immuable)
@@ -127,6 +128,8 @@ model Product {
   name                 String
   slug                 String            @unique
   description          String?           // Description simple (marque - nom)
+  seoDescription       String?  @db.Text // Description longue SEO (bénéfices, ingrédients clés, conseils)
+  availableSizes       String?           // Contenances disponibles (ex: "30ml,50ml,100ml")
   imageUrl             String?
   brand                String?           // Ancien champ texte (sera migré vers brandId)
   brandId              String?           // Relation vers Brand (nouveau)
@@ -206,6 +209,7 @@ model Deal {
   title           String
   refinedTitle    String?    // Titre optimisé par IA (ex: "L'Oréal Pro - Crème Hydratante Curl (200ml)")
   description     String?
+  whyGoodDeal     String?    @db.Text // Explication SEO: pourquoi c'est un bon deal (généré par IA)
   type            String     @default("scraped") // "scraped", "manual", "promo_code"
   dealPrice       Float
   originalPrice   Float

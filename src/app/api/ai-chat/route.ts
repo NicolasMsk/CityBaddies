@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import prisma from '@/lib/prisma';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization pour éviter l'erreur au build time
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 // Définition des tools/functions pour le LLM
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
@@ -264,7 +272,7 @@ export async function POST(request: NextRequest) {
     ];
 
     // Appel à OpenAI avec function calling
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages,
       tools,

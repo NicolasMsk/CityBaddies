@@ -15,7 +15,7 @@ import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';
 import CommentSection from '@/components/comments/CommentSection';
 import DealImage from '@/components/deals/DealImage';
-import { ArrowLeft, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck, Sparkles, Beaker, ScrollText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck, Sparkles, Beaker, ScrollText, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -629,6 +629,110 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                 );
               })()}
 
+              {/* PREMIUM RICH CONTENT - EDITORIAL LAYOUT */}
+              <div className="mt-20 space-y-12">
+                  
+                  {/* 01. THE PRODUCT - Hero Description */}
+                  {(deal.product.description || deal.product.seoDescription) && (
+                    <div className="relative">
+                       {/* Background Number */}
+                       <span className="absolute -top-12 -left-4 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                         01
+                       </span>
+                       
+                       <div className="relative z-10 pl-8 md:pl-10 border-l border-[#d4a855]">
+                           <h3 className="text-[10px] font-bold tracking-[0.4em] text-[#d4a855] uppercase mb-4 transform translate-y-1">
+                             L'Expérience
+                           </h3>
+                           <div className="prose prose-invert max-w-3xl">
+                             <div className="text-base md:text-lg font-light text-neutral-200 leading-7 text-justify">
+                                {deal.product.seoDescription ? (
+                                  <div className="whitespace-pre-wrap">{deal.product.seoDescription}</div>
+                                ) : (
+                                  <p>{deal.product.description}</p>
+                                )}
+                             </div>
+                           </div>
+                       </div>
+                    </div>
+                  )}
+
+                  {/* 02. INGREDIENTS - Dark Card */}
+                  {deal.product.ingredients && (
+                    <div className="relative">
+                       <span className="absolute -top-12 right-0 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                         02
+                       </span>
+                       
+                       <div className="relative z-10 bg-[#111111] p-8 border border-white/5">
+                           <div className="flex flex-col md:flex-row md:items-baseline justify-between mb-6 gap-4 border-b border-white/10 pb-4">
+                             <h3 className="text-[10px] font-bold tracking-[0.4em] text-white uppercase">
+                               Formulation
+                             </h3>
+                             <span className="text-[10px] tracking-widest text-neutral-600 uppercase">
+                               Analyse des actifs
+                             </span>
+                           </div>
+                           <p className="text-sm md:text-base font-light text-neutral-400 leading-relaxed text-justify">
+                              {deal.product.ingredients}
+                           </p>
+                       </div>
+                    </div>
+                  )}
+
+                  {/* 03. APPLICATION - Standard Layout */}
+                  {deal.product.application && (
+                    <div className="relative">
+                       <span className="absolute -top-12 -left-4 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                         03
+                       </span>
+                       
+                       <div className="relative z-10 pl-8 md:pl-10 border-l border-white/20">
+                           <h3 className="text-[10px] font-bold tracking-[0.4em] text-white uppercase mb-4 transform translate-y-1">
+                             Conseil d'Application
+                           </h3>
+                           <p className="text-base md:text-lg font-light text-white leading-relaxed text-left">
+                                {deal.product.application}
+                           </p>
+                       </div>
+                    </div>
+                  )}
+
+                  {/* 04. BRAND UNIVERSE - Center Stage */}
+                  {deal.product.brand && (
+                    <div className="relative pt-16 border-t border-white/5">
+                        <div className="text-center max-w-2xl mx-auto">
+                            <span className="text-[10px] font-bold tracking-[0.4em] text-neutral-700 uppercase block mb-6">
+                              Univers de la marque
+                            </span>
+                            <h2 className="text-4xl md:text-6xl font-thin text-white tracking-tight mb-8">
+                                {deal.product.brand}
+                            </h2>
+                            <Link
+                                href={`/deals?brand=${encodeURIComponent(deal.product.brand)}`}
+                                className="group inline-flex items-center gap-3 px-6 py-3 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-[#d4a855] transition-colors duration-500"
+                            >
+                                <span>Explorer</span>
+                                <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
+                  )}
+
+                  {/* 05. RITUEL - MOOD QUOTE */}
+                  <div className="flex justify-center pt-8 pb-4">
+                      <div className="text-center max-w-lg mx-auto">
+                          <h3 className="text-[10px] font-bold tracking-[0.4em] text-[#d4a855] uppercase mb-6">
+                            Le Rituel
+                          </h3>
+                          <p className="text-lg md:text-xl font-light italic text-white/40 font-serif leading-relaxed">
+                            "Prenez le temps d'appliquer ce soin. Un moment de connexion avec votre beauté naturelle."
+                          </p>
+                      </div>
+                  </div>
+                  
+              </div>
+
               {/* Price Chart */}
               <div className="border-t border-white/10 pt-12">
                  <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
@@ -640,76 +744,6 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                    currentPrice={deal.dealPrice}
                  />
               </div>
-
-              {/* Product Detailed Information - Minimalist & Premium */}
-              {(deal.product.description || deal.product.seoDescription || deal.product.ingredients || deal.product.application) && (
-                <div className="border-t border-white/10 pt-16">
-                  
-                  {/* Description */}
-                  {(deal.product.description || deal.product.seoDescription) && (
-                    <div className="mb-20">
-                       <h3 className="text-3xl font-thin text-white mb-8">Le Produit</h3>
-                       <div className="prose prose-invert max-w-none prose-p:font-light prose-p:text-neutral-400 prose-p:leading-loose prose-p:text-lg">
-                        {deal.product.seoDescription ? (
-                          <div className="whitespace-pre-wrap">{deal.product.seoDescription}</div>
-                        ) : (
-                          <p>{deal.product.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Grid for Ingredients & Usage - Clean Layout */}
-                  {(deal.product.ingredients || deal.product.application) && (
-                    <div className="grid md:grid-cols-2 gap-x-24 gap-y-16">
-                      {deal.product.ingredients && (
-                        <div>
-                          <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8 pb-4 border-b border-white/10">
-                            Ingrédients
-                          </h4>
-                          <p className="text-[10px] uppercase font-mono text-neutral-500 leading-loose tracking-wide">
-                            {deal.product.ingredients}
-                          </p>
-                        </div>
-                      )}
-
-                      {deal.product.application && (
-                        <div>
-                          <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8 pb-4 border-b border-white/10">
-                            Conseil d'Application
-                          </h4>
-                          <p className="text-base font-light text-white leading-relaxed">
-                            {deal.product.application}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Brand Section */}
-              {deal.product.brand && (
-                <div className="border-t border-white/10 pt-12">
-                  <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-6">
-                    À Propos de la Marque
-                  </h3>
-                  <div className="flex items-center justify-between p-6 bg-[#111111] rounded-lg border border-white/5">
-                    <div>
-                      <p className="text-xl font-light text-white mb-2">{deal.product.brand}</p>
-                      <p className="text-sm text-neutral-500">
-                        Découvrez tous les deals {deal.product.brand} disponibles
-                      </p>
-                    </div>
-                    <Link
-                      href={`/deals?brand=${encodeURIComponent(deal.product.brand)}`}
-                      className="px-6 py-3 border border-[#d4a855]/30 text-[#d4a855] text-xs font-bold tracking-[0.15em] uppercase hover:bg-[#d4a855] hover:text-black transition-all"
-                    >
-                      Voir les deals {deal.product.brand}
-                    </Link>
-                  </div>
-                </div>
-              )}
 
               {/* Comments Section */}
               <div className="border-t border-white/10 pt-12">

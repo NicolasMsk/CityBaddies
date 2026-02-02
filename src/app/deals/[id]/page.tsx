@@ -388,12 +388,12 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                 <span>Vérifié il y a {timeAgo}</span>
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-thin text-white tracking-tight leading-none mb-6">
+              <h1 className="text-2xl md:text-4xl font-thin text-white tracking-tight leading-none mb-6">
                 {deal.refinedTitle || deal.title}
               </h1>
 
               {deal.description && (
-                <p className="text-neutral-500 font-light text-base leading-relaxed max-w-2xl mt-4">
+                <p className="text-neutral-500 font-light text-sm leading-relaxed max-w-2xl mt-4">
                   {deal.description}
                 </p>
               )}
@@ -412,7 +412,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
             {/* Price Section - Editorial Typography */}
             <div className="mb-12">
                 <div className="flex items-baseline gap-6 mb-4">
-                  <span className="text-6xl md:text-7xl font-light text-white tracking-tighter">
+                  <span className="text-4xl md:text-5xl font-light text-white tracking-tighter">
                     {deal.dealPrice.toFixed(2)}€
                   </span>
                   <div className="flex flex-col items-start">
@@ -466,7 +466,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                    <h3 className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#d4a855] mb-4 transform translate-y-1">
                       L'Avis L'Expert
                    </h3>
-                   <div className="text-base md:text-lg font-light text-neutral-200 leading-relaxed text-justify">
+                   <div className="text-sm md:text-base font-light text-neutral-200 leading-relaxed text-justify">
                       <p>{deal.whyGoodDeal}</p>
                    </div>
                 </div>
@@ -636,7 +636,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   {(deal.product.description || deal.product.seoDescription) && (
                     <div className="relative">
                        {/* Background Number */}
-                       <span className="absolute -top-12 -left-4 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                       <span className="absolute -top-10 -left-4 text-[80px] font-black text-white/[0.03] select-none pointer-events-none z-0">
                          01
                        </span>
                        
@@ -644,7 +644,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                            <h3 className="text-[10px] font-bold tracking-[0.4em] text-[#d4a855] uppercase mb-4 transform translate-y-1">
                              L'Expérience
                            </h3>
-                           <div className="text-base md:text-lg font-light text-neutral-200 leading-relaxed text-justify max-w-3xl">
+                           <div className="text-sm md:text-base font-light text-neutral-200 leading-relaxed text-justify max-w-3xl">
                                 {deal.product.seoDescription ? (
                                   <div className="whitespace-pre-wrap">{deal.product.seoDescription}</div>
                                 ) : (
@@ -658,7 +658,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   {/* 02. INGREDIENTS - Dark Card */}
                   {deal.product.ingredients && (
                     <div className="relative">
-                       <span className="absolute -top-12 right-0 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                       <span className="absolute -top-10 right-0 text-[80px] font-black text-white/[0.03] select-none pointer-events-none z-0">
                          02
                        </span>
                        
@@ -671,7 +671,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                                Analyse des actifs
                              </span>
                            </div>
-                           <p className="text-base md:text-lg font-light text-neutral-200 leading-relaxed text-justify">
+                           <p className="text-sm md:text-base font-light text-neutral-200 leading-relaxed text-justify">
                               {deal.product.ingredients}
                            </p>
                        </div>
@@ -681,7 +681,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   {/* 03. APPLICATION - Standard Layout */}
                   {deal.product.application && (
                     <div className="relative">
-                       <span className="absolute -top-12 -left-4 text-[100px] font-black text-white/[0.03] select-none pointer-events-none z-0">
+                       <span className="absolute -top-10 -left-4 text-[80px] font-black text-white/[0.03] select-none pointer-events-none z-0">
                          03
                        </span>
                        
@@ -689,7 +689,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                            <h3 className="text-[10px] font-bold tracking-[0.4em] text-white uppercase mb-4 transform translate-y-1">
                              Conseil d'Application
                            </h3>
-                           <p className="text-base md:text-lg font-light text-neutral-200 leading-relaxed text-justify">
+                           <p className="text-sm md:text-base font-light text-neutral-200 leading-relaxed text-left md:text-justify">
                                 {deal.product.application}
                            </p>
                        </div>
@@ -703,7 +703,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                             <span className="text-[10px] font-bold tracking-[0.4em] text-neutral-700 uppercase block mb-6">
                               Univers de la marque
                             </span>
-                            <h2 className="text-4xl md:text-6xl font-thin text-white tracking-tight mb-8">
+                            <h2 className="text-2xl md:text-4xl font-thin text-white tracking-tight mb-8">
                                 {deal.product.brand}
                             </h2>
                             <Link
@@ -723,7 +723,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                           <h3 className="text-[10px] font-bold tracking-[0.4em] text-[#d4a855] uppercase mb-6">
                             Le Rituel
                           </h3>
-                          <p className="text-lg md:text-xl font-light italic text-white/40 font-serif leading-relaxed">
+                          <p className="text-base md:text-lg font-light italic text-white/40 font-serif leading-relaxed">
                             "Prenez le temps d'appliquer ce soin. Un moment de connexion avec votre beauté naturelle."
                           </p>
                       </div>
@@ -755,7 +755,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
         {/* Similar Deals - Bottom Carousel Layout */}
         {similarDeals.length > 0 && (
           <div className="mt-32 pt-16 border-t border-white/10">
-            <h2 className="text-3xl font-thin text-white mb-12 flex items-center gap-6">
+            <h2 className="text-xl md:text-2xl font-thin text-white mb-12 flex items-center gap-6">
               VOUS AIMEREZ AUSSI <span className="h-px flex-1 bg-white/10"></span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

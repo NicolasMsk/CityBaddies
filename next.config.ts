@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Output standalone pour Docker
+  output: 'standalone',
+  
   // Redirection www vers domaine principal
   async redirects() {
     return [

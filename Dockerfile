@@ -1,25 +1,53 @@
-# Dockerfile pour Cloud Run Job - Enrichissement Marionnaud (avec Playwright + GPT)
-FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+# Dockerfile pour Railway - Application Next.js City Baddies
+FROM node:20-alpine AS base
 
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Copier les fichiers de dépendances
-COPY package*.json ./
+# Copy package files
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
-COPY tsconfig.json ./
 
-# Installer les dépendances
+# Install dependencies
 RUN npm ci
-RUN npm install -g tsx
 
-# Générer le client Prisma
+# Generate Prisma client
 RUN npx prisma generate
 
-# Copier le code source nécessaire
-COPY src/scripts/cloud-jobs/enrich-marionnaud.ts ./src/scripts/cloud-jobs/
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Variables d'environnement (seront override par Cloud Run)
+# Build the application
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+RUN npm run build
 
-# Commande d'exécution
-CMD ["npx", "tsx", "src/scripts/cloud-jobs/enrich-marionnaud.ts"]
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy necessary files
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

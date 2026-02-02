@@ -1,12 +1,12 @@
-# Deploiement Cloud Run Job - Enrichissement Nocibe
+# Deploiement Cloud Run Job - Enrichissement Sephora
 $ErrorActionPreference = "Stop"
 
-Write-Host "Deploiement Enrichissement Nocibe..." -ForegroundColor Cyan
+Write-Host "Deploiement Enrichissement Sephora..." -ForegroundColor Cyan
 
 $REGION = "europe-west1"
 $PROJECT = "city-baddies"
 $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
-$JOB_NAME = "enrich-nocibe"
+$JOB_NAME = "enrich-sephora"
 
 # Recuperer les secrets depuis .env (avec Trim pour eviter les espaces)
 $envContent = Get-Content .env -Raw
@@ -16,7 +16,7 @@ if ($envContent -match 'OPENAI_API_KEY="?([^"\s]+)"?') { $OPENAI_KEY = $matches[
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
 Write-Host "  Build Docker..." -ForegroundColor Gray
-docker build -f Dockerfile.enrich-nocibe -t "$REGISTRY/${JOB_NAME}:latest" .
+docker build -f Dockerfile.enrich-sephora -t "$REGISTRY/${JOB_NAME}:latest" .
 
 Write-Host "  Push vers Artifact Registry..." -ForegroundColor Gray
 docker push "$REGISTRY/${JOB_NAME}:latest"
@@ -45,13 +45,13 @@ if ($LASTEXITCODE -eq 0) {
         --set-env-vars="DATABASE_URL=$DATABASE_URL,OPENAI_API_KEY=$OPENAI_KEY"
 }
 
-# Creer/mettre a jour le scheduler pour 8h tous les jours
-Write-Host "  Configuration du scheduler (8h tous les jours)..." -ForegroundColor Gray
+# Creer/mettre a jour le scheduler pour 8h30 tous les jours (apres Nocibe a 8h)
+Write-Host "  Configuration du scheduler (8h30 tous les jours)..." -ForegroundColor Gray
 $schedulerExists = gcloud scheduler jobs describe $JOB_NAME-scheduler --location=$REGION 2>$null
 if ($LASTEXITCODE -eq 0) {
     gcloud scheduler jobs update http $JOB_NAME-scheduler `
         --location=$REGION `
-        --schedule="0 8 * * *" `
+        --schedule="30 8 * * *" `
         --time-zone="Europe/Paris" `
         --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT/jobs/${JOB_NAME}:run" `
         --http-method=POST `
@@ -59,7 +59,7 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     gcloud scheduler jobs create http $JOB_NAME-scheduler `
         --location=$REGION `
-        --schedule="0 8 * * *" `
+        --schedule="30 8 * * *" `
         --time-zone="Europe/Paris" `
         --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT/jobs/${JOB_NAME}:run" `
         --http-method=POST `
@@ -67,7 +67,7 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 Write-Host ""
-Write-Host "Enrichissement Nocibe deploye!" -ForegroundColor Green
+Write-Host "Enrichissement Sephora deploye!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Commandes utiles:" -ForegroundColor Yellow
 Write-Host "  - Executer maintenant: gcloud run jobs execute $JOB_NAME --region=$REGION"

@@ -40,11 +40,11 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-8">
             <Link href="/" className="inline-block">
               <Image
-                src="/images/logo-white.png"
+                src="/images/logo.png"
                 alt="City Baddies"
-                width={200}
-                height={55}
-                className="h-12 w-auto object-contain brightness-200 contrast-200"
+                width={240}
+                height={80}
+                className="h-20 w-auto object-contain"
               />
             </Link>
             <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">

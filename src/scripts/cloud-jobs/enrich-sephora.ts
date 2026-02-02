@@ -1,11 +1,12 @@
 /**
- * Cloud Run Job - Enrichissement Nocibé
- * Exécuté quotidiennement à 8h pour enrichir les deals avec GPT
+ * Cloud Run Job - Enrichissement Sephora
+ * Exécuté quotidiennement pour enrichir les deals avec GPT
  * 
- * - Récupère les deals Nocibé actifs sans whyGoodDeal
- * - Scrape les infos produit (description, ingrédients, labels, etc.)
+ * - Récupère les deals Sephora actifs sans whyGoodDeal
+ * - Scrape les infos produit (description, ingrédients, conseils, etc.)
  * - Réécrit en style City Baddies via GPT
  * - Met à jour Product et Deal dans la DB
+ * - Désactive les deals si plus de promo sur la page
  */
 
 import { chromium, Page } from 'playwright';
@@ -22,22 +23,26 @@ const DELAY_BETWEEN_DEALS = 2000; // 2 secondes entre chaque deal
 // TYPES
 // ============================================================================
 
-interface VariantData {
-  name: string;
-  price: string;
-  originalPrice: string | null;
-  pricePerUnit: string;
-  isSelected: boolean;
-}
-
 interface ScrapedData {
-  titre: string;
-  variantes: VariantData[];
+  brand: string;
+  name: string;
+  fullTitle: string;
+  variant: string;
+  sku: string;
+  rating: string;
+  reviewCount: string;
+  currentPrice: string;
+  originalPrice: string;
+  discount: string;
   labels: string[];
-  classifications: Record<string, string>;
   description: string;
   application: string;
+  testResults: string;
+  moreInfos: string;
   ingredients: string;
+  category: string;
+  nature: string;
+  section: string;
   hasPromo: boolean; // True si le produit est en promo
 }
 
@@ -68,8 +73,7 @@ function parsePrice(priceStr: string): number | null {
 }
 
 function parseVolume(volumeStr: string): { value: number | null; unit: string | null } {
-  const cleaned = volumeStr.replace(/^[A-Z\s\-]+\s*-\s*/i, '').trim();
-  const match = cleaned.match(/(\d+(?:[,\.]\d+)?)\s*(ml|g|l|kg|cl)/i);
+  const match = volumeStr.match(/(\d+(?:[,\.]\d+)?)\s*(ml|g|l|kg|cl)/i);
   if (match) {
     const value = parseFloat(match[1].replace(',', '.'));
     const unit = match[2].toLowerCase();
@@ -79,148 +83,178 @@ function parseVolume(volumeStr: string): { value: number | null; unit: string | 
 }
 
 // ============================================================================
-// SCRAPING
+// SCRAPING SEPHORA
 // ============================================================================
 
-async function scrapeNocibePage(page: Page, url: string): Promise<ScrapedData | null> {
+async function scrapeSephoraPage(page: Page, url: string): Promise<ScrapedData | null> {
   try {
     // Délai aléatoire avant navigation (2-5s)
     await page.waitForTimeout(2000 + Math.random() * 3000);
     
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     
-    // Attendre que la page se charge complètement
-    await page.waitForTimeout(5000);
+    // Attendre que la page se charge
+    await page.waitForTimeout(3000);
     
-    // Cookie
+    // Gérer les cookies TC Privacy
     try {
-      await page.waitForSelector('button[data-testid="uc-accept-all-button"]', { timeout: 10000 });
-      await page.click('button[data-testid="uc-accept-all-button"]');
-      await page.waitForTimeout(2000);
-    } catch {
-      // Pas de cookie
-    }
-    
-    await page.waitForSelector('.product-cockpit__variant', { timeout: 15000 }).catch(() => null);
-    
-    // Extraire titre + variantes
-    const baseData = await page.evaluate(() => {
-      const brand = document.querySelector('span.brand-name__seo-only')?.textContent?.trim() || '';
-      const line = document.querySelector('a.brand-line')?.textContent?.trim() || '';
-      const name = document.querySelector('span.header-name')?.textContent?.trim() || '';
-      const titre = `${brand.split(' ')[0]} ${line} ${name}`.trim();
+      const cookieSelectors = [
+        '#footer_tc_privacy_button_3',
+        'button.tc-privacy-button[title="Tout accepter"]',
+        '.tc-privacy-button',
+        '#onetrust-accept-btn-handler',
+      ];
       
-      const variantes: Array<{
-        name: string;
-        price: string;
-        originalPrice: string | null;
-        pricePerUnit: string;
-        isSelected: boolean;
-      }> = [];
-      
-      // Plusieurs variantes
-      document.querySelectorAll('div[data-testid="RadioButton"]').forEach((el) => {
-        const varName = el.querySelector('.product-detail__variant-name')?.textContent?.trim() || '';
-        const price = el.querySelector('[data-testid="price-type-discount-color"]')?.textContent?.trim() || '';
-        const originalPrice = el.querySelector('[data-testid="price-type-strikethrough"]')?.textContent?.trim() || null;
-        const pricePerUnit = el.querySelector('[data-testid="price-base-unit"] span')?.textContent?.trim() || '';
-        const isSelected = el.querySelector('input[aria-checked="true"]') !== null;
-        variantes.push({ name: varName, price, originalPrice, pricePerUnit, isSelected });
-      });
-      
-      // Variante unique
-      if (variantes.length === 0) {
-        const uniqueVariant = document.querySelector('.product-detail__variant-unique, .product-detail__variant--size-display');
-        if (uniqueVariant) {
-          const varName = uniqueVariant.querySelector('.product-detail__variant-name')?.textContent?.trim() || '';
-          const price = uniqueVariant.querySelector('[data-testid="price-type-discount-color"]')?.textContent?.trim() || '';
-          const originalPrice = uniqueVariant.querySelector('[data-testid="price-type-strikethrough"]')?.textContent?.trim() || null;
-          const pricePerUnit = uniqueVariant.querySelector('[data-testid="price-base-unit"] span')?.textContent?.trim() || '';
-          if (varName) {
-            variantes.push({ name: varName, price, originalPrice, pricePerUnit, isSelected: true });
+      for (const selector of cookieSelectors) {
+        try {
+          const btn = await page.$(selector);
+          if (btn) {
+            await btn.click();
+            await page.waitForTimeout(1000);
+            break;
           }
+        } catch {
+          // Continuer
         }
       }
+    } catch {
+      // Pas de cookie banner
+    }
+    
+    // Attendre le contenu principal
+    await page.waitForSelector('.product-title-heading', { timeout: 10000 });
+    await page.waitForTimeout(1500);
+    
+    // Extraire les données de base
+    const baseData = await page.evaluate(() => {
+      const brand = document.querySelector('.brand-name')?.textContent?.trim() || '';
+      const name = document.querySelector('.product-name')?.textContent?.trim() || '';
+      const rating = document.querySelector('[itemprop="ratingValue"]')?.textContent?.trim() || '';
+      const reviewCount = document.querySelector('[itemprop="reviewCount"]')?.getAttribute('content') || '';
+      const currentPrice = document.querySelector('.price-sales')?.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      const originalPrice = document.querySelector('.price-standard')?.textContent?.trim() || '';
+      const discount = document.querySelector('.original-price-discount')?.textContent?.trim() || '';
+      const variant = document.querySelector('.variation-title')?.textContent?.trim() || '';
+      const sku = document.querySelector('#masterid')?.textContent?.trim() || '';
       
-      return { titre, variantes };
+      return {
+        brand,
+        name,
+        fullTitle: `${brand} - ${name}`.trim(),
+        rating,
+        reviewCount,
+        currentPrice,
+        originalPrice,
+        discount,
+        variant,
+        sku,
+      };
     });
     
-    // Modale Description
-    await page.click('button[data-testid="details"]');
-    await page.waitForSelector('[data-testid="modal-dialog"]', { timeout: 3000 });
-    await page.waitForSelector('.product-labels', { timeout: 3000 }).catch(() => null);
-    await page.waitForTimeout(500);
-    
-    const descriptionData = await page.evaluate(() => {
-      const labelsSet = new Set<string>();
-      document.querySelectorAll('.product-label .product-label__name').forEach((el) => {
-        const text = el.textContent?.trim();
-        if (text) labelsSet.add(text);
-      });
-      document.querySelectorAll('li.product-label[aria-label]').forEach((el) => {
-        const label = el.getAttribute('aria-label');
-        if (label) labelsSet.add(label);
-      });
-      
-      const classifications: Record<string, string> = {};
-      document.querySelectorAll('[data-testid="product-detail-info__classifications"] > div').forEach((el) => {
-        const spans = el.querySelectorAll('span');
-        if (spans.length >= 2) {
-          classifications[spans[0].textContent?.trim() || ''] = spans[1].textContent?.trim() || '';
+    // Cliquer sur "Lire la suite" pour charger le contenu complet
+    try {
+      const readMoreBtn = await page.$('.read-more-pdp-description, .morelink-product-description, a.morelink');
+      if (readMoreBtn) {
+        await readMoreBtn.click();
+        await page.waitForTimeout(800);
+      } else {
+        const descTab = await page.$('#tab-description, li.pdp-description');
+        if (descTab) {
+          await descTab.click();
+          await page.waitForTimeout(800);
         }
+      }
+    } catch {
+      // Pas de bouton
+    }
+    
+    await page.waitForSelector('#product-infos-content', { timeout: 5000 }).catch(() => null);
+    
+    // Extraction de toutes les infos produit
+    const productInfo = await page.evaluate(() => {
+      // === DESCRIPTION ===
+      const descContainer = document.querySelector('#product-infos-content .pdp-description .description-content');
+      
+      // Labels depuis les badges images
+      const labelImages = descContainer?.querySelectorAll('img[src*="badge"]') || [];
+      const labels: string[] = [];
+      labelImages.forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.includes('clean')) labels.push('Clean');
+        if (src.includes('vegan')) labels.push('Vegan');
+        if (src.includes('cruelty')) labels.push('Cruelty Free');
+        if (src.includes('natural')) labels.push('Natural');
+        if (src.includes('bio')) labels.push('Bio');
       });
       
-      const description = document.querySelector('[data-testid="product-details-description"]')?.textContent?.trim() || '';
+      // SKU
+      const sku = descContainer?.querySelector('.skuid')?.textContent?.trim() || '';
       
-      return { labels: Array.from(labelsSet), classifications, description };
+      // Description texte
+      let description = '';
+      if (descContainer) {
+        const clone = descContainer.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('img, .gpsr-supplier-infos, style, script').forEach(el => el.remove());
+        description = clone.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      }
+      
+      // === CONSEILS D'UTILISATION ===
+      const tipsContainer = document.querySelector('#product-infos-content .pdp-tips .tips-content');
+      const application = tipsContainer?.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      
+      // === RESULTATS DES TESTS ===
+      const testResultsContainer = document.querySelector('#product-infos-content .pdp-test-results .test-results-content');
+      const testResults = testResultsContainer?.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      
+      // === PLUS D'INFORMATIONS ===
+      const moreInfosContainer = document.querySelector('#product-infos-content .pdp-more-infos .more-infos-content');
+      const moreInfos = moreInfosContainer?.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      
+      // === INGREDIENTS ===
+      const ingredientsContainer = document.querySelector('#product-infos-content .pdp-ingredients .ingredients-content');
+      let ingredients = ingredientsContainer?.textContent?.trim()?.replace(/\s+/g, ' ') || '';
+      ingredients = ingredients.replace(/Cette liste d'ingrédients peut faire l'objet.*$/i, '').trim();
+      
+      return { description, application, testResults, moreInfos, ingredients, labels, sku };
     });
     
-    await page.click('button[data-testid="modal-header-close"]');
-    await page.waitForTimeout(300);
+    // Données tc_vars (analytics)
+    const tcVars = await page.evaluate(() => {
+      // @ts-ignore
+      const vars = (window as any).tc_vars || {};
+      return {
+        category: vars.product_breadcrumb_label || '',
+        nature: vars.product_nature || '',
+        section: vars.product_section || '',
+      };
+    });
     
-    // Modale Application
-    let application = '';
-    try {
-      await page.click('button[data-testid="application"]');
-      await page.waitForSelector('[data-testid="modal-dialog"]', { timeout: 3000 });
-      await page.waitForTimeout(300);
-      application = await page.evaluate(() => {
-        return document.querySelector('[data-testid="application-panel-other-info"]')?.textContent?.trim() || '';
-      });
-      await page.click('button[data-testid="modal-header-close"]');
-      await page.waitForTimeout(300);
-    } catch {
-      // Pas de modale application
-    }
-    
-    // Modale Ingrédients
-    let ingredients = '';
-    try {
-      await page.click('button[data-testid="ingredients"]');
-      await page.waitForSelector('[data-testid="modal-dialog"]', { timeout: 3000 });
-      await page.waitForTimeout(300);
-      ingredients = await page.evaluate(() => {
-        return document.querySelector('[data-testid="ingredients-panel-other-info"]')?.textContent?.trim() || '';
-      });
-      await page.click('button[data-testid="modal-header-close"]');
-      await page.waitForTimeout(300);
-    } catch {
-      // Pas de modale ingrédients
-    }
-    
-    // Vérifier si au moins une variante est en promo (a un originalPrice)
-    const hasPromo = baseData.variantes.some(v => v.originalPrice !== null);
+    // Vérifier si le produit est encore en promo
+    const hasPromo = !!(baseData.originalPrice && baseData.discount);
     
     return {
-      titre: baseData.titre,
-      variantes: baseData.variantes,
-      labels: descriptionData.labels,
-      classifications: descriptionData.classifications,
-      description: descriptionData.description,
-      application,
-      ingredients,
+      brand: baseData.brand,
+      name: baseData.name,
+      fullTitle: baseData.fullTitle,
+      variant: baseData.variant,
+      sku: productInfo.sku || baseData.sku,
+      rating: baseData.rating,
+      reviewCount: baseData.reviewCount,
+      currentPrice: baseData.currentPrice,
+      originalPrice: baseData.originalPrice,
+      discount: baseData.discount,
+      labels: productInfo.labels,
+      description: productInfo.description,
+      application: productInfo.application,
+      testResults: productInfo.testResults,
+      moreInfos: productInfo.moreInfos,
+      ingredients: productInfo.ingredients,
+      category: tcVars.category,
+      nature: tcVars.nature,
+      section: tcVars.section,
       hasPromo,
     };
+    
   } catch (error) {
     console.error(`  ❌ Erreur scraping:`, error);
     return null;
@@ -233,10 +267,6 @@ async function scrapeNocibePage(page: Page, url: string): Promise<ScrapedData | 
 
 async function rewriteWithGPT(data: ScrapedData, priceInfo: PriceInfo): Promise<RewrittenContent | null> {
   try {
-    const sizesInfo = data.variantes.length > 0 
-      ? data.variantes.map(v => `${v.name} (${v.price})`).join(', ')
-      : 'Taille unique ou non spécifié';
-    
     const prompt = `Tu es copywriter pour City Baddies, un site de bons plans beauté ciblant les jeunes femmes (18-35 ans) en France. Ton style d'écriture :
 - Fun, décalé et empowering
 - Tu utilises des emojis avec parcimonie mais efficacement
@@ -248,12 +278,15 @@ async function rewriteWithGPT(data: ScrapedData, priceInfo: PriceInfo): Promise<
 Réécris les infos produit suivantes dans la voix City Baddies. Reste informatif mais fais en sorte que ça claque !
 
 **INFOS PRODUIT:**
-- Nom: ${data.titre}
-- Labels marque: ${data.labels.join(', ') || 'Aucun'}
-- Tailles/Contenances disponibles: ${sizesInfo}
-- Description originale: ${data.description || 'Pas de description'}
-- Conseils d'utilisation: ${data.application || 'Pas de conseils'}
-- Ingrédients (INCI): ${data.ingredients || 'Non listés'}
+- Nom: ${data.fullTitle}
+- Marque: ${data.brand}
+- Labels: ${data.labels.join(', ') || 'Aucun'}
+- Taille/Contenance: ${data.variant || 'Non spécifié'}
+- Catégorie: ${data.section || data.category || 'Beauté'}
+- Description originale: ${data.description?.substring(0, 500) || 'Pas de description'}
+- Conseils d'utilisation: ${data.application?.substring(0, 300) || 'Pas de conseils'}
+- Infos supplémentaires: ${data.moreInfos || ''}
+- Ingrédients (INCI): ${data.ingredients?.substring(0, 300) || 'Non listés'}
 
 **INFOS PRIX:**
 - Prix deal: ${priceInfo.dealPrice.toFixed(2)}€
@@ -266,7 +299,7 @@ Réécris les infos produit suivantes dans la voix City Baddies. Reste informati
   "ingredients": "Réécris la section ingrédients de façon friendly et accessible. Explique ce que font les ingrédients clés. Si pas d'ingrédients, écris 'Les ingrédients ne sont pas disponibles pour ce produit.'",
   "application": "Réécris les conseils d'utilisation de façon fun et facile à suivre. Ajoute de la personnalité ! Si pas de conseils, écris 'Applique comme tu le sens, babe !'",
   "whyGoodDeal": "Explique en 1-2 phrases pourquoi c'est un bon deal. Mentionne le % de réduction, les économies réalisées, et pourquoi c'est le moment d'en profiter. Sois enthousiaste !",
-  "availableSizes": "Liste les tailles/contenances disponibles formatées proprement (ex: '50ml, 100ml, 200ml'). Si taille unique, écris juste la taille. Si pas d'info, écris 'Taille standard'."
+  "availableSizes": "Taille/contenance du produit. Si pas d'info, écris 'Taille standard'."
 }`;
 
     const response = await openai.chat.completions.create({
@@ -297,35 +330,22 @@ async function updateDealWithScrapedData(
   data: ScrapedData,
   rewritten: RewrittenContent | null
 ): Promise<void> {
-  let availableSizes = rewritten?.availableSizes || null;
-  if (!availableSizes && data.variantes.length > 0) {
-    availableSizes = data.variantes
-      .map(v => {
-        const { value, unit } = parseVolume(v.name);
-        return value && unit ? `${value}${unit}` : v.name;
-      })
-      .filter(s => s)
-      .join(', ');
-  }
-  
-  const selectedVariant = data.variantes.find(v => v.isSelected) || data.variantes[0];
-  
+  // Mise à jour du Product
   await prisma.product.update({
     where: { id: productId },
     data: {
-      name: data.titre,
       description: data.description?.substring(0, 500) || null,
       seoDescription: rewritten?.seoDescription || null,
-      availableSizes: availableSizes || null,
-      ingredients: rewritten?.ingredients || null,
-      application: rewritten?.application || null,
+      availableSizes: rewritten?.availableSizes || data.variant || null,
+      ingredients: rewritten?.ingredients || data.ingredients?.substring(0, 2000) || null,
+      application: rewritten?.application || data.application?.substring(0, 1000) || null,
       labels: data.labels.length > 0 ? data.labels.join(', ') : null,
-      classifications: Object.keys(data.classifications).length > 0 ? data.classifications : undefined,
     },
   });
   
+  // Mise à jour du Deal
   const dealUpdateData: Record<string, unknown> = {
-    refinedTitle: data.titre,
+    refinedTitle: data.fullTitle,
     lastSeenAt: new Date(),
   };
   
@@ -333,30 +353,13 @@ async function updateDealWithScrapedData(
     dealUpdateData.whyGoodDeal = rewritten.whyGoodDeal;
   }
   
-  if (selectedVariant) {
-    const { value, unit } = parseVolume(selectedVariant.name);
-    const dealPrice = parsePrice(selectedVariant.price);
-    const originalPrice = parsePrice(selectedVariant.originalPrice || '');
-    
+  // Volume depuis la variante
+  if (data.variant) {
+    const { value, unit } = parseVolume(data.variant);
     if (value && unit) {
       dealUpdateData.volumeValue = value;
       dealUpdateData.volumeUnit = unit;
-      dealUpdateData.volume = selectedVariant.name;
-    }
-    
-    if (dealPrice) {
-      dealUpdateData.dealPrice = dealPrice;
-      if (value) {
-        dealUpdateData.pricePerUnit = dealPrice / value * 100;
-      }
-    }
-    
-    if (originalPrice) {
-      dealUpdateData.originalPrice = originalPrice;
-      if (dealPrice) {
-        dealUpdateData.discountAmount = originalPrice - dealPrice;
-        dealUpdateData.discountPercent = Math.round((1 - dealPrice / originalPrice) * 100);
-      }
+      dealUpdateData.volume = data.variant;
     }
   }
   
@@ -372,17 +375,17 @@ async function updateDealWithScrapedData(
 
 async function main() {
   const startTime = Date.now();
-  console.log('🚀 [CLOUD JOB] Enrichissement Nocibé...');
+  console.log('🚀 [CLOUD JOB] Enrichissement Sephora...');
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
-  // Récupérer TOUS les deals à enrichir (actifs, non expirés, sans whyGoodDeal)
+  // Récupérer les deals Sephora à enrichir (actifs, non expirés, sans whyGoodDeal)
   const deals = await prisma.deal.findMany({
     where: {
       isActive: true,
       isExpired: false,
       whyGoodDeal: null,
       product: {
-        productUrl: { contains: 'nocibe.fr' },
+        productUrl: { contains: 'sephora.fr' },
       },
     },
     select: {
@@ -404,7 +407,7 @@ async function main() {
     orderBy: { createdAt: 'desc' },
   });
 
-  console.log(`📊 ${deals.length} deal(s) à enrichir\n`);
+  console.log(`📊 ${deals.length} deal(s) Sephora à enrichir\n`);
 
   if (deals.length === 0) {
     console.log('✅ Aucun deal à enrichir (tous déjà traités)');
@@ -465,7 +468,7 @@ async function main() {
       console.log(`[${i + 1}/${deals.length}] ${deal.title}`);
       console.log(`   URL: ${productUrl}`);
 
-      const data = await scrapeNocibePage(page, productUrl);
+      const data = await scrapeSephoraPage(page, productUrl);
 
       if (!data) {
         errors++;
@@ -485,8 +488,8 @@ async function main() {
         continue;
       }
 
-      console.log(`   ✅ ${data.titre}`);
-      console.log(`   📦 ${data.variantes.length} variantes, ${data.labels.length} labels`);
+      console.log(`   ✅ ${data.fullTitle}`);
+      console.log(`   📦 Variante: ${data.variant || 'N/A'}, Labels: ${data.labels.join(', ') || 'Aucun'}`);
 
       console.log(`   🤖 GPT...`);
       const priceInfo: PriceInfo = {
@@ -517,7 +520,7 @@ async function main() {
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log('='.repeat(60));
-  console.log('📊 [CLOUD JOB] RAPPORT FINAL - ENRICHISSEMENT NOCIBÉ');
+  console.log('📊 [CLOUD JOB] RAPPORT FINAL - ENRICHISSEMENT SEPHORA');
   console.log('='.repeat(60));
   console.log(`⏱️  Durée: ${duration}s`);
   console.log(`✅ Réussis: ${success}`);

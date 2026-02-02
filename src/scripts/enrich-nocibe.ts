@@ -34,6 +34,7 @@ interface ScrapedData {
   description: string;
   application: string;
   ingredients: string;
+  hasPromo: boolean; // True si le produit est en promo
 }
 
 // ============================================================================
@@ -187,6 +188,9 @@ async function scrapeNocibePage(page: Page, url: string): Promise<ScrapedData | 
     await page.click('button[data-testid="modal-header-close"]');
     await page.waitForTimeout(300);
     
+    // Vérifier si au moins une variante est en promo (a un originalPrice)
+    const hasPromo = baseData.variantes.some(v => v.originalPrice !== null);
+    
     return {
       titre: baseData.titre,
       variantes: baseData.variantes,
@@ -195,6 +199,7 @@ async function scrapeNocibePage(page: Page, url: string): Promise<ScrapedData | 
       description: descriptionData.description,
       application,
       ingredients,
+      hasPromo,
     };
     
   } catch (error) {
@@ -472,6 +477,17 @@ async function main() {
       if (!data) {
         errors++;
         console.log('   ❌ Échec scraping\n');
+        continue;
+      }
+      
+      // Vérifier si le deal est encore en promo
+      if (!data.hasPromo) {
+        console.log('   ⚠️ Plus de promo sur cette page! Désactivation du deal...');
+        await prisma.deal.update({
+          where: { id: deal.id },
+          data: { isActive: false, isExpired: true },
+        });
+        console.log('   ✓ Deal désactivé\n');
         continue;
       }
       

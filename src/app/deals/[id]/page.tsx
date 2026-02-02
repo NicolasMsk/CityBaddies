@@ -97,6 +97,72 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
+// Quotes pour le rituel
+const RITUAL_QUOTES = {
+  parfum: [
+    "Un sillage qui raconte votre histoire avant même que vous ne parliez.",
+    "Plus qu'un parfum, une signature invisible et inoubliable.",
+    "Laissez cette fragrance révéler une nouvelle facette de votre personnalité.",
+    "Quelques gouttes suffisent pour transformer l'ordinaire en moment d'exception.",
+    "L'élégance est la seule beauté qui ne se fane jamais, et ce parfum en est la clé."
+  ],
+  soin: [
+    "Prenez le temps de masser ce soin. Votre peau vous remerciera.",
+    "Un moment de connexion avec votre beauté naturelle, matin et soir.",
+    "L'éclat n'est pas qu'une question de produit, c'est une intention.",
+    "Faites de cette application un rituel de bien-être, pas une corvée.",
+    "La peau est le miroir de l'âme, prenez-en soin avec douceur."
+  ],
+  makeup: [
+    "Le maquillage n'est pas un masque, c'est un outil de puissance.",
+    "Révélez votre créativité. Osez, sublimez, brillez.",
+    "Une touche de couleur pour illuminer votre journée et celle des autres.",
+    "L'art de se sublimer commence par un geste précis et délicat.",
+    "Soyez votre propre muse, chaque jour est une nouvelle toile."
+  ],
+  cheveux: [
+    "Vos cheveux sont votre couronne, portez-la avec fierté.",
+    "Un soin profond pour redonner vie et mouvement à votre chevelure.",
+    "La beauté commence par des cheveux sains et vibrants.",
+    "Détendez-vous et laissez la magie opérer de la racine aux pointes."
+  ],
+  bain: [
+    "Transformez votre salle de bain en sanctuaire de paix.",
+    "Lavez les soucis de la journée et retrouvez votre sérénité.",
+    "Un moment pour soi, loin du bruit du monde."
+  ],
+  default: [
+    "Prenez le temps d'appliquer ce soin. Un moment de connexion avec votre beauté naturelle.",
+    "Chaque geste de beauté est une promesse d'amour envers soi-même.",
+    "La beauté réside dans les détails et l'attention que vous vous portez.",
+    "Un instant pour soi, une parenthèse de douceur dans votre journée.",
+    "Sublimez votre quotidien avec ce petit luxe accessible.",
+    "La beauté est une lumière dans le cœur, ce produit aide juste à la faire briller."
+  ]
+};
+
+function getRitualQuote(categoryName: string | undefined, dealId: string): string {
+  const seed = dealId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  const lowerCat = (categoryName || '').toLowerCase();
+  let selectedQuotes = RITUAL_QUOTES.default;
+
+  if (lowerCat.includes('parfum') || lowerCat.includes('eau de') || lowerCat.includes('toilette') || lowerCat.includes('cologne')) {
+    selectedQuotes = RITUAL_QUOTES.parfum;
+  } else if (lowerCat.includes('visage') || lowerCat.includes('sérum') || lowerCat.includes('crème') || lowerCat.includes('huile') || lowerCat.includes('nettoyant') || lowerCat.includes('soin')) {
+    selectedQuotes = RITUAL_QUOTES.soin;
+  } else if (lowerCat.includes('maquillage') || lowerCat.includes('teint') || lowerCat.includes('rouge') || lowerCat.includes('mascara') || lowerCat.includes('poudre') || lowerCat.includes('levre') || lowerCat.includes('yeux')) {
+    selectedQuotes = RITUAL_QUOTES.makeup;
+  } else if (lowerCat.includes('cheveux') || lowerCat.includes('shampoing') || lowerCat.includes('masque') || lowerCat.includes('capillaire')) {
+    selectedQuotes = RITUAL_QUOTES.cheveux;
+  } else if (lowerCat.includes('corps') || lowerCat.includes('bain') || lowerCat.includes('douche') || lowerCat.includes('gommage')) {
+    selectedQuotes = RITUAL_QUOTES.bain;
+  }
+
+  const index = seed % selectedQuotes.length;
+  return selectedQuotes[index];
+}
+
 async function getDealData(id: string) {
   const deal = await prisma.deal.findUnique({
     where: { id },
@@ -205,6 +271,10 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   }
 
   const { deal, similarDeals, priceStats } = data;
+  
+  // Sélection de la citation rituel
+  const ritualQuote = getRitualQuote(deal.product.category?.name, deal.id);
+
   const timeAgo = formatDistanceToNow(new Date(deal.createdAt), {
     addSuffix: true,
     locale: fr,
@@ -724,7 +794,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                             Le Rituel
                           </h3>
                           <p className="text-base md:text-lg font-light italic text-white/40 font-serif leading-relaxed">
-                            "Prenez le temps d'appliquer ce soin. Un moment de connexion avec votre beauté naturelle."
+                            "{ritualQuote}"
                           </p>
                       </div>
                   </div>

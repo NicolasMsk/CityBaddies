@@ -125,7 +125,7 @@ export default function Header() {
             {categories.map((category) => (
               <div key={category.slug} className="relative group h-full flex items-center">
                 <Link
-                  href={`/deals?category=${category.slug}`}
+                  href={`/categories/${category.slug}`}
                   className="flex items-center gap-1 px-2 xl:px-4 h-full text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-400 hover:text-white transition-colors border-b-2 border-transparent group-hover:border-[#9b1515]"
                 >
                   {category.label}
@@ -137,7 +137,7 @@ export default function Header() {
                   <div className="bg-[#0a0a0a] border border-white/10 shadow-2xl min-w-[200px] p-2">
                     {/* Voir tout */}
                     <Link
-                      href={`/deals?category=${category.slug}`}
+                      href={`/categories/${category.slug}`}
                       className="block px-4 py-3 text-[10px] font-bold tracking-[0.15em] uppercase text-[#d4a855] hover:bg-white/5 transition-colors"
                     >
                       Voir tout {category.label}
@@ -220,7 +220,7 @@ export default function Header() {
                   {openMobileCategory === category.slug && (
                     <div className="ml-4 border-l border-white/10 pl-4 py-2 space-y-1 bg-white/[0.02]">
                       <Link
-                        href={`/deals?category=${category.slug}`}
+                        href={`/categories/${category.slug}`}
                         onClick={() => setIsMenuOpen(false)}
                         className="block px-3 py-3 text-xs text-[#d4a855] font-bold tracking-wider hover:bg-white/5 uppercase"
                       >

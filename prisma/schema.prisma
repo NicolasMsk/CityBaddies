@@ -143,6 +143,12 @@ model Product {
   productUrl           String
   isActive             Boolean           @default(true)
   
+  // Données enrichies (scraping)
+  ingredients          String?  @db.Text // Liste INCI des ingrédients
+  application          String?  @db.Text // Conseils d'utilisation
+  labels               String?           // Labels séparés par virgules (sans silicone, vegan, etc.)
+  classifications      Json?             // Classifications produit (Parfum, Texture, Type de cheveux, etc.)
+  
   // Relations
   variants             ProductVariant[]  // Un produit peut avoir plusieurs variantes (50ml, 100ml, etc.)
   priceHistory         PriceHistory[]

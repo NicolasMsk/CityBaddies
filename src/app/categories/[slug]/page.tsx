@@ -242,7 +242,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 Top Deals
               </h2>
               <Link 
-                href={`/deals?category=${slug}`}
+                href={`/deals?category=${slug}&sort=discount`}
                 className="text-white hover:text-bordeaux-400 transition-colors flex items-center gap-2 text-sm font-medium uppercase tracking-wider"
               >
                 Voir tout
@@ -284,7 +284,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             Nous comparons quotidiennement les offres de Sephora, Nocibé et Marionnaud pour vous garantir les meilleurs prix sur vos produits {category.name.toLowerCase()} favoris.
           </p>
           <Link
-            href={`/deals?category=${slug}`}
+            href={`/deals?category=${slug}&sort=discount`}
             className="inline-flex items-center gap-3 px-8 py-3 bg-white text-black text-sm font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors"
           >
             Voir les {totalDeals} offres

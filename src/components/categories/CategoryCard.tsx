@@ -26,7 +26,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
   return (
     <Link
-      href={`/deals?category=${category.slug}`}
+      href={`/categories/${category.slug}`}
       className="group relative overflow-hidden rounded-2xl aspect-[4/5] border border-white/5 hover:border-[#7b0a0a]/40 transition-all duration-300 card-premium"
     >
       {/* Background Image */}

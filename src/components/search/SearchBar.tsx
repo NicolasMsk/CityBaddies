@@ -163,7 +163,7 @@ export default function SearchBar({
         // Ordre: Catégories -> Marques -> Deals
         if (selectedIndex >= 0 && selectedIndex < matchingCategories.length) {
           // Sélectionner une catégorie
-          window.location.href = `/deals?category=${matchingCategories[selectedIndex].slug}`;
+          window.location.href = `/categories/${matchingCategories[selectedIndex].slug}`;
         } else if (selectedIndex >= matchingCategories.length && selectedIndex < matchingCategories.length + brands.length) {
           // Sélectionner une marque
           const brandIndex = selectedIndex - matchingCategories.length;
@@ -258,7 +258,7 @@ export default function SearchBar({
               {matchingCategories.map((cat, index) => (
                 <Link
                   key={cat.slug}
-                  href={`/deals?category=${cat.slug}`}
+                  href={`/categories/${cat.slug}`}
                   onClick={handleResultClick}
                   className={`
                     flex items-center gap-3 px-3 py-3 text-sm

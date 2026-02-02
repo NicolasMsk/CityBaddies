@@ -7,24 +7,32 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: [
+          '/',
+          '/_next/image',  // Autoriser les images optimisées Next.js
+        ],
         disallow: [
           '/api/',
           '/admin/',
           '/auth/',
           '/profile/',
-          '/_next/',
+          '/_next/static/',  // Bloquer uniquement les assets JS/CSS
           '/private/',
+          '/deals?*',  // Bloquer les filtres (doublons avec /categories/)
         ],
       },
       {
         userAgent: 'Googlebot',
-        allow: '/',
+        allow: [
+          '/',
+          '/_next/image',  // Autoriser les images optimisées
+        ],
         disallow: [
           '/api/',
           '/admin/',
           '/auth/',
           '/profile/',
+          '/deals?*',  // Bloquer les filtres (utiliser /categories/ à la place)
         ],
       },
     ],

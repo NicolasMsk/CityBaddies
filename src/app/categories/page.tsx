@@ -1,15 +1,39 @@
 import prisma from '@/lib/prisma';
 import CategoryCard from '@/components/categories/CategoryCard';
+import Link from 'next/link';
 import type { Metadata } from 'next';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 // Force dynamic - pas de pré-rendu au build
 export const dynamic = 'force-dynamic';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
+// Images statiques par défaut (fallback si pas d'image en BDD)
+const CATEGORY_IMAGES: Record<string, string> = {
+  'maquillage': '/images/maquillage.png',
+  'soins-visage': '/images/soins-visage.png',
+  'soins-corps': '/images/soins-corps.png',
+  'cheveux': '/images/cheveux.png',
+  'parfums': '/images/parfum.png',
+  'ongles': '/images/ongles.png',
+  'accessoires': '/images/accessoires.png',
+};
+
+// Descriptions courtes par catégorie pour affichage sur la page
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'maquillage': 'Fonds de teint, rouges à lèvres, mascaras et palettes des plus grandes marques à prix réduit.',
+  'soins-visage': 'Sérums, crèmes hydratantes, nettoyants et masques pour une peau éclatante.',
+  'soins-corps': 'Laits corporels, huiles sèches, gommages et soins hydratants pour tout le corps.',
+  'cheveux': 'Shampoings, masques, soins sans rinçage et traitements capillaires professionnels.',
+  'parfums': 'Eaux de parfum, eaux de toilette et coffrets des plus grandes maisons de parfumerie.',
+  'ongles': 'Vernis, gels UV, soins des ongles et accessoires nail art.',
+  'accessoires': 'Pinceaux, éponges, trousses et outils indispensables pour votre routine beauté.',
+};
+
 export const metadata: Metadata = {
-  title: "Catégories Beauté | Maquillage, Skincare, Parfums",
-  description: "Explorez toutes les catégories beauté : maquillage, soins du visage, parfums, corps et cheveux. Trouvez les meilleurs deals par catégorie avec des réductions jusqu'à -70%.",
+  title: "Catégories Beauté | Maquillage, Skincare, Parfums - City Baddies",
+  description: "Explorez toutes les catégories beauté : maquillage, soins du visage, parfums, corps et cheveux. Trouvez les meilleurs deals par catégorie avec des réductions jusqu'à -70% sur Sephora, Nocibé et Marionnaud.",
   keywords: [
     "catégories beauté",
     "maquillage deals",
@@ -17,6 +41,7 @@ export const metadata: Metadata = {
     "parfum réduction",
     "soins visage pas cher",
     "cosmétiques promo",
+    "bons plans beauté par catégorie",
   ],
   alternates: {
     canonical: `${BASE_URL}/categories`,
@@ -63,34 +88,158 @@ async function getCategories() {
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
+  const totalDeals = categories.reduce((acc, cat) => acc + cat._count.deals, 0);
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-16 bg-[#0a0a0a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Catégories Beauté
+        
+        {/* Header Esthétique */}
+        <div className="text-center mb-20">
+          <span className="text-[#d4a855] text-xs md:text-sm uppercase tracking-[0.3em] font-semibold mb-4 block animate-in fade-in slide-in-from-bottom-3 duration-700">
+            Par catégorie
+          </span>
+          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+            Trouve ton <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-slate-400">obsession</span>
           </h1>
-          <p className="text-slate-400 max-w-2xl mx-auto">
-            Explorez nos catégories pour trouver les meilleurs deals beauté
-          </p>
-        </div>
-
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {categories.map((category) => (
-            <CategoryCard key={category.id} category={category as any} />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {categories.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-slate-400">
-              Aucune catégorie avec des deals actifs pour le moment.
+          
+          <div className="max-w-2xl mx-auto text-slate-400 text-sm leading-relaxed opacity-0 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-200 fill-mode-forwards">
+            <p>
+              Maquillage, soins, parfums ou cheveux : explorez nos {categories.length} catégories 
+              et accédez à plus de <span className="text-white font-medium">{totalDeals} offres exclusives</span>.
             </p>
           </div>
+        </div>
+
+        {/* Grille Esthétique */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-32">
+          {categories.map((category, index) => {
+             // Priorité : Image catégorie BDD > Image statique locale > Fallback dégradé
+             const bgImage = category.imageUrl || CATEGORY_IMAGES[category.slug];
+             
+             return (
+              <Link 
+                key={category.id} 
+                href={`/categories/${category.slug}`}
+                className="group relative block aspect-[3/4] overflow-hidden rounded-xl bg-neutral-900 border border-white/5 transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(212,168,85,0.3)]"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Background Image */}
+                {bgImage ? (
+                  <div className="absolute inset-0">
+                    <img 
+                      src={bgImage} 
+                      alt={category.name}
+                      className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 opacity-70 group-hover:opacity-60"
+                    />
+                    <div className="absolute inset-0 bg-neutral-900/20 group-hover:bg-neutral-900/10 transition-colors duration-500" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-neutral-900 transition-transform duration-[1.5s] ease-out group-hover:scale-110" />
+                )}
+                
+                {/* Overlay Gradient Premium */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500" />
+
+                {/* Content */}
+                <div className="absolute inset-0 p-8 flex flex-col justify-end items-center text-center">
+                  
+                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out w-full flex flex-col items-center">
+                    
+                    {/* Decorative Line Top */}
+                    <div className="h-px w-0 bg-[#d4a855]/50 mb-4 group-hover:w-16 transition-all duration-700 ease-out" />
+
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-wide font-serif">
+                      {category.name}
+                    </h2>
+                    
+                    <p className="text-sm text-slate-300 mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 max-w-[80%] line-clamp-2 leading-relaxed">
+                      {CATEGORY_DESCRIPTIONS[category.slug]}
+                    </p>
+
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-black/20 backdrop-blur-sm group-hover:border-[#d4a855]/50 group-hover:bg-[#d4a855]/10 transition-all duration-300">
+                      <span className="text-[#d4a855] font-medium text-sm uppercase tracking-wider">
+                        Découvrir
+                      </span>
+                      <span className="text-white/60 text-xs border-l border-white/20 pl-3 ml-1">
+                        {category._count.deals} offres
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Guide d'achat SEO (Style Minimal) */}
+        {categories.length > 0 && (
+          <section className="border-t border-white/[0.06] pt-24 max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <span className="text-[#d4a855] text-xs uppercase tracking-widest font-medium block mb-3">Guide</span>
+              <h2 className="text-3xl font-bold text-white">
+                Comment choisir sa catégorie ?
+              </h2>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour commencer une routine skincare
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Commencez par les <strong className="text-white font-normal">soins du visage</strong> : un bon nettoyant, 
+                  une crème hydratante adaptée à votre type de peau et un SPF. Les sérums sont un excellent 
+                  investissement pour cibler des problématiques spécifiques.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour un maquillage longue tenue
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Investissez dans une bonne base (primer) et un fond de teint adapté à votre carnation. 
+                  Les <strong className="text-white font-normal">palettes de fards</strong> offrent un meilleur rapport 
+                  qualité-prix que les produits unitaires.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour trouver son parfum signature
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Profitez des <strong className="text-white font-normal">coffrets parfum</strong> qui incluent souvent 
+                  le lait corps et le gel douche assortis pour un sillage qui dure. Les eaux de parfum ont 
+                  une meilleure tenue que les eaux de toilette.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour des cheveux en pleine santé
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Adaptez votre routine à votre <strong className="text-white font-normal">type de cheveux</strong> : 
+                  shampoings hydratants pour les cheveux secs, purifiants pour les racines grasses. 
+                  Un masque hebdomadaire et un sérum sans rinçage font toute la différence.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-20 pt-8 border-t border-dashed border-white/10 text-center">
+              <p className="text-slate-500 text-sm">
+                Tous nos deals sont vérifiés quotidiennement. Les prix affichés incluent les promotions 
+                en cours chez Sephora, Nocibé et Marionnaud.
+              </p>
+            </div>
+          </section>
         )}
       </div>
     </div>

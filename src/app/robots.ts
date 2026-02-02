@@ -18,7 +18,12 @@ export default function robots(): MetadataRoute.Robots {
           '/profile/',
           '/_next/static/',  // Bloquer uniquement les assets JS/CSS
           '/private/',
-          '/deals?*',  // Bloquer les filtres (doublons avec /categories/)
+          // Bloquer les filtres (doublons avec /categories/) mais PAS /deals?page=
+          '/deals?category=',
+          '/deals?merchant=',
+          '/deals?brand=',
+          '/deals?search=',
+          '/deals?sort=',
         ],
       },
       {
@@ -32,7 +37,12 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/auth/',
           '/profile/',
-          '/deals?*',  // Bloquer les filtres (utiliser /categories/ à la place)
+          // Bloquer les filtres mais autoriser /deals?page= pour la pagination
+          '/deals?category=',
+          '/deals?merchant=',
+          '/deals?brand=',
+          '/deals?search=',
+          '/deals?sort='
         ],
       },
     ],

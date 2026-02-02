@@ -15,7 +15,7 @@ import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';
 import CommentSection from '@/components/comments/CommentSection';
 import DealImage from '@/components/deals/DealImage';
-import { ArrowLeft, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck, Sparkles, Beaker, ScrollText, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -397,6 +397,16 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   {deal.description}
                 </p>
               )}
+
+              {deal.tags && (
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {deal.tags.split(',').map((tag: string) => (
+                    <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 text-[9px] tracking-[0.15em] uppercase text-neutral-400 rounded-full">
+                      {tag.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Price Section - Editorial Typography */}
@@ -449,6 +459,18 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
 
             {/* Additional Sections */}
             <div className="space-y-16">
+
+              {/* Why Good Deal - IA Analysis - Editorial Style - Ultra Clean */}
+              {deal.whyGoodDeal && (
+                <div className="relative border-l-2 border-[#d4a855] pl-8 py-2">
+                   <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#d4a855] mb-4">
+                      L'Avis L'Expert
+                   </h3>
+                   <div className="prose prose-invert max-w-none prose-p:text-xl prose-p:font-light prose-p:leading-relaxed prose-p:text-white">
+                      <p>{deal.whyGoodDeal}</p>
+                   </div>
+                </div>
+              )}
 
 
               {/* Price Comparison - All Merchants */}
@@ -619,15 +641,50 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                  />
               </div>
 
-              {/* Product Description */}
-              {deal.product.description && (
-                <div className="border-t border-white/10 pt-12">
-                  <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
-                    Aperçu du Produit
-                  </h3>
-                  <div className="prose prose-invert max-w-none prose-p:font-light prose-p:text-neutral-400 prose-p:leading-relaxed">
-                    <p>{deal.product.description}</p>
-                  </div>
+              {/* Product Detailed Information - Minimalist & Premium */}
+              {(deal.product.description || deal.product.seoDescription || deal.product.ingredients || deal.product.application) && (
+                <div className="border-t border-white/10 pt-16">
+                  
+                  {/* Description */}
+                  {(deal.product.description || deal.product.seoDescription) && (
+                    <div className="mb-20">
+                       <h3 className="text-3xl font-thin text-white mb-8">Le Produit</h3>
+                       <div className="prose prose-invert max-w-none prose-p:font-light prose-p:text-neutral-400 prose-p:leading-loose prose-p:text-lg">
+                        {deal.product.seoDescription ? (
+                          <div className="whitespace-pre-wrap">{deal.product.seoDescription}</div>
+                        ) : (
+                          <p>{deal.product.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grid for Ingredients & Usage - Clean Layout */}
+                  {(deal.product.ingredients || deal.product.application) && (
+                    <div className="grid md:grid-cols-2 gap-x-24 gap-y-16">
+                      {deal.product.ingredients && (
+                        <div>
+                          <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8 pb-4 border-b border-white/10">
+                            Ingrédients
+                          </h4>
+                          <p className="text-[10px] uppercase font-mono text-neutral-500 leading-loose tracking-wide">
+                            {deal.product.ingredients}
+                          </p>
+                        </div>
+                      )}
+
+                      {deal.product.application && (
+                        <div>
+                          <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8 pb-4 border-b border-white/10">
+                            Conseil d'Application
+                          </h4>
+                          <p className="text-base font-light text-white leading-relaxed">
+                            {deal.product.application}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

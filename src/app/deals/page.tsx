@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 
 // Récupérer les données initiales côté serveur
 async function getInitialData() {
-  // Récupérer les 12 derniers deals actifs (première page)
+  // Récupérer TOUS les deals actifs pour le SEO
   const deals = await prisma.deal.findMany({
     where: {
       isActive: true,
@@ -60,16 +60,11 @@ async function getInitialData() {
     orderBy: [
       { createdAt: 'desc' },
     ],
-    take: 12,
+    // Pas de take: pour charger tous les deals
   });
 
-  // Compter le total pour la pagination
-  const totalDeals = await prisma.deal.count({
-    where: {
-      isActive: true,
-      isExpired: false,
-    },
-  });
+  // Le total = nombre de deals retournés
+  const totalDeals = deals.length;
 
   // Récupérer les catégories avec des deals actifs
   const categoriesRaw = await prisma.category.findMany({

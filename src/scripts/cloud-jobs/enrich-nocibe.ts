@@ -239,7 +239,7 @@ async function rewriteWithGPT(data: ScrapedData, priceInfo: PriceInfo): Promise<
     
     const prompt = `Tu es copywriter pour City Baddies, un site de bons plans beauté ciblant les jeunes femmes (18-35 ans) en France. Ton style d'écriture :
 - Fun, décalé et empowering
-- Tu utilises des emojis avec parcimonie mais efficacement
+- PAS D'EMOJI NI DE SMILEY dans tes textes, jamais
 - Tu parles directement à la lectrice ("tu", "toi")
 - Tu mets en avant le côté bon plan / économies
 - Confiant et sans complexe sur le self-care

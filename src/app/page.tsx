@@ -534,12 +534,11 @@ export default async function HomePage() {
 
       {/* Visual Interlude - Baddies 5 */}
       <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-        <div className="relative aspect-[16/8] md:aspect-[21/9] w-full overflow-hidden rounded-2xl border border-white/10 group">
-           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
+        <div className="relative aspect-[4/5] sm:aspect-[16/8] md:aspect-[21/9] w-full overflow-hidden rounded-2xl border border-white/10 group">
            <img 
               src="/images/baddies_5.png" 
               alt="City Baddies Mood" 
-              className="w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[2s] ease-out grayscale-[0.2] group-hover:grayscale-0"
+              className="w-full h-full object-cover"
            />
            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl z-20 pointer-events-none" />
         </div>
@@ -652,13 +651,12 @@ export default async function HomePage() {
 
       {/* Visual Interlude 2 - Baddies 2 */}
       <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-0 mt-32">
-        {/* Ratio ajusté pour moins couper la photo (16/9 au lieu de 32/9) */}
-        <div className="relative aspect-[16/9] md:aspect-[2/1] w-full overflow-hidden rounded-2xl border border-white/5">
-           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10 opactiy-50" />
+        {/* Ratio ajusté pour mobile (4/5 portrait) et desktop (2/1 paysage) */}
+        <div className="relative aspect-[4/5] sm:aspect-[16/9] md:aspect-[2/1] w-full overflow-hidden rounded-2xl border border-white/5">
            <img 
               src="/images/baddies_2.png" 
               alt="Community Mood" 
-              className="w-full h-full object-cover opacity-60"
+              className="w-full h-full object-cover"
            />
         </div>
       </div>

@@ -6,73 +6,82 @@ import Script from 'next/script';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: 'Manifesto | Notre Mission Beauté',
-  description: 'City Baddies - Plus qu\'un comparateur de prix beauté, un club privé. Découvrez notre mission : transparence totale sur les prix, deals curatés et communauté de passionnées.',
+  title: 'À Propos de City Baddies | L\'Expert des Deals Beauté & Luxe',
+  description: 'Découvrez la technologie City Baddies : le premier comparateur de prix beauté intelligent qui scanne Sephora, Nocibé et Marionnaud pour dénicher les vraies promotions skincare, maquillage et parfums.',
   keywords: [
-    "city baddies manifesto",
-    "comparateur beauté",
-    "bons plans communauté",
-    "transparence prix cosmétiques",
-    "club beauté",
+    "comparateur prix beauté",
+    "bons plans maquillage luxe",
+    "erreurs de prix sephora",
+    "promotions parfum authentique",
+    "technologie beauty tech",
+    "city baddies concept",
+    "expert deals cosmétiques"
   ],
   alternates: {
     canonical: `${BASE_URL}/about`,
   },
   openGraph: {
-    title: 'Manifesto | City Baddies',
-    description: 'Plus qu\'un comparateur, un club privé. Découvrez notre mission.',
+    title: 'À Propos de City Baddies | L\'Expert des Deals Beauté',
+    description: 'Plus qu\'un comparateur, une technologie de pointe au service de votre budget beauté. Découvrez notre algorithme de veille tarifaire.',
     url: `${BASE_URL}/about`,
     type: 'website',
   },
 };
 
-// FAQ Schema pour les rich snippets Google
-const faqSchema = {
+// JSON-LD Unifié : Organization + FAQ
+const structuredData = {
   "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
+  "@graph": [
     {
-      "@type": "Question",
-      name: "Qu'est-ce que City Baddies ?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "City Baddies est une plateforme communautaire de bons plans beauté. Notre algorithme scanne Sephora, Nocibé et d'autres sites 24/7 pour trouver les meilleures promotions sur le maquillage, skincare et parfums.",
-      },
+      "@type": "Organization",
+      "name": "City Baddies",
+      "url": "https://citybaddies.com",
+      "logo": "https://citybaddies.com/images/logo.png",
+      "sameAs": [
+        "https://instagram.com/citybaddies",
+        "https://tiktok.com/@citybaddies"
+      ],
+      "description": "Le premier comparateur de prix beauté sélectif qui analyse et vérifie les promotions des grandes enseignes en temps réel."
     },
     {
-      "@type": "Question",
-      name: "Comment City Baddies trouve les meilleurs deals ?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Nous utilisons un algorithme qui analyse les prix en temps réel sur les sites partenaires comme Sephora et Nocibé. Nous vérifions l'historique des prix pour s'assurer que les promotions sont réelles et pas des faux rabais.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Est-ce que City Baddies est gratuit ?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Oui, City Baddies est 100% gratuit. Nous ne vendons rien directement, nous redirigeons vers les sites officiels des enseignes partenaires.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Comment savoir si un deal est vraiment intéressant ?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Chaque deal affiche le pourcentage de réduction réel calculé sur l'historique des prix. Nous n'affichons que les offres avec au moins 20% de réduction vérifiée.",
-      },
-    },
-  ],
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce que City Baddies ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "City Baddies est une plateforme technologique dédiée à la beauté qui agrège et compare les offres des plus grands distributeurs (Sephora, Nocibé, Marionnaud, etc.). Notre algorithme propriétaire vérifie la véracité des remises pour vous garantir les meilleurs prix sur le marché."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment garantissez-vous les meilleurs prix beauté ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Notre technologie de scraping scanne des milliers de références produits 24h/24 et 7j/7. Nous analysons l'historique des prix sur 30 jours pour détecter les fausses promotions et ne retenons que les baisses de prix réelles (minimum 20%)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Est-ce que City Baddies vend des produits ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Non, City Baddies est un comparateur et un guide d'achat indépendant. Nous vous redirigeons directement vers les sites officiels de nos partenaires agréés pour finaliser vos achats en toute sécurité."
+          }
+        }
+      ]
+    }
+  ]
 };
 
 export default function AboutPage() {
   return (
     <>
       <Script
-        id="faq-schema"
+        id="structured-data"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black overflow-hidden relative">
       {/* Background Texture */}
@@ -101,24 +110,24 @@ export default function AboutPage() {
             </h1>
             
             <p className="text-xl md:text-2xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed">
-              City Baddies, c&apos;est ta meilleure amie qui te dit <br />
-              <span className="text-white">« Girl, attends, je l&apos;ai vu moins cher ailleurs ».</span>
+              City Baddies n&apos;est pas un simple comparateur. <br />
+              <span className="text-white">C&apos;est votre concierge privé pour l&apos;excellence beauté au meilleur prix.</span>
             </p>
           </div>
 
           {/* Value Proposition */}
           <div className="grid md:grid-cols-2 gap-16 mb-32 items-center">
             <div className="space-y-8 order-2 md:order-1">
-              <h2 className="text-4xl font-thin uppercase tracking-wide">La Mission</h2>
+              <h2 className="text-4xl font-thin uppercase tracking-wide">L'Exigence</h2>
               <div className="space-y-6 text-neutral-400 font-light text-lg leading-relaxed">
                 <p>
-                  Le marché de la beauté est opaque. Les prix changent constamment, les &quot;promos&quot; sont souvent gonflées, et les vraies pépites sont cachées.
+                  L&apos;industrie de la beauté cultive l&apos;opacité. Prix fluctuants, fausses promotions, exclusivités artificielles... Il est devenu complexe de distinguer l&apos;opportunité réelle du marketing agressif.
                 </p>
                 <p>
-                  <span className="text-white font-medium">On change les règles.</span>
+                  <span className="text-white font-medium">Nous rétablissons la vérité.</span>
                 </p>
                 <p>
-                  Notre algorithme scanne Sephora, Nocibé, LookFantastic et des dizaines d&apos;autres sites 24/7. Nous traquons les baisses de prix, les erreurs d&apos;affichage et les codes secrets.
+                  Notre technologie propriétaire analyse en temps réel les catalogues des maisons les plus prestigieuses (Sephora, Nocibé, Marionnaud, LookFantastic). Nous ne traquons pas seulement les prix baissés, nous identifions les anomalies de marché, les erreurs de pricing et les opportunités fugaces que les algorithmes classiques ne voient pas.
                 </p>
               </div>
             </div>
@@ -126,9 +135,16 @@ export default function AboutPage() {
             {/* Visual Abstract Element */}
             <div className="relative order-1 md:order-2 group">
               <div className="absolute inset-0 bg-gradient-to-br from-[#d4a855] to-[#9b1515] opacity-20 blur-2xl rounded-full group-hover:opacity-30 transition-opacity duration-700" />
-              <div className="relative aspect-square rounded-2xl border border-white/10 bg-[#0a0a0a]/50 backdrop-blur-sm p-8 flex flex-col justify-center items-center text-center">
-                 <div className="text-6xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-500">💸</div>
-                 <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#d4a855]">Smart Shopping Club</div>
+              <div className="relative aspect-square rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
+                 <img 
+                    src="/images/baddies_3.png" 
+                    alt="City Baddies Private Club" 
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                 />
+                 <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center justify-end">
+                    <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#d4a855] mb-2">Club Privé</div>
+                    <div className="w-12 h-px bg-white/30" />
+                 </div>
               </div>
             </div>
           </div>
@@ -137,18 +153,18 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-2xl overflow-hidden mb-32">
             {[
               {
-                title: "Transparence Totale",
-                desc: "Historique des prix vérifié. Si une promo est fausse, on te le dit.",
+                title: "Transparence Radicale",
+                desc: "Nous auditons l'historique de chaque produit. Si une promotion est artificielle, elle est immédiatement disqualifiée de notre sélection.",
                 icon: Shield
               },
               {
-                title: "Curated Deals",
-                desc: "Pas de spam. Uniquement les offres qui valent vraiment le coup (> 20%).",
+                title: "Sélection Curatée",
+                desc: "L'élégance, c'est le choix. Nous ne vous inondons pas d'offres médiocres. Seule l'excellence (minimum 20% de remise réelle) mérite votre attention.",
                 icon: Sparkles
               },
               {
-                title: "Communauté",
-                desc: "Les meilleures offres sont partagées entre nous avant de disparaître.",
+                title: "Cercle d'Initiés",
+                desc: "Rejoignez une communauté exigeante qui partage les codes d'accès aux ventes privées et les erreurs de prix avant qu'elles ne soient corrigées.",
                 icon: Users
               }
             ].map((item, i) => (
@@ -160,6 +176,89 @@ export default function AboutPage() {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* New Editorial Section */}
+          <div className="max-w-4xl mx-auto text-center mb-32">
+             <h2 className="text-3xl md:text-4xl font-thin mb-8">Pourquoi <span className="italic font-normal font-serif text-[#d4a855]">City Baddies</span> ?</h2>
+             <p className="text-neutral-400 mb-6 leading-relaxed text-lg font-light">
+               Parce que le luxe ne devrait pas être une question de budget, mais de savoir-faire. 
+               Nous croyons que l&apos;accès aux meilleurs produits de soin et maquillage est un droit, pas un privilège réservé à celles qui ne regardent pas les étiquettes.
+             </p>
+             <p className="text-neutral-400 leading-relaxed text-lg font-light">
+               Notre standard est simple : <span className="text-white font-medium">si nous ne l&apos;achèterions pas pour nous-mêmes, vous ne le verrez pas ici.</span>
+             </p>
+          </div>
+
+          {/* Detailed Process Section */}
+          <div className="grid md:grid-cols-2 gap-16 mb-32 border-t border-white/5 pt-32">
+            <div>
+              <h2 className="text-3xl font-thin mb-8 uppercase tracking-wide">Le Protocole <br /><span className="font-serif text-[#d4a855] italic text-4xl normal-case">Intransigeant</span></h2>
+              <p className="text-neutral-400 mb-6 font-light leading-relaxed">
+                Chaque offre publiée sur City Baddies a survécu à un processus de sélection drastique. Sur 1000 promotions détectées par nos robots, moins de 50 sont retenues.
+              </p>
+              <ul className="space-y-8 mt-12">
+                <li className="flex items-start gap-6 group">
+                  <span className="text-[#d4a855] font-serif italic text-2xl opacity-50 group-hover:opacity-100 transition-opacity">01.</span>
+                  <div>
+                    <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Détection Technique</strong>
+                    <span className="text-neutral-500 text-sm leading-relaxed">Nos serveurs analysent les catalogues des retailers officiels en temps réel pour repérer les baisses de prix avant qu&apos;elles ne soient annoncées au grand public.</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-6 group">
+                  <span className="text-[#d4a855] font-serif italic text-2xl opacity-50 group-hover:opacity-100 transition-opacity">02.</span>
+                  <div>
+                    <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Audit de Véracité</strong>
+                    <span className="text-neutral-500 text-sm leading-relaxed">Nous croisons le prix barré avec le prix moyen constaté sur les 30 derniers jours (conformité Omnibus) pour éviter les fausses promos gonflées artificiellement.</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-6 group">
+                  <span className="text-[#d4a855] font-serif italic text-2xl opacity-50 group-hover:opacity-100 transition-opacity">03.</span>
+                  <div>
+                    <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Curation Humaine</strong>
+                    <span className="text-neutral-500 text-sm leading-relaxed">Notre équipe valide l&apos;intérêt du produit. Est-ce une teinte universelle ? Une formule clean ? Une marque désirable ? Si le produit est "cheap", il est écarté.</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="relative">
+              <div className="sticky top-32">
+                <div className="relative bg-white/[0.02] border border-white/5 rounded-none md:rounded-2xl p-8 md:p-12 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4a855]/5 rounded-full blur-[80px] pointer-events-none" />
+                  
+                  <h3 className="text-xl font-bold uppercase tracking-widest mb-8 text-white relative z-10">Nos <span className="text-[#9b1515]">Red Flags</span></h3>
+                  <p className="text-neutral-400 mb-8 border-b border-white/5 pb-8 relative z-10 font-light text-sm">
+                    Nous ne publierons <strong className="text-white">jamais</strong> :
+                  </p>
+                  <ul className="space-y-6 text-neutral-300 font-light relative z-10">
+                    <li className="flex items-center gap-4 group">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />
+                      <span className="group-hover:text-white transition-colors">Les produits dont la date de péremption est proche.</span>
+                    </li>
+                    <li className="flex items-center gap-4 group">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />
+                      <span className="group-hover:text-white transition-colors">Les teintes invendables (fond de teint orange, rouge à lèvre improbable...).</span>
+                    </li>
+                    <li className="flex items-center gap-4 group">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />
+                      <span className="group-hover:text-white transition-colors">Le dropshipping ou les marques sans traçabilité.</span>
+                    </li>
+                    <li className="flex items-center gap-4 group">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />
+                      <span className="group-hover:text-white transition-colors">Les réductions inférieures à 20% (sauf exception type Dyson/Rare Beauty).</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Manifesto Final Statement */}
+          <div className="text-center py-20 border-y border-white/5 mb-20 bg-gradient-to-b from-transparent to-white/[0.01]">
+            <p className="text-2xl md:text-5xl font-serif text-white/90 leading-tight max-w-5xl mx-auto italic">
+              &quot;Le luxe n&apos;est pas ce que vous payez, <br/> c&apos;est ce que vous <span className="text-[#d4a855] not-italic decoration-[#d4a855] underline decoration-1 underline-offset-4">découvrez</span>.&quot;
+            </p>
           </div>
 
         </div>

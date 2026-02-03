@@ -242,92 +242,96 @@ export default async function HomePage() {
       <div className="fixed bottom-[10%] right-[-5%] w-[30vw] h-[30vw] bg-[#d4a855] opacity-[0.05] blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="fixed top-[40%] right-[-10%] w-[30vw] h-[30vw] bg-[#7b0a0a] opacity-[0.06] blur-[120px] rounded-full pointer-events-none z-0" />
 
-      {/* Hero Section - Editorial Dark */}
-      <section className="relative z-10 min-h-[90vh] flex items-center bg-transparent overflow-hidden pb-32">
+      {/* Hero Section - Premium Magazine Redesign */}
+      <section className="relative h-screen flex flex-col justify-end pb-0 overflow-hidden">
         
-        {/* Background - kept subtle */}
+        {/* Background Image */}
         <div className="absolute inset-0 z-0">
            <Image
-            src="/images/hero-bg.png"
-            alt="Editorial Beauty"
+            src="/images/hero-bg-premium.png" // User requested baddies image
+            alt="City Baddies Squad"
             fill
-            className="object-cover object-center opacity-50"
+            className="object-cover object-top"
             priority
-            quality={90}
+            quality={100}
           />
-           {/* Gradient Lateral (Texte lisible) */}
-           <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/90 via-30% to-transparent" />
-           
-           {/* Gradient Bottom (Transition douce avec le reste de la page) */}
-           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] via-10% to-transparent opacity-100" />
+           {/* Sophisticated Gradient - Dark at bottom for text readability */}
+           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent via-50%" />
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-          <div className="max-w-4xl">
-            
-            {/* Editorial Header */}
-            <div className="mb-8 flex items-center gap-4">
-              <div className="h-px w-12 bg-white/30" />
-              <span className="text-xs font-bold tracking-[0.3em] text-white/80 uppercase">
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 pb-12 lg:pb-16 flex flex-col md:flex-row items-end justify-between gap-12">
+          
+          {/* Main Text Block */}
+          <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-10 duration-1000">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-[1px] w-12 bg-[#d4a855]"></span>
+              <span className="text-[#d4a855] text-xs font-bold tracking-[0.2em] uppercase">
                 Deals Beauté Premium
               </span>
             </div>
 
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-thin text-white tracking-tighter leading-[0.9] mb-12">
-              SLAY TA <br/>
-              <span className="font-normal italic text-[#d4a855] pr-4">ROUTINE</span> <br/>
-              <span className="text-4xl md:text-6xl lg:text-7xl font-light tracking-normal text-neutral-400 block mt-4">PAS TON BUDGET.</span>
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-white leading-[0.85] tracking-tight mb-8">
+              <span className="block italic font-light opacity-90">Slay ta</span>
+              <span className="block font-medium">Routine.</span>
             </h1>
+            
+            <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-xl border-l border-white/20 pl-6 mb-10">
+              Pas ton budget. <span className="text-white/60 text-base block mt-2">Nous traquons les baisses de prix Sephora, Nocibé & Marionnaud en temps réel.</span>
+            </p>
 
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 border-t border-white/10 pt-12 mt-12">
-              <p className="max-w-sm text-neutral-400 font-light leading-relaxed">
-                Sephora, Nocibé, Marionnaud. Nous suivons les baisses de prix pour vous. Seulement les vrais deals.
-              </p>
-              
-              <div className="flex items-center gap-6">
-                 <Link
-                  href="/deals"
-                  className="px-8 py-4 bg-white text-black text-sm font-bold tracking-widest uppercase hover:bg-neutral-200 transition-colors"
-                >
-                  Voir les Offres
-                </Link>
-                <Link
-                  href="/categories"
-                  className="text-sm font-medium tracking-widest uppercase text-white hover:text-[#d4a855] transition-colors border-b border-white/20 pb-1"
-                >
-                  Parcourir
-                </Link>
+            <div className="flex flex-wrap items-center gap-4">
+               <Link
+                href="/deals"
+                className="group relative px-8 py-4 bg-white text-black overflow-hidden"
+              >
+                <div className="absolute inset-0 w-3 bg-[#d4a855] transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
+                <span className="relative text-sm font-bold tracking-widest uppercase flex items-center gap-2">
+                  Voir les Offres <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+              <Link
+                href="/categories"
+                className="px-8 py-4 border border-white/20 text-white hover:bg-white/5 text-sm font-bold tracking-widest uppercase transition-colors"
+              >
+                Parcourir
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats Column - Vertical on Desktop */}
+          <div className="hidden md:block min-w-[200px] space-y-8 animate-in fade-in slide-in-from-right-10 duration-1000 delay-300 border-l border-white/10 pl-8">
+             <div>
+                <div className="text-3xl font-serif text-white mb-1">{stats.deals.toLocaleString()}</div>
+                <div className="text-xs text-[#d4a855] uppercase tracking-widest">Deals Actifs</div>
+             </div>
+             <div>
+                <div className="text-3xl font-serif text-white mb-1">{stats.products.toLocaleString()}</div>
+                <div className="text-xs text-neutral-500 uppercase tracking-widest">Produits Suivis</div>
+             </div>
+             <div>
+                <div className="text-3xl font-serif text-white mb-1">+{stats.dealsToday}</div>
+                <div className="text-xs text-neutral-500 uppercase tracking-widest">Ajoutés Aujourd&apos;hui</div>
+             </div>
+          </div>
+        </div>
+
+        {/* Mobile Stats Bar */}
+        <div className="md:hidden w-full border-t border-white/10 bg-black/20 backdrop-blur-md">
+           <div className="grid grid-cols-3 divide-x divide-white/10">
+              <div className="p-4 text-center">
+                 <div className="text-white font-serif text-lg">{stats.deals}</div>
+                 <div className="text-[10px] text-neutral-400 uppercase">Deals</div>
               </div>
-            </div>
-
-          </div>
-
-          {/* Stats - Refined */}
-          <div className="flex items-center gap-12 mt-24">
-            <div className="space-y-1">
-              <p className="text-4xl font-light text-white">{stats.deals}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9b1515]">Deals Actifs</p>
-            </div>
-            <div className="w-px h-12 bg-white/10" />
-            <div className="space-y-1">
-               <p className="text-4xl font-light text-white">{stats.products}</p>
-               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Produits Suivis</p>
-            </div>
-            <div className="hidden sm:block w-px h-12 bg-white/10" />
-            <div className="hidden sm:block space-y-1">
-               <p className="text-4xl font-light text-white">{stats.merchants}</p>
-               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Partenaires</p>
-            </div>
-             {stats.dealsToday > 0 && (
-              <>
-                <div className="hidden lg:block w-px h-12 bg-white/10" />
-                 <div className="hidden lg:block space-y-1">
-                   <p className="text-4xl font-light text-[#d4a855]">+{stats.dealsToday}</p>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Ajoutés Aujourd&apos;hui</p>
-                </div>
-              </>
-            )}
-          </div>
+              <div className="p-4 text-center">
+                 <div className="text-white font-serif text-lg">{stats.products}</div>
+                 <div className="text-[10px] text-neutral-400 uppercase">Produits</div>
+              </div>
+              <div className="p-4 text-center">
+                 <div className="text-white font-serif text-lg">+{stats.dealsToday}</div>
+                 <div className="text-[10px] text-neutral-400 uppercase">New</div>
+              </div>
+           </div>
         </div>
       </section>
 
@@ -528,6 +532,19 @@ export default async function HomePage() {
 
 
 
+      {/* Visual Interlude - Baddies 5 */}
+      <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+        <div className="relative aspect-[16/8] md:aspect-[21/9] w-full overflow-hidden rounded-2xl border border-white/10 group">
+           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
+           <img 
+              src="/images/baddies_5.png" 
+              alt="City Baddies Mood" 
+              className="w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[2s] ease-out grayscale-[0.2] group-hover:grayscale-0"
+           />
+           <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl z-20 pointer-events-none" />
+        </div>
+      </div>
+
       {/* About Section - Le Concept (Redesigned) */}
       <section className="relative z-10 py-32 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -633,10 +650,23 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Visual Interlude 2 - Baddies 2 */}
+      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-0 mt-32">
+        {/* Ratio ajusté pour moins couper la photo (16/9 au lieu de 32/9) */}
+        <div className="relative aspect-[16/9] md:aspect-[2/1] w-full overflow-hidden rounded-2xl border border-white/5">
+           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10 opactiy-50" />
+           <img 
+              src="/images/baddies_2.png" 
+              alt="Community Mood" 
+              className="w-full h-full object-cover opacity-60"
+           />
+        </div>
+      </div>
+
       {/* FAQ Section */}
-      <section className="relative z-10 py-24 border-t border-white/5 bg-[#0a0a0a]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+      <section className="relative z-10 py-24 border-t border-transparent bg-[#0a0a0a] -mt-32">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+          <div className="text-center mb-16 bg-[#0a0a0a]/80 backdrop-blur-md py-8 rounded-2xl border border-white/5 inline-block w-full shadow-2xl">
             <h2 className="text-3xl md:text-4xl font-light text-white mb-4 tracking-tight">
               QUESTIONS <span className="font-semibold text-[#d4a855]">FRÉQUENTES</span>
             </h2>

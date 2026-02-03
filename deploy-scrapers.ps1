@@ -19,10 +19,8 @@ $OPENAI_KEY = (Get-Content .env | Select-String "OPENAI_API_KEY" | ForEach-Objec
 $SERPER_KEY = (Get-Content .env | Select-String "SERPER_API_KEY" | ForEach-Object { $_.Line -replace 'SERPER_API_KEY\s*=\s*"?([^"]+)"?', '$1' })
 
 Write-Host "SEPHORA" -ForegroundColor Yellow
-Write-Host "  Build..." -ForegroundColor Gray
-docker build -f Dockerfile.sephora -t "$REGISTRY/scrape-sephora:latest" . --quiet
-Write-Host "  Push..." -ForegroundColor Gray
-docker push "$REGISTRY/scrape-sephora:latest" --quiet
+Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/scrape-sephora:latest" --dockerfile Dockerfile.sephora --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-sephora `
     --image="$REGISTRY/scrape-sephora:latest" `
@@ -32,10 +30,8 @@ Write-Host "  Sephora deploye!" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "NOCIBE" -ForegroundColor Yellow
-Write-Host "  Build..." -ForegroundColor Gray
-docker build -f Dockerfile.nocibe -t "$REGISTRY/scrape-nocibe:latest" . --quiet
-Write-Host "  Push..." -ForegroundColor Gray
-docker push "$REGISTRY/scrape-nocibe:latest" --quiet
+Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/scrape-nocibe:latest" --dockerfile Dockerfile.nocibe --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-nocibe `
     --image="$REGISTRY/scrape-nocibe:latest" `
@@ -45,10 +41,8 @@ Write-Host "  Nocibe deploye!" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "MARIONNAUD" -ForegroundColor Yellow
-Write-Host "  Build..." -ForegroundColor Gray
-docker build -f Dockerfile.marionnaud -t "$REGISTRY/scrape-marionnaud:latest" . --quiet
-Write-Host "  Push..." -ForegroundColor Gray
-docker push "$REGISTRY/scrape-marionnaud:latest" --quiet
+Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/scrape-marionnaud:latest" --dockerfile Dockerfile.marionnaud --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-marionnaud `
     --image="$REGISTRY/scrape-marionnaud:latest" `

@@ -1,4 +1,4 @@
-# Deploiement rapide Marionnaud
+# Deploiement rapide Marionnaud (via Cloud Build)
 $ErrorActionPreference = "Stop"
 
 Write-Host "Deploiement Marionnaud..." -ForegroundColor Cyan
@@ -9,11 +9,8 @@ $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
 
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
-Write-Host "  Build..." -ForegroundColor Gray
-docker build -f Dockerfile.marionnaud -t "$REGISTRY/scrape-marionnaud:latest" . --quiet
-
-Write-Host "  Push..." -ForegroundColor Gray
-docker push "$REGISTRY/scrape-marionnaud:latest" --quiet
+Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/scrape-marionnaud:latest" --dockerfile Dockerfile.marionnaud --quiet
 
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-marionnaud --image="$REGISTRY/scrape-marionnaud:latest" --region=$REGION --quiet

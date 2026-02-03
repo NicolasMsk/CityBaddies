@@ -1,4 +1,4 @@
-# Deploy Expire Deals Job to Google Cloud Run
+# Deploy Expire Deals Job to Google Cloud Run (via Cloud Build)
 # Usage: .\deploy-expire-deals.ps1
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -21,25 +21,16 @@ if (-not $DATABASE_URL) {
 }
 Write-Host "[OK] DATABASE_URL loaded from .env" -ForegroundColor Green
 
-# Build Docker image
-Write-Host "[1/3] Building Docker image..." -ForegroundColor Yellow
-docker build -f Dockerfile.expire-deals -t $IMAGE_NAME .
+# Build and Push via Cloud Build
+Write-Host "[1/2] Building and pushing via Cloud Build..." -ForegroundColor Yellow
+gcloud builds submit --tag $REGISTRY --dockerfile Dockerfile.expire-deals
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Docker build failed" -ForegroundColor Red
-    exit 1
-}
-
-# Push to Artifact Registry
-Write-Host "[2/3] Pushing to Artifact Registry..." -ForegroundColor Yellow
-docker tag $IMAGE_NAME $REGISTRY
-docker push $REGISTRY
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Docker push failed" -ForegroundColor Red
+    Write-Host "[ERROR] Cloud Build failed" -ForegroundColor Red
     exit 1
 }
 
 # Deploy to Cloud Run Jobs
-Write-Host "[3/3] Deploying to Cloud Run Jobs..." -ForegroundColor Yellow
+Write-Host "[2/2] Deploying to Cloud Run Jobs..." -ForegroundColor Yellow
 gcloud run jobs update $JOB_NAME `
     --image=$REGISTRY `
     --region=$REGION `

@@ -1,4 +1,4 @@
-# Deploiement Cloud Run Job - Enrichissement Sephora
+# Deploiement Cloud Run Job - Enrichissement Sephora (via Cloud Build)
 $ErrorActionPreference = "Stop"
 
 Write-Host "Deploiement Enrichissement Sephora..." -ForegroundColor Cyan
@@ -15,11 +15,8 @@ if ($envContent -match 'OPENAI_API_KEY="?([^"\s]+)"?') { $OPENAI_KEY = $matches[
 
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
-Write-Host "  Build Docker..." -ForegroundColor Gray
-docker build -f Dockerfile.enrich-sephora -t "$REGISTRY/${JOB_NAME}:latest" .
-
-Write-Host "  Push vers Artifact Registry..." -ForegroundColor Gray
-docker push "$REGISTRY/${JOB_NAME}:latest"
+Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/${JOB_NAME}:latest" --dockerfile Dockerfile.enrich-sephora
 
 # Verifier si le job existe
 $jobExists = gcloud run jobs describe $JOB_NAME --region=$REGION 2>$null

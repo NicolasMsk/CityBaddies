@@ -1,4 +1,4 @@
-# Deploiement rapide Sephora
+# Deploiement rapide Sephora (via Cloud Build)
 $ErrorActionPreference = "Stop"
 
 Write-Host "Deploiement Sephora..." -ForegroundColor Cyan
@@ -9,11 +9,8 @@ $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
 
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
-Write-Host "  Build..." -ForegroundColor Gray
-docker build -f Dockerfile.sephora -t "$REGISTRY/scrape-sephora:latest" . --quiet
-
-Write-Host "  Push..." -ForegroundColor Gray
-docker push "$REGISTRY/scrape-sephora:latest" --quiet
+Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
+gcloud builds submit --tag "$REGISTRY/scrape-sephora:latest" --dockerfile Dockerfile.sephora --quiet
 
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-sephora --image="$REGISTRY/scrape-sephora:latest" --region=$REGION --quiet

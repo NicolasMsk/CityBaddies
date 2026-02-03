@@ -179,7 +179,8 @@ model ProductVariant {
   volumeRaw     String?  // Volume brut original (ex: "50 ML", "1.7 oz") pour debug
   ean           String?  // Code-barres EAN spécifique à la variante
   
-  deals         Deal[]   // Les deals sont liés à une variante spécifique
+  deals         Deal[]        // Les deals sont liés à une variante spécifique
+  priceHistory  PriceHistory[] // Historique des prix pour cette variante
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -190,16 +191,26 @@ model ProductVariant {
   @@index([volumeValue, volumeUnit])  // Pour trouver toutes les variantes 50ml
 }
 
-// Historique des prix pour chaque produit
+// Historique des prix pour chaque produit (avec contenance)
 model PriceHistory {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  price     Float
-  date      DateTime @default(now())
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price       Float
+  
+  // Contenance associée au prix (essentiel pour comparer les prix)
+  variantId   String?              // Lien vers la variante (si connue)
+  variant     ProductVariant?      @relation(fields: [variantId], references: [id])
+  volumeValue Float?               // Valeur numérique (ex: 50, 100)
+  volumeUnit  String?              // Unité: "ml", "g", "l", "kg"
+  volumeRaw   String?              // Volume brut original (ex: "50 ML")
+  
+  date        DateTime @default(now())
 
   @@index([productId])
+  @@index([variantId])
   @@index([date])
+  @@index([productId, volumeValue, volumeUnit])  // Pour filtrer par produit+contenance
 }
 
 // Deals/Promotions (offres éphémères)

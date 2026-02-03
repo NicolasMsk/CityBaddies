@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { calculatePricePerUnit, findOrCreateVariant } from '@/lib/utils/volume';
 
 /**
  * POST /api/admin/deals
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       promoCode,
       title,
       description,
+      volume, // Ajout du volume (ex: "50 ml")
     } = body;
 
     // Validation
@@ -47,6 +49,9 @@ export async function POST(request: Request) {
     // Générer un slug unique
     const slug = generateSlug(productName) + '-' + Date.now();
 
+    // Parser le volume
+    const priceInfo = volume ? calculatePricePerUnit(price, volume) : null;
+
     // Créer le produit (sans prix - les prix sont dans Deal)
     const product = await prisma.product.create({
       data: {
@@ -61,11 +66,18 @@ export async function POST(request: Request) {
       },
     });
 
-    // Créer l'historique de prix initial
+    // Créer la variante si volume fourni
+    const variant = volume ? await findOrCreateVariant(prisma, product.id, volume) : null;
+
+    // Créer l'historique de prix initial (avec contenance)
     await prisma.priceHistory.create({
       data: {
         productId: product.id,
         price,
+        variantId: variant?.id || null,
+        volumeValue: priceInfo?.volumeValue || null,
+        volumeUnit: priceInfo?.volumeUnit || null,
+        volumeRaw: volume || null,
         date: new Date(),
       },
     });
@@ -81,6 +93,11 @@ export async function POST(request: Request) {
         discountAmount,
         promoCode: promoCode || null,
         productId: product.id,
+        variantId: variant?.id || null,
+        volume: volume || null,
+        volumeValue: priceInfo?.volumeValue || null,
+        volumeUnit: priceInfo?.volumeUnit || null,
+        pricePerUnit: priceInfo?.pricePerUnit || null,
         isHot: discountPercent >= 30,
         votes: 0,
         views: 0,

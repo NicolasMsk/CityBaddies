@@ -215,10 +215,20 @@ async function importProducts() {
         });
       }
 
-      // PriceHistory uniquement si le prix a changé
+      // PriceHistory uniquement si le prix a changé (avec contenance)
       const lastPrice = lastPriceMap.get(dbProduct.id);
       if (lastPrice !== product.currentPrice) {
-        await prisma.priceHistory.create({ data: { productId: dbProduct.id, price: product.currentPrice, date: new Date() } });
+        await prisma.priceHistory.create({ 
+          data: { 
+            productId: dbProduct.id, 
+            price: product.currentPrice, 
+            variantId: variant?.id || null,
+            volumeValue: priceInfo?.volumeValue || null,
+            volumeUnit: priceInfo?.volumeUnit || null,
+            volumeRaw: product.volume || null,
+            date: new Date() 
+          } 
+        });
         priceChanges++;
       }
       updated++;
@@ -340,7 +350,17 @@ async function importProducts() {
           });
         }
 
-        await tx.priceHistory.create({ data: { productId: dbProduct.id, price: product.currentPrice, date: new Date() } });
+        await tx.priceHistory.create({ 
+          data: { 
+            productId: dbProduct.id, 
+            price: product.currentPrice, 
+            variantId: variant?.id || null,
+            volumeValue: priceInfo?.volumeValue || null,
+            volumeUnit: priceInfo?.volumeUnit || null,
+            volumeRaw: product.volume || null,
+            date: new Date() 
+          } 
+        });
       });
 
       created++;

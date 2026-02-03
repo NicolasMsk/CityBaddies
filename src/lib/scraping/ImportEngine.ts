@@ -404,13 +404,17 @@ export class ImportEngine {
           });
         }
 
-        // PriceHistory uniquement si prix changé
+        // PriceHistory uniquement si prix changé (avec contenance)
         const lastPrice = lastPriceMap.get(dbProduct.id);
         if (lastPrice !== product.currentPrice) {
           await prisma.priceHistory.create({
             data: {
               productId: dbProduct.id,
               price: product.currentPrice,
+              variantId: variant?.id || null,
+              volumeValue: priceInfo?.volumeValue || null,
+              volumeUnit: priceInfo?.volumeUnit || null,
+              volumeRaw: product.volume || null,
               date: new Date(),
             },
           });
@@ -562,11 +566,15 @@ export class ImportEngine {
             });
           }
 
-          // PriceHistory initial
+          // PriceHistory initial (avec contenance)
           await tx.priceHistory.create({
             data: {
               productId: dbProduct.id,
               price: product.currentPrice,
+              variantId: variant?.id || null,
+              volumeValue: priceInfo?.volumeValue || null,
+              volumeUnit: priceInfo?.volumeUnit || null,
+              volumeRaw: product.volume || null,
               date: new Date(),
             },
           });

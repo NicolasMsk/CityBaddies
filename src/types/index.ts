@@ -42,6 +42,11 @@ export interface PriceHistory {
   id: string;
   price: number;
   date: string;
+  // Contenance associée au prix
+  variantId?: string | null;
+  volumeValue?: number | null;
+  volumeUnit?: string | null;
+  volumeRaw?: string | null;
 }
 
 export interface PriceStats {

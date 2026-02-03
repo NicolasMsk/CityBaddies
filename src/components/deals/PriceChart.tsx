@@ -37,10 +37,13 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
   const dates = priceHistory.map(ph => new Date(ph.date));
   const firstSeenDate = dates.length > 0 ? dates[0] : new Date();
   const lastSeenDate = dates.length > 0 ? dates[dates.length - 1] : new Date();
-  const coverageDays = differenceInDays(new Date(), firstSeenDate);
   
-  // Règle : données insuffisantes si < 7 observations OU < 14 jours de couverture
-  const hasInsufficientData = nObservations < 7 || coverageDays < 14;
+  // Vérifier si tous les prix sont identiques (pas de variation)
+  const allPricesSame = priceHistory.length > 1 && 
+    priceHistory.every(ph => Math.abs(ph.price - priceHistory[0].price) < 0.01);
+  
+  // Règle : données insuffisantes si <= 2 observations OU tous les prix sont identiques
+  const hasInsufficientData = nObservations <= 2 || allPricesSame;
   
   // Cas spécial : une seule observation
   const hasSingleObservation = nObservations === 1;
@@ -49,6 +52,7 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
     date: format(new Date(ph.date), 'd MMM', { locale: fr }),
     fullDate: format(new Date(ph.date), 'dd MMMM yyyy', { locale: fr }),
     price: ph.price,
+    volume: ph.volumeRaw || (ph.volumeValue && ph.volumeUnit ? `${ph.volumeValue} ${ph.volumeUnit}` : null),
   }));
 
   // Ne calculer ces valeurs que si on a assez de données
@@ -56,12 +60,23 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
   const priceChange = ((currentPrice - priceStats.average) / priceStats.average) * 100;
   const savings = priceStats.average - currentPrice;
 
+  // Récupérer le volume le plus récent pour l'afficher dans le titre
+  const currentVolume = priceHistory.length > 0 
+    ? (priceHistory[priceHistory.length - 1].volumeRaw || 
+       (priceHistory[priceHistory.length - 1].volumeValue && priceHistory[priceHistory.length - 1].volumeUnit 
+         ? `${priceHistory[priceHistory.length - 1].volumeValue} ${priceHistory[priceHistory.length - 1].volumeUnit}` 
+         : null))
+    : null;
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-3 shadow-lg">
           <p className="text-white/50 text-sm">{payload[0].payload.fullDate}</p>
           <p className="text-white font-bold text-lg">{payload[0].value.toFixed(2)}€</p>
+          {payload[0].payload.volume && (
+            <p className="text-white/40 text-xs mt-1">{payload[0].payload.volume}</p>
+          )}
         </div>
       );
     }
@@ -76,24 +91,14 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
 
   return (
     <div className="w-full">
-      {/* Message données insuffisantes */}
+      {/* Message données insuffisantes - NE PAS AFFICHER, juste cacher le graphique */}
       {hasInsufficientData && (
-        <div className="mb-8 p-4 bg-transparent border border-amber-500/30 flex items-start gap-4">
-          <Clock className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-amber-500 text-xs font-bold tracking-widest uppercase mb-1">Historique en cours</p>
-            <p className="text-amber-500/70 text-xs font-light tracking-wide">
-              Nous récoltons actuellement des données pour cet article. L'analyse complète sera disponible après 7 jours de suivi.
-            </p>
-            <div className="flex flex-wrap gap-6 mt-3 text-[10px] text-amber-500/50 uppercase tracking-widest">
-              <span>Points : {nObservations}</span>
-              <span>Suivi depuis : {format(firstSeenDate, 'd MMM yyyy', { locale: fr })}</span>
-            </div>
-          </div>
+        <div className="text-center py-8 bg-white/5 border border-white/10">
+          <p className="text-white/50 text-sm tracking-widest uppercase">Pas assez de données pour l'historique</p>
         </div>
       )}
 
-      {/* Stats Cards - Sharp */}
+      {/* Stats Cards - Sharp - Afficher seulement si données suffisantes */}
       {!hasInsufficientData && !hasSingleObservation && (
         <div className="grid grid-cols-3 gap-px bg-white/10 border border-white/10 mb-8">
           <div className="bg-[#0a0a0a] p-6 text-center">
@@ -121,69 +126,74 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
         </div>
       )}
 
-      <div className="h-[300px] w-full min-w-[200px]">
-        <ResponsiveContainer width="100%" height={300} minWidth={200}>
-          {hasSingleObservation ? (
-            // Scatter chart pour un point unique
-            <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-              <XAxis 
-                dataKey="date" 
-                stroke="#666" 
-                tick={{ fill: '#666', fontSize: 10, dy: 10 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis 
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 10 }}
-                tickFormatter={(value) => `${value}€`}
-                tickLine={false}
-                axisLine={false}
-                domain={getSinglePointDomain(chartData[0].price)}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-              <Scatter name="Prix" data={chartData} fill="#d4a855" shape="circle" />
-            </ScatterChart>
-          ) : (
-            // Line chart classique
-            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-              <XAxis 
-                dataKey="date" 
-                stroke="#666" 
-                tick={{ fill: '#666', fontSize: 10, dy: 10 }}
-                tickLine={false}
-                axisLine={false}
-                padding={{ left: 20, right: 20 }}
-              />
-              <YAxis 
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 10 }}
-                tickFormatter={(value) => `${value}€`}
-                tickLine={false}
-                axisLine={false}
-                domain={['auto', 'auto']}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="stepAfter" 
-                dataKey="price" 
-                stroke="#d4a855" 
-                strokeWidth={1}
-                dot={{ fill: '#d4a855', r: 2, strokeWidth: 0 }}
-                activeDot={{ r: 4, fill: '#fff' }}
-              />
-            </LineChart>
-          )}
-        </ResponsiveContainer>
-      </div>
+      {/* Graphique - Afficher seulement si données suffisantes */}
+      {!hasInsufficientData && (
+        <div className="h-[300px] w-full min-w-[200px]">
+          <ResponsiveContainer width="100%" height={300} minWidth={200}>
+            {hasSingleObservation ? (
+              // Scatter chart pour un point unique
+              <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#666" 
+                  tick={{ fill: '#666', fontSize: 10, dy: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="#666"
+                  tick={{ fill: '#666', fontSize: 10 }}
+                  tickFormatter={(value) => `${value}€`}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={getSinglePointDomain(chartData[0].price)}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                <Scatter name="Prix" data={chartData} fill="#d4a855" shape="circle" />
+              </ScatterChart>
+            ) : (
+              // Line chart classique avec points bien visibles
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#666" 
+                  tick={{ fill: '#666', fontSize: 10, dy: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  padding={{ left: 20, right: 20 }}
+                />
+                <YAxis 
+                  stroke="#666"
+                  tick={{ fill: '#666', fontSize: 10 }}
+                  tickFormatter={(value) => `${value}€`}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={['auto', 'auto']}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line 
+                  type="stepAfter" 
+                  dataKey="price" 
+                  stroke="#d4a855" 
+                  strokeWidth={2}
+                  dot={{ fill: '#d4a855', r: 5, strokeWidth: 0 }}
+                  activeDot={{ r: 7, fill: '#fff', stroke: '#d4a855', strokeWidth: 2 }}
+                />
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      )}
 
-      {/* Legend / Info */}
-      <div className="mt-6 flex items-center justify-between text-[10px] text-neutral-600 uppercase tracking-widest font-medium">
-        <span>Daily Price Check</span>
-        <span>Source: Official Retailers</span>
-      </div>
+      {/* Legend / Info - Afficher seulement si données suffisantes */}
+      {!hasInsufficientData && (
+        <div className="mt-6 flex items-center justify-between text-[10px] text-neutral-600 uppercase tracking-widest font-medium">
+          <span>Daily Price Check</span>
+          <span>Source: Official Retailers</span>
+        </div>
+      )}
     </div>
   );
 }

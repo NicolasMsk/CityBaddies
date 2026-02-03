@@ -801,17 +801,24 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   
               </div>
 
-              {/* Price Chart */}
-              <div className="border-t border-white/10 pt-12">
-                 <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
-                    Historique des Prix
-                 </h3>
-                 <PriceChart
-                   priceHistory={deal.product.priceHistory as any}
-                   priceStats={priceStats}
-                   currentPrice={deal.dealPrice}
-                 />
-              </div>
+              {/* Price Chart - Afficher seulement si plus de 2 données et variation de prix */}
+              {deal.product.priceHistory && 
+               deal.product.priceHistory.length > 2 &&
+               !(deal.product.priceHistory.length > 1 && 
+                 deal.product.priceHistory.every((ph: any) => 
+                   Math.abs(ph.price - deal.product.priceHistory[0].price) < 0.01
+                 )) && (
+                <div className="border-t border-white/10 pt-12">
+                   <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-500 mb-8">
+                      Historique des Prix
+                   </h3>
+                   <PriceChart
+                     priceHistory={deal.product.priceHistory as any}
+                     priceStats={priceStats}
+                     currentPrice={deal.dealPrice}
+                   />
+                </div>
+              )}
 
               {/* Comments Section */}
               <div className="border-t border-white/10 pt-12">

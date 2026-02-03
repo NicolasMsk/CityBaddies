@@ -20,7 +20,7 @@ $SERPER_KEY = (Get-Content .env | Select-String "SERPER_API_KEY" | ForEach-Objec
 
 Write-Host "SEPHORA" -ForegroundColor Yellow
 Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/scrape-sephora:latest" --dockerfile Dockerfile.sephora --quiet
+gcloud builds submit --config=cloudbuild-sephora.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-sephora:latest" --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-sephora `
     --image="$REGISTRY/scrape-sephora:latest" `
@@ -31,7 +31,7 @@ Write-Host ""
 
 Write-Host "NOCIBE" -ForegroundColor Yellow
 Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/scrape-nocibe:latest" --dockerfile Dockerfile.nocibe --quiet
+gcloud builds submit --config=cloudbuild-nocibe.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-nocibe:latest" --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-nocibe `
     --image="$REGISTRY/scrape-nocibe:latest" `
@@ -42,7 +42,7 @@ Write-Host ""
 
 Write-Host "MARIONNAUD" -ForegroundColor Yellow
 Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/scrape-marionnaud:latest" --dockerfile Dockerfile.marionnaud --quiet
+gcloud builds submit --config=cloudbuild-marionnaud.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-marionnaud:latest" --quiet
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-marionnaud `
     --image="$REGISTRY/scrape-marionnaud:latest" `

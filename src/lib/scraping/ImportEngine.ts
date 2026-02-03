@@ -407,13 +407,14 @@ export class ImportEngine {
         // PriceHistory uniquement si prix changé (avec contenance)
         const lastPrice = lastPriceMap.get(dbProduct.id);
         if (lastPrice !== product.currentPrice) {
+          const volumeInfo = calculatePricePerUnit(product.currentPrice, product.volume);
           await prisma.priceHistory.create({
             data: {
               productId: dbProduct.id,
               price: product.currentPrice,
               variantId: variant?.id || null,
-              volumeValue: product.volumeValue || null,
-              volumeUnit: product.volumeUnit || null,
+              volumeValue: volumeInfo?.volumeValue || null,
+              volumeUnit: volumeInfo?.volumeUnit || null,
               volumeRaw: product.volume || null,
               date: new Date(),
             },

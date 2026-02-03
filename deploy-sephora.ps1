@@ -10,7 +10,7 @@ $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
 Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/scrape-sephora:latest" --dockerfile Dockerfile.sephora --quiet
+gcloud builds submit --config=cloudbuild-sephora.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-sephora:latest" --quiet
 
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-sephora --image="$REGISTRY/scrape-sephora:latest" --region=$REGION --quiet

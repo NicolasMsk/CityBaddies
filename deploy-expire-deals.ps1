@@ -23,7 +23,7 @@ Write-Host "[OK] DATABASE_URL loaded from .env" -ForegroundColor Green
 
 # Build and Push via Cloud Build
 Write-Host "[1/2] Building and pushing via Cloud Build..." -ForegroundColor Yellow
-gcloud builds submit --tag $REGISTRY --dockerfile Dockerfile.expire-deals
+gcloud builds submit --config=cloudbuild-expire-deals.yaml --substitutions=_IMAGE_TAG=$REGISTRY
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Cloud Build failed" -ForegroundColor Red
     exit 1

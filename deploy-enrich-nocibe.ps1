@@ -16,7 +16,7 @@ if ($envContent -match 'OPENAI_API_KEY="?([^"\s]+)"?') { $OPENAI_KEY = $matches[
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
 Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/${JOB_NAME}:latest" --dockerfile Dockerfile.enrich-nocibe
+gcloud builds submit --config=cloudbuild-enrich-nocibe.yaml --substitutions=_IMAGE_TAG="$REGISTRY/${JOB_NAME}:latest"
 
 # Verifier si le job existe
 $jobExists = gcloud run jobs describe $JOB_NAME --region=$REGION 2>$null

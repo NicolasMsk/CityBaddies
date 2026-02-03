@@ -10,7 +10,7 @@ $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
 Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
-gcloud builds submit --tag "$REGISTRY/scrape-marionnaud:latest" --dockerfile Dockerfile.marionnaud --quiet
+gcloud builds submit --config=cloudbuild-marionnaud.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-marionnaud:latest" --quiet
 
 Write-Host "  Update job..." -ForegroundColor Gray
 gcloud run jobs update scrape-marionnaud --image="$REGISTRY/scrape-marionnaud:latest" --region=$REGION --quiet

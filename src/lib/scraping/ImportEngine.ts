@@ -568,13 +568,14 @@ export class ImportEngine {
           }
 
           // PriceHistory initial (avec contenance)
+          const volumeInfo = calculatePricePerUnit(product.currentPrice, product.volume);
           await tx.priceHistory.create({
             data: {
               productId: dbProduct.id,
               price: product.currentPrice,
               variantId: variant?.id || null,
-              volumeValue: priceInfo?.volumeValue || null,
-              volumeUnit: priceInfo?.volumeUnit || null,
+              volumeValue: volumeInfo?.volumeValue || null,
+              volumeUnit: volumeInfo?.volumeUnit || null,
               volumeRaw: product.volume || null,
               date: new Date(),
             },

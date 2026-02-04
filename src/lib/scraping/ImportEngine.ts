@@ -16,7 +16,19 @@ import { findOrCreateBrand } from '../brands';
 import { calculatePricePerUnit, findOrCreateVariant } from '../utils/volume';
 import { calculateDealScore, tagsToString } from '../utils/scoring';
 
-const prisma = new PrismaClient() as any;
+// Configuration du connection pool pour éviter les timeouts
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  // Log des requêtes lentes
+  log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+}) as any;
+
+// Nombre max de requêtes parallèles pour éviter d'épuiser le pool
+const MAX_CONCURRENT_UPDATES = 10;
 
 // ============================================
 // CONFIGURATION PAR DÉFAUT
@@ -156,7 +168,10 @@ export class ImportEngine {
       stats.errors.push(...createResult.errors);
     }
 
-    // 10. Rapport final
+    // 10. Déconnexion propre de Prisma
+    await prisma.$disconnect();
+
+    // 11. Rapport final
     stats.duration = (Date.now() - startTime) / 1000;
     this.printReport(stats);
 
@@ -396,6 +411,7 @@ export class ImportEngine {
               score: scoreResult.score,
               tags: tagsToString(scoreResult.tags),
               isTrending,
+              isActive: true,
               isExpired: false,
               isHot: existingDeal.votes >= 20,
               lastSeenAt: new Date(),
@@ -435,11 +451,12 @@ export class ImportEngine {
       );
     }
 
-    // Exécuter par batch
-    for (let i = 0; i < updatePromises.length; i += this.options.batchSize) {
-      await Promise.all(updatePromises.slice(i, i + this.options.batchSize));
-      if (i + this.options.batchSize < updatePromises.length) {
-        log(`⏳ ${Math.min(i + this.options.batchSize, updatePromises.length)} mis à jour...`, this.options.verbose);
+    // Exécuter par petits batch pour ne pas épuiser le connection pool
+    const concurrencyLimit = MAX_CONCURRENT_UPDATES;
+    for (let i = 0; i < updatePromises.length; i += concurrencyLimit) {
+      await Promise.all(updatePromises.slice(i, i + concurrencyLimit));
+      if ((i + concurrencyLimit) % 50 === 0 || i + concurrencyLimit >= updatePromises.length) {
+        log(`⏳ ${Math.min(i + concurrencyLimit, updatePromises.length)}/${updatePromises.length} mis à jour...`, this.options.verbose);
       }
     }
 
@@ -559,6 +576,7 @@ export class ImportEngine {
                 tags: tagsToString(scoreResult.tags),
                 isHot: false,
                 isTrending,
+                isActive: true,
                 isExpired: false,
                 lastSeenAt: new Date(),
                 votes: 0,

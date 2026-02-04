@@ -1,0 +1,28 @@
+# Dockerfile pour Cloud Run Job - Validation Nocibe (Node.js simple, pas besoin de Playwright)
+FROM node:20-slim
+
+# Installer OpenSSL pour Prisma
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY tsconfig.json ./
+
+# Installer les dépendances
+RUN npm ci
+RUN npm install -g tsx
+
+# Générer le client Prisma
+RUN npx prisma generate
+
+# Copier le code source nécessaire
+COPY src/scripts/cloud-jobs/validate-deals-nocibe.ts ./src/scripts/cloud-jobs/
+
+# Variables d'environnement (seront override par Cloud Run)
+ENV NODE_ENV=production
+
+# Commande d'exécution
+CMD ["npx", "tsx", "src/scripts/cloud-jobs/validate-deals-nocibe.ts"]

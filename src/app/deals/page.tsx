@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import DealCard from '@/components/deals/DealCard';
+import DealsPageClient from './DealsPageClient';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 
 // Force dynamic rendering pour avoir des données fraîches
@@ -57,8 +58,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 async function getDealsData(page: number) {
   const skip = (page - 1) * DEALS_PER_PAGE;
   
-  // Récupérer les deals paginés
-  const [deals, totalDeals] = await Promise.all([
+  // Récupérer les deals paginés + catégories + merchants + brands
+  const [deals, totalDeals, categoriesRaw, merchantsRaw, brandsRaw] = await Promise.all([
     prisma.deal.findMany({
       where: {
         isActive: true,
@@ -84,26 +85,56 @@ async function getDealsData(page: number) {
         isExpired: false,
       },
     }),
-  ]);
-
-  const totalPages = Math.ceil(totalDeals / DEALS_PER_PAGE);
-
-  // Récupérer les catégories avec des deals actifs
-  const categoriesRaw = await prisma.category.findMany({
-    where: {
-      products: {
-        some: {
-          deals: {
-            some: {
-              isActive: true,
-              isExpired: false,
+    // Catégories avec des deals actifs
+    prisma.category.findMany({
+      where: {
+        products: {
+          some: {
+            deals: {
+              some: {
+                isActive: true,
+                isExpired: false,
+              },
             },
           },
         },
       },
-    },
-    orderBy: { name: 'asc' },
-  });
+      orderBy: { name: 'asc' },
+    }),
+    // Merchants avec des deals actifs
+    prisma.merchant.findMany({
+      where: {
+        products: {
+          some: {
+            deals: {
+              some: {
+                isActive: true,
+                isExpired: false,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    // Brands uniques avec des deals actifs
+    prisma.deal.findMany({
+      where: {
+        isActive: true,
+        isExpired: false,
+      },
+      select: {
+        product: {
+          select: {
+            brand: true,
+          },
+        },
+      },
+      distinct: ['productId'],
+    }),
+  ]);
+
+  const totalPages = Math.ceil(totalDeals / DEALS_PER_PAGE);
   
   const categories = categoriesRaw.map(c => ({
     id: c.id,
@@ -113,12 +144,27 @@ async function getDealsData(page: number) {
     description: c.description ?? undefined,
   }));
 
+  const merchants = merchantsRaw.map(m => ({
+    id: String(m.id),
+    name: m.name,
+    slug: m.slug,
+  }));
+
+  // Extraire les marques uniques et les trier
+  const uniqueBrands = [...new Set(brandsRaw.map(d => d.product.brand).filter((b): b is string => Boolean(b)))].sort();
+  const brands = uniqueBrands.map(b => ({
+    name: b,
+    slug: b.toLowerCase().replace(/\s+/g, '-'),
+  }));
+
   return {
     deals,
     totalDeals,
     totalPages,
     currentPage: page,
     categories,
+    merchants,
+    brands,
   };
 }
 
@@ -132,150 +178,73 @@ export default async function DealsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = typeof params.page === 'string' ? Math.max(1, parseInt(params.page, 10)) : 1;
   
-  const { deals, totalDeals, totalPages, currentPage, categories } = await getDealsData(page);
+  const { deals, totalDeals, totalPages, currentPage, categories, merchants, brands } = await getDealsData(page);
+
+  // Sérialiser les deals pour le client (dates -> strings)
+  const serializedDeals = deals.map(deal => ({
+    ...deal,
+    createdAt: deal.createdAt.toISOString(),
+    updatedAt: deal.updatedAt.toISOString(),
+    lastSeenAt: deal.lastSeenAt?.toISOString() || null,
+    product: {
+      ...deal.product,
+      createdAt: deal.product.createdAt.toISOString(),
+      updatedAt: deal.product.updatedAt.toISOString(),
+    },
+  }));
 
   return (
     <div className="min-h-screen py-8 bg-[#0a0a0a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header SEO avec H1 et contenu éditorial */}
-        <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Tous les Deals Beauté
-            {page > 1 && <span className="text-white/50 text-2xl ml-2">- Page {page}</span>}
+        <header className="mb-20 text-center max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-[0.3em] uppercase text-[#d4a855] mb-8 hover:bg-white/10 transition-colors cursor-default">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]"></span>
+            {totalDeals} Pépites Trouvées
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-thin tracking-tighter mb-8 text-white uppercase leading-[0.9]">
+            Tous les <br/>
+            <span className="font-normal italic text-white/40">Bons Plans</span>
           </h1>
-          <div className="text-white/70 space-y-3 max-w-3xl">
-            <p>
-              Bienvenue dans notre sélection complète de <strong>bons plans beauté</strong> ! 
-              Chez City Baddies, on traque pour toi les meilleures <strong>promotions maquillage</strong>, 
-              <strong> soins visage</strong>, <strong>parfums</strong> et <strong>cosmétiques</strong> chez 
-              Sephora, Nocibé et Marionnaud. Chaque deal est vérifié quotidiennement pour te garantir 
-              des réductions réelles allant jusqu&apos;à -70%.
+
+          <div className="text-neutral-400 font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+            <p className="mb-4">
+              La collection complète de nos trouvailles chez <span className="text-white">Sephora, Nocibé et Marionnaud</span>.
             </p>
-            {page === 1 && (
-              <p className="text-white/50">
-                Utilise les filtres ci-dessous pour affiner ta recherche par catégorie, marque, 
-                enseigne ou fourchette de prix. {totalDeals} deals t&apos;attendent ! 💅
-              </p>
-            )}
+            <p className="text-base text-neutral-500">
+              Chaque offre est vérifiée quotidiennement par nos algorithmes pour garantir sa validité.
+              {page === 1 && ` Utilise les filtres pour affiner ta recherche.`}
+            </p>
           </div>
         </header>
 
-        {/* Résultats */}
-        <p className="text-white/40 text-sm mb-4">
-          {totalDeals} résultat{totalDeals > 1 ? 's' : ''} 
-          {totalPages > 1 && ` • Page ${currentPage} sur ${totalPages}`}
-        </p>
+        {/* Composant client avec filtres interactifs */}
+        <DealsPageClient
+          initialDeals={serializedDeals}
+          categories={categories}
+          merchants={merchants}
+          brands={brands}
+          totalDeals={totalDeals}
+          totalPages={totalPages}
+          currentPage={currentPage}
+        />
 
-        {deals.length > 0 ? (
-          <>
-            {/* Grille de deals */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {deals.map((deal) => (
-                <DealCard key={deal.id} deal={deal as any} />
-              ))}
-            </div>
-
-            {/* Pagination SSR avec vrais liens crawlables */}
-            {totalPages > 1 && (
-              <nav aria-label="Pagination des deals" className="flex items-center justify-center gap-2 mt-12">
-                {/* Previous Link - VRAI LIEN CRAWLABLE */}
-                {currentPage > 1 ? (
-                  <Link
-                    href={getPageUrl(currentPage - 1)}
-                    className="flex items-center gap-1 px-4 py-2 rounded-xl transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Précédent
-                  </Link>
-                ) : (
-                  <span className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/5 text-white/20 cursor-not-allowed">
-                    <ChevronLeft className="h-4 w-4" />
-                    Précédent
-                  </span>
-                )}
-
-                {/* Page Numbers - VRAIS LIENS CRAWLABLES */}
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(pageNum => {
-                      return (
-                        pageNum === 1 ||
-                        pageNum === totalPages ||
-                        Math.abs(pageNum - currentPage) <= 2
-                      );
-                    })
-                    .map((pageNum, index, array) => {
-                      const prevPage = array[index - 1];
-                      const showEllipsis = prevPage && pageNum - prevPage > 1;
-
-                      return (
-                        <div key={pageNum} className="flex items-center">
-                          {showEllipsis && (
-                            <span className="px-2 text-white/30">...</span>
-                          )}
-                          {pageNum === currentPage ? (
-                            <span
-                              aria-current="page"
-                              className="w-10 h-10 rounded-xl font-medium flex items-center justify-center bg-[#7b0a0a] text-white"
-                            >
-                              {pageNum}
-                            </span>
-                          ) : (
-                            <Link
-                              href={getPageUrl(pageNum)}
-                              className="w-10 h-10 rounded-xl font-medium flex items-center justify-center transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
-                            >
-                              {pageNum}
-                            </Link>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-
-                {/* Next Link - VRAI LIEN CRAWLABLE */}
-                {currentPage < totalPages ? (
-                  <Link
-                    href={getPageUrl(currentPage + 1)}
-                    className="flex items-center gap-1 px-4 py-2 rounded-xl transition-all bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10"
-                  >
-                    Suivant
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <span className="flex items-center gap-1 px-4 py-2 rounded-xl bg-white/5 text-white/20 cursor-not-allowed">
-                    Suivant
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                )}
-              </nav>
-            )}
-
-            {/* Liens SEO supplémentaires pour le maillage interne */}
-            <div className="mt-16 border-t border-white/10 pt-8">
-              <h2 className="text-xl font-semibold text-white mb-4">Explorer par catégorie</h2>
-              <div className="flex flex-wrap gap-3">
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/categories/${category.slug}`}
-                    className="px-4 py-2 rounded-full bg-[#1a1a1a] text-white/70 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10 transition-all"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20">
-            <Package className="h-16 w-16 text-[#7b0a0a]/50 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">Aucun deal disponible</h2>
-            <p className="text-white/40">
-              Reviens plus tard, on cherche toujours de nouvelles pépites !
-            </p>
+        {/* Liens SEO pour le maillage interne */}
+        <div className="mt-16 border-t border-white/10 pt-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Explorer par catégorie</h2>
+          <div className="flex flex-wrap gap-3">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/categories/${category.slug}`}
+                className="px-4 py-2 rounded-full bg-[#1a1a1a] text-white/70 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10 transition-all"
+              >
+                {category.name}
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,9 @@
 /**
- * Script de validation des deals Nocibe
+ * Cloud Job: Validation des deals Nocibe
  * 
  * Ce script vérifie que les prix des deals correspondent à la réalité sur Nocibe.
  * Utilise un simple fetch HTML (pas besoin de Playwright car les données sont dans le HTML).
- * 
- * Usage: npx tsx src/scripts/validate-deals-nocibe.ts [--limit N] [--deal-id ID]
+ * Prend en compte les codes promo (ex: -30% avec code) comme promo valide.
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -33,27 +32,25 @@ function calculatePricePerUnit(price: number, volumeStr: string | null | undefin
 
 // Type pour une variante de produit
 interface ProductVariant {
-  name: string;            // "30 ml"
-  volume: string;          // "30 ml"
-  volumeValue: number;     // 30
-  volumeUnit: string;      // "ml"
-  currentPrice: number;    // Prix actuel (promo ou normal)
-  originalPrice: number;   // Prix barré (si promo)
-  discountPercent: number; // % de réduction
-  isPromo: boolean;        // true si en promo directe (prix barré) OU code promo disponible
-  promoCode?: string;      // Code promo si applicable
-  priceWithCode?: number;  // Prix après code promo
-  discountWithCode?: number; // % de réduction avec code promo
+  name: string;
+  volume: string;
+  volumeValue: number;
+  volumeUnit: string;
+  currentPrice: number;
+  originalPrice: number;
+  discountPercent: number;
+  isPromo: boolean;
+  promoCode?: string;
+  priceWithCode?: number;
+  discountWithCode?: number;
 }
 
-// Résultat du scraping d'une page produit
 interface ScrapedProductInfo {
   variants: ProductVariant[];
   url: string;
   scrapedAt: Date;
 }
 
-// Résultat de la validation
 interface ValidationResult {
   dealId: string;
   productName: string;
@@ -70,18 +67,12 @@ interface ValidationResult {
   matchedVariant?: ProductVariant;
 }
 
-/**
- * Parse un prix français (ex: "14,90 €" -> 14.90)
- */
 function parsePrice(priceStr: string): number {
   if (!priceStr) return 0;
   const cleaned = priceStr.replace(/[^\d,\.]/g, '').replace(',', '.');
   return parseFloat(cleaned) || 0;
 }
 
-/**
- * Parse un volume (ex: "30 ml" -> { value: 30, unit: "ml" })
- */
 function parseVolume(volumeStr: string): { value: number; unit: string } | null {
   const match = volumeStr.match(/(\d+(?:[.,]\d+)?)\s*(ml|g|l|kg|cl)/i);
   if (match) {
@@ -92,16 +83,10 @@ function parseVolume(volumeStr: string): { value: number; unit: string } | null 
   return null;
 }
 
-/**
- * Normalise le volume pour la comparaison (enlève les espaces, uniformise)
- */
 function normalizeVolume(volume: string): string {
   return volume.toLowerCase().replace(/\s+/g, '').trim();
 }
 
-/**
- * Scrape une page produit Nocibe pour récupérer toutes les variantes
- */
 async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductInfo | null> {
   try {
     console.log(`  📄 Chargement: ${productUrl}`);
@@ -124,29 +109,21 @@ async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductIn
     
     const variants: ProductVariant[] = [];
 
-    // Cas 1: Plusieurs variantes (radio buttons) ou variante unique
-    // Différents types: size-display, color-display, style-display
     const variantDivs = $('div.product-detail__variant--size-display, div.product-detail__variant--color-display, div.product-detail__variant--style-display');
     
     if (variantDivs.length > 0) {
       variantDivs.each((_, el) => {
         const $variant = $(el);
         
-        // Récupérer le volume
         const volumeName = $variant.find('.product-detail__variant-name').first().text().trim();
         if (!volumeName) return;
         
         const volumeInfo = parseVolume(volumeName);
         
-        // Récupérer les prix
-        // Prix barré (original) - promo directe
         const strikethroughPrice = $variant.find('[data-testid="price-type-strikethrough"]').text().trim();
-        // Prix promo - promo directe
         const discountPrice = $variant.find('[data-testid="price-type-discount-color"]').text().trim();
-        // Prix normal (sans promo)
         const currentPriceEl = $variant.find('[data-testid="price-type-current"]').text().trim();
         
-        // Prix avec code promo
         const priceWithCodeEl = $variant.find('[data-testid="variant-product-price"]').text().trim();
         const promoCodeEl = $variant.find('.dacc09ebcc0caa6da034').text().trim();
         
@@ -155,12 +132,10 @@ async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductIn
         let isPromo = false;
         
         if (strikethroughPrice && discountPrice) {
-          // Promo directe (prix barré)
           originalPrice = parsePrice(strikethroughPrice);
           currentPrice = parsePrice(discountPrice);
           isPromo = true;
         } else if (currentPriceEl) {
-          // Pas de promo directe
           currentPrice = parsePrice(currentPriceEl);
           originalPrice = currentPrice;
           isPromo = false;
@@ -185,7 +160,6 @@ async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductIn
         if (priceWithCodeEl && promoCodeEl) {
           variant.promoCode = promoCodeEl;
           variant.priceWithCode = parsePrice(priceWithCodeEl);
-          // Calculer la réduction avec code promo
           if (originalPrice > 0 && variant.priceWithCode > 0) {
             variant.discountWithCode = Math.round((1 - variant.priceWithCode / originalPrice) * 100);
           }
@@ -201,7 +175,6 @@ async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductIn
       });
     }
     
-    // Dédupliquer les variantes
     const uniqueVariants = variants.filter((v, i, arr) => 
       arr.findIndex(x => normalizeVolume(x.name) === normalizeVolume(v.name)) === i
     );
@@ -220,9 +193,6 @@ async function scrapeNocibeProduct(productUrl: string): Promise<ScrapedProductIn
   }
 }
 
-/**
- * Trouve la variante correspondant au deal
- */
 function findMatchingVariant(
   variants: ProductVariant[], 
   dealVolume: string
@@ -233,13 +203,11 @@ function findMatchingVariant(
   
   const normalizedDealVolume = normalizeVolume(dealVolume);
   
-  // Chercher une correspondance exacte
   const exactMatch = variants.find(v => normalizeVolume(v.name) === normalizedDealVolume);
   if (exactMatch) {
     return { variant: exactMatch, isExactMatch: true };
   }
   
-  // Essayer de parser et comparer les valeurs numériques
   const dealVolumeInfo = parseVolume(dealVolume);
   if (dealVolumeInfo) {
     const numericMatch = variants.find(v => {
@@ -256,9 +224,6 @@ function findMatchingVariant(
   return { variant: null, isExactMatch: false };
 }
 
-/**
- * Valide un deal contre les données scrapées
- */
 async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): Promise<ValidationResult> {
   const baseResult: ValidationResult = {
     dealId: deal.id,
@@ -275,15 +240,12 @@ async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): 
 
   const { variant: matchingVariant, isExactMatch } = findMatchingVariant(scrapedInfo.variants, deal.volume);
   
-  // Vérifier s'il y a des promos sur d'autres variantes
   const promoVariants = scrapedInfo.variants.filter(v => v.isPromo);
   
   if (matchingVariant && isExactMatch && matchingVariant.isPromo) {
-    // La variante du deal est toujours en promo
     const priceDiff = Math.abs(deal.dealPrice - matchingVariant.currentPrice);
     
     if (priceDiff > 0.05) {
-      // Prix a changé
       return {
         ...baseResult,
         status: 'PRICE_CHANGED',
@@ -295,7 +257,6 @@ async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): 
         message: `Prix changé: ${deal.dealPrice}€ → ${matchingVariant.currentPrice}€`,
       };
     } else {
-      // Prix identique, deal validé
       return {
         ...baseResult,
         status: 'VALID',
@@ -304,8 +265,6 @@ async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): 
       };
     }
   } else if (promoVariants.length > 0) {
-    // La variante du deal n'est plus en promo, mais d'autres le sont
-    // Trouver la meilleure promo
     const bestPromo = promoVariants.reduce((best, curr) => 
       curr.discountPercent > best.discountPercent ? curr : best
     );
@@ -323,7 +282,6 @@ async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): 
       message: `Volume changé: ${deal.volume} → ${bestPromo.name}`,
     };
   } else {
-    // Aucune promo disponible
     return {
       ...baseResult,
       status: 'EXPIRED',
@@ -332,9 +290,6 @@ async function validateDeal(deal: any, scrapedInfo: ScrapedProductInfo | null): 
   }
 }
 
-/**
- * Applique le résultat de la validation dans la base de données
- */
 async function applyValidationResult(result: ValidationResult, deal: any) {
   switch (result.status) {
     case 'EXPIRED':
@@ -363,7 +318,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
             discountPercent: newVariant.discountPercent,
             discountAmount: newVariant.originalPrice - newVariant.currentPrice,
             pricePerUnit: priceInfo?.pricePerUnit || deal.pricePerUnit,
-            description: `${newVariant.discountPercent}% de réduction !`,
+            description: `${newVariant.discountPercent}% de réduction${newVariant.promoCode ? ` avec code ${newVariant.promoCode}` : ''} !`,
             title: `${brandName} -${newVariant.discountPercent}% : ${deal.product?.name?.substring(0, 100) || ''}`,
             updatedAt: new Date(),
             lastSeenAt: new Date(),
@@ -399,7 +354,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
             discountPercent: matchingVariant.discountPercent,
             discountAmount: matchingVariant.originalPrice - matchingVariant.currentPrice,
             pricePerUnit: priceInfo?.pricePerUnit || deal.pricePerUnit,
-            description: `${matchingVariant.discountPercent}% de réduction !`,
+            description: `${matchingVariant.discountPercent}% de réduction${matchingVariant.promoCode ? ` avec code ${matchingVariant.promoCode}` : ''} !`,
             title: `${brandName} -${matchingVariant.discountPercent}% : ${deal.product?.name?.substring(0, 100) || ''}`,
             updatedAt: new Date(),
             lastSeenAt: new Date(),
@@ -446,7 +401,6 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       break;
 
     case 'NOT_FOUND':
-      // Produit non trouvé (404) → marquer comme expiré par précaution
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
@@ -468,51 +422,26 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
 // ============================================
 
 async function main() {
-  const args = process.argv.slice(2);
-  let limit = 10;
-  let specificDealId: string | null = null;
-
-  // Parser les arguments
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1]);
-    }
-    if (args[i] === '--deal-id' && args[i + 1]) {
-      specificDealId = args[i + 1];
-    }
-  }
-
-  console.log('🔍 Validation des deals Nocibe');
-  console.log('================================');
-  console.log('Mode: fetch HTML (pas besoin de Playwright)');
-  console.log('');
-
-  // Récupérer le merchant Nocibe
+  console.log('========================================');
+  console.log('   VALIDATE DEALS NOCIBE - Cloud Job   ');
+  console.log('========================================\n');
+  
   const merchant = await prisma.merchant.findFirst({ where: { slug: 'nocibe' } });
   if (!merchant) {
     console.log('❌ Merchant Nocibe non trouvé');
     return;
   }
 
-  // Récupérer les deals à valider
-  let deals;
-  if (specificDealId) {
-    deals = await prisma.deal.findMany({
-      where: { id: specificDealId },
-      include: { product: { include: { merchant: true, brandRef: true } } },
-    });
-  } else {
-    deals = await prisma.deal.findMany({
-      where: {
-        product: { merchantId: merchant.id },
-        isExpired: false,
-        isActive: true,
-      },
-      include: { product: { include: { merchant: true, brandRef: true } } },
-      orderBy: { updatedAt: 'desc' },
-      take: limit,
-    });
-  }
+  // Récupérer TOUS les deals actifs Nocibe
+  const deals = await prisma.deal.findMany({
+    where: {
+      product: { merchantId: merchant.id },
+      isExpired: false,
+      isActive: true,
+    },
+    include: { product: { include: { merchant: true, brandRef: true } } },
+    orderBy: { updatedAt: 'desc' },
+  });
 
   console.log(`📋 ${deals.length} deals à valider\n`);
 
@@ -521,11 +450,10 @@ async function main() {
   for (const deal of deals) {
     console.log(`\n${'═'.repeat(60)}`);
     console.log(`🏷️ Deal #${deal.id}: ${deal.title?.substring(0, 50)}...`);
-    console.log(`   🔗 http://localhost:3000/deals/${deal.id}`);
     console.log(`   📦 Volume: ${deal.volume || 'N/A'}`);
     console.log(`   💵 Prix original: ${deal.originalPrice}€`);
     console.log(`   💰 Prix promo: ${deal.dealPrice}€`);
-    console.log(`   📉 Réduction: -${deal.discountPercent}% (${deal.discountAmount}€ d'économie)`);
+    console.log(`   📉 Réduction: -${deal.discountPercent}%`);
 
     const productUrl = deal.product?.productUrl;
     if (!productUrl) {
@@ -534,7 +462,6 @@ async function main() {
       continue;
     }
 
-    // Scraper la page produit
     const scrapedInfo = await scrapeNocibeProduct(productUrl);
     
     if (scrapedInfo && scrapedInfo.variants.length > 0) {
@@ -545,22 +472,14 @@ async function main() {
         const isMatch = matchingVariant && normalizeVolume(v.name) === normalizeVolume(matchingVariant.name);
         const matchTag = isMatch ? ' ← DEAL ACTUEL' : '';
         const promoIcon = v.isPromo ? '🏷️' : '  ';
-        const promoInfo = v.isPromo ? `(-${v.discountPercent}%)` : '(pas de promo)';
+        const promoInfo = v.isPromo ? `(-${v.discountPercent}%${v.promoCode ? ` code ${v.promoCode}` : ''})` : '(pas de promo)';
         console.log(`      ${promoIcon} ${v.name}: ${v.originalPrice}€ → ${v.currentPrice}€ ${promoInfo}${matchTag}`);
-        
-        if (v.promoCode && v.priceWithCode) {
-          console.log(`         📎 Code ${v.promoCode}: ${v.priceWithCode}€`);
-        }
       }
     }
 
-    // Valider le deal
     const validationResult = await validateDeal(deal, scrapedInfo);
-
-    // Appliquer les changements
     await applyValidationResult(validationResult, deal);
 
-    // Mettre à jour les stats
     switch (validationResult.status) {
       case 'VALID': stats.valid++; break;
       case 'PRICE_CHANGED': stats.priceChanged++; break;
@@ -570,7 +489,7 @@ async function main() {
       case 'ERROR': stats.error++; break;
     }
 
-    // Délai entre les requêtes (respecter le rate limit)
+    // Délai entre les requêtes
     await new Promise(r => setTimeout(r, 500));
   }
 

@@ -63,6 +63,7 @@ async function getCategories() {
           deals: {
             where: {
               isActive: true,
+              isExpired: false,
             },
           },
         },

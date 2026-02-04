@@ -48,6 +48,7 @@ async function getHomeData() {
           deals: {
             where: {
               isActive: true,
+              isExpired: false,
             },
           },
         },
@@ -79,6 +80,7 @@ async function getHomeData() {
   const hotDeals = await prisma.deal.findMany({
     where: { 
       isActive: true,
+      isExpired: false,
     },
     include: {
       product: {
@@ -101,6 +103,7 @@ async function getHomeData() {
   const luxeDeals = await prisma.deal.findMany({
     where: { 
       isActive: true,
+      isExpired: false,
       brandTier: 1,
       id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
     },
@@ -132,6 +135,7 @@ async function getHomeData() {
             deals: {
               some: {
                 isActive: true,
+                isExpired: false,
                 id: { notIn: excludedIds }, // Exclure les deals des autres sections
               },
             },
@@ -149,6 +153,7 @@ async function getHomeData() {
         prisma.deal.findMany({
           where: {
             isActive: true,
+            isExpired: false,
             product: { merchantId: merchant.id },
             id: { notIn: excludedIds }, // Exclure les deals des autres sections
           },
@@ -184,7 +189,7 @@ async function getHomeData() {
   const [stats, dealsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
-      prisma.deal.count({ where: { isActive: true } }),
+      prisma.deal.count({ where: { isActive: true, isExpired: false } }),
       prisma.product.count(),
       prisma.merchant.count(),
     ]),
@@ -204,6 +209,7 @@ async function getHomeData() {
             deals: {
               some: {
                 isActive: true,
+                isExpired: false,
               },
             },
           },

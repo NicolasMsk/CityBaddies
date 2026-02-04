@@ -209,6 +209,7 @@ async function getDealData(id: string) {
     where: {
       id: { not: id },
       isActive: true, // Deals actifs uniquement
+      isExpired: false, // Deals non expirés uniquement
       product: {
         brand: deal.product.brand,
       },
@@ -230,6 +231,7 @@ async function getDealData(id: string) {
     where: {
       id: { not: id, notIn: sameBrandDeals.map(d => d.id) },
       isActive: true, // Deals actifs uniquement
+      isExpired: false, // Deals non expirés uniquement
       dealPrice: { gte: priceRange.min, lte: priceRange.max },
       product: {
         categoryId: deal.product.categoryId,

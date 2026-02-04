@@ -154,6 +154,7 @@ async function executeSearchDeals(params: {
 }) {
   const where: any = {
     isActive: true, // Deals actifs uniquement
+    isExpired: false, // Deals non expirés uniquement
   };
 
   const productFilter: any = {};
@@ -223,6 +224,7 @@ async function executeSearchDeals(params: {
   if (deals.length === 0 && params.searchTerms && params.categories && params.categories.length > 0) {
     const fallbackWhere: any = {
       isActive: true, // Deals actifs uniquement
+      isExpired: false, // Deals non expirés uniquement
       product: {
         category: { slug: { in: params.categories } },
       },

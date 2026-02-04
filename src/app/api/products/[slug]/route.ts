@@ -17,7 +17,7 @@ export async function GET(
           orderBy: { date: 'asc' },
         },
         deals: {
-          where: { isActive: true },
+          where: { isActive: true, isExpired: false },
           orderBy: { createdAt: 'desc' },
           take: 5,
         },

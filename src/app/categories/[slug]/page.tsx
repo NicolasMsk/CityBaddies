@@ -243,6 +243,7 @@ async function getCategoryDeals(slug: string) {
   const rawDeals = await (prisma.deal as any).findMany({
     where: {
       isActive: true,
+      isExpired: false,
       product: {
         categoryId: category.id,
       },

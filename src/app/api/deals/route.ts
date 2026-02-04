@@ -32,6 +32,7 @@ export async function GET(request: Request) {
     // Construire les filtres
     const where: any = {
       isActive: true, // Deals actifs uniquement
+      isExpired: false, // Deals non expirés uniquement
     };
 
     if (hotOnly) {

@@ -1,5 +1,8 @@
 // Types partagés pour l'application
 
+// Enum DealStatus (miroir de Prisma)
+export type DealStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED';
+
 export interface Category {
   id: string;
   name: string;
@@ -78,7 +81,7 @@ export interface Deal {
   endDate?: string;
   isHot: boolean;
   isTrending?: boolean;
-  isExpired: boolean;
+  status: DealStatus;
   votes: number;
   views: number;
   createdAt: string;

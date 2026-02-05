@@ -170,7 +170,7 @@ async function enrichCompetitorPrices(
   // Construire le filtre de requête
   const whereClause: any = {
     score: { gte: minScore },
-    isExpired: false,
+    status: { not: 'EXPIRED' },
     volume: { not: null }
   };
 

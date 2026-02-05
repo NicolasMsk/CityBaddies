@@ -17,8 +17,7 @@ export async function GET(request: NextRequest) {
     // Recherche dans les deals actifs
     const deals = await prisma.deal.findMany({
       where: {
-        isActive: true,
-        isExpired: false,
+        status: 'ACTIVE',
         OR: [
           // Recherche dans le titre du deal
           { title: { contains: searchQuery } },

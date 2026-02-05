@@ -153,8 +153,7 @@ async function executeSearchDeals(params: {
   luxuryOnly?: boolean;
 }) {
   const where: any = {
-    isActive: true, // Deals actifs uniquement
-    isExpired: false, // Deals non expirés uniquement
+    status: 'ACTIVE', // Deals actifs uniquement
   };
 
   const productFilter: any = {};
@@ -223,8 +222,7 @@ async function executeSearchDeals(params: {
   // FALLBACK: Si aucun résultat et qu'on avait des searchTerms, réessayer sans eux (juste catégorie + prix)
   if (deals.length === 0 && params.searchTerms && params.categories && params.categories.length > 0) {
     const fallbackWhere: any = {
-      isActive: true, // Deals actifs uniquement
-      isExpired: false, // Deals non expirés uniquement
+      status: 'ACTIVE', // Deals actifs uniquement
       product: {
         category: { slug: { in: params.categories } },
       },

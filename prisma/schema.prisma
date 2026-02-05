@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Statut d'un deal dans le workflow Import → Validate → Enrich
+enum DealStatus {
+  PENDING   // Nouveau deal importé, en attente de validation
+  ACTIVE    // Validé et visible sur le site
+  EXPIRED   // Expiré (plus en promo ou lien mort)
+}
+
 // Utilisateurs (synchronisés avec Supabase Auth)
 model User {
   id            String     @id // UUID from Supabase Auth
@@ -249,8 +256,7 @@ model Deal {
   startDate       DateTime   @default(now())
   endDate         DateTime?
   isHot           Boolean    @default(false) // Validé par la communauté (votes >= 20)
-  isExpired       Boolean    @default(false)
-  isActive        Boolean    @default(false) // Deal actif (score >= 60, non expiré, visible sur le site)
+  status          DealStatus @default(PENDING) // Statut du deal dans le workflow
   isTrending      Boolean    @default(false) // Produit tendance réseaux sociaux
   lastSeenAt      DateTime   @default(now()) // Dernière fois que le deal a été vu en scraping
   votes           Int        @default(0)
@@ -272,8 +278,7 @@ model Deal {
   // Index simples
   @@index([productId])
   @@index([variantId])
-  @@index([isExpired])
-  @@index([isActive])
+  @@index([status])
   @@index([isHot])
   @@index([brandTier])
   @@index([pricePerUnit])
@@ -284,12 +289,11 @@ model Deal {
   @@index([lastSeenAt])                    // Pour le job d'expiration
   
   // Index composites pour requêtes fréquentes
-  @@index([isActive, score])               // Deals actifs triés par score
-  @@index([isActive, brandTier, score])    // Deals actifs par tier de marque
-  @@index([isActive, pricePerUnit])        // Deals actifs triés par prix/unité
-  @@index([productId, isActive])           // Deals actifs d'un produit
-  @@index([isActive, lastSeenAt])          // Deals actifs par dernière vue
-  @@index([isExpired, score])              // Legacy - sera supprimé
+  @@index([status, score])                 // Deals par statut triés par score
+  @@index([status, brandTier, score])      // Deals par statut et tier de marque
+  @@index([status, pricePerUnit])          // Deals par statut triés par prix/unité
+  @@index([productId, status])             // Deals d'un produit par statut
+  @@index([status, lastSeenAt])            // Deals par statut et dernière vue
 }
 
 // Alertes de prix pour les utilisateurs

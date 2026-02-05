@@ -51,8 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Compter le total de deals pour générer les pages de pagination
   const totalDeals = await prisma.deal.count({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
     },
   });
   
@@ -78,8 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         some: {
           deals: {
             some: {
-              isActive: true,
-              isExpired: false,
+              status: 'ACTIVE',
             },
           },
         },
@@ -101,8 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Récupérer les deals actifs (limiter aux plus récents/populaires)
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
     },
     select: {
       id: true,

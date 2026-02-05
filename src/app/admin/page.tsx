@@ -39,7 +39,7 @@ interface Deal {
   dealPrice: number;
   originalPrice: number;
   isHot: boolean;
-  isExpired: boolean;
+  status: 'PENDING' | 'ACTIVE' | 'EXPIRED';
   votes: number;
   createdAt: string;
   author?: {
@@ -159,18 +159,19 @@ export default function AdminPage() {
     }
   };
 
-  const handleToggleExpired = async (dealId: string, isExpired: boolean) => {
+  const handleToggleExpired = async (dealId: string, currentStatus: 'PENDING' | 'ACTIVE' | 'EXPIRED') => {
     setActionLoading(dealId);
     try {
+      const newStatus = currentStatus === 'EXPIRED' ? 'ACTIVE' : 'EXPIRED';
       const res = await fetch(`/api/admin/deals/${dealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isExpired: !isExpired }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (res.ok) {
         setRecentDeals(deals => 
-          deals.map(d => d.id === dealId ? { ...d, isExpired: !isExpired } : d)
+          deals.map(d => d.id === dealId ? { ...d, status: newStatus } : d)
         );
       }
     } catch (error) {
@@ -358,8 +359,10 @@ export default function AdminPage() {
                            {deal.isHot && (
                              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" title="Hot"></span>
                            )}
-                           {deal.isExpired ? (
+                           {deal.status === 'EXPIRED' ? (
                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50">Expiré</span>
+                           ) : deal.status === 'PENDING' ? (
+                             <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-950/30 text-yellow-400 border border-yellow-900/30">En attente</span>
                            ) : (
                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-950/30 text-emerald-400 border border-emerald-900/30">Actif</span>
                            )}
@@ -380,16 +383,16 @@ export default function AdminPage() {
                              <Star className="w-4 h-4" fill={deal.isHot ? "currentColor" : "none"} />
                            </button>
                            <button
-                             onClick={() => handleToggleExpired(deal.id, deal.isExpired)}
+                             onClick={() => handleToggleExpired(deal.id, deal.status)}
                              disabled={actionLoading === deal.id}
                              className={`p-1.5 rounded-md transition-all ${
-                               deal.isExpired 
+                               deal.status === 'EXPIRED' 
                                  ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-950/20' 
                                  : 'text-zinc-500 hover:text-rose-400 hover:bg-rose-950/20'
                              }`}
-                             title={deal.isExpired ? 'Réactiver' : 'Marquer expiré'}
+                             title={deal.status === 'EXPIRED' ? 'Réactiver' : 'Marquer expiré'}
                            >
-                             {deal.isExpired ? <TrendingUp className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                             {deal.status === 'EXPIRED' ? <TrendingUp className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                            </button>
                            <div className="w-px h-4 bg-zinc-800 mx-1"></div>
                            <button

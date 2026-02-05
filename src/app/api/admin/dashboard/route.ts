@@ -30,9 +30,9 @@ export async function GET() {
       totalCategories,
     ] = await Promise.all([
       prisma.deal.count(),
-      prisma.deal.count({ where: { isExpired: false } }),
-      prisma.deal.count({ where: { isExpired: true } }),
-      prisma.deal.count({ where: { isHot: true, isExpired: false } }),
+      prisma.deal.count({ where: { status: 'ACTIVE' } }),
+      prisma.deal.count({ where: { status: 'EXPIRED' } }),
+      prisma.deal.count({ where: { isHot: true, status: 'ACTIVE' } }),
       prisma.user.count(),
       prisma.vote.count(),
       prisma.comment.count(),
@@ -71,7 +71,7 @@ export async function GET() {
     const topDeals = await prisma.deal.findMany({
       take: 10,
       orderBy: { votes: 'desc' },
-      where: { isExpired: false },
+      where: { status: 'ACTIVE' },
       select: {
         id: true,
         title: true,
@@ -94,7 +94,7 @@ export async function GET() {
     // Top 10 deals les plus likés (favoris)
     const topFavorites = await prisma.deal.findMany({
       take: 10,
-      where: { isExpired: false },
+      where: { status: 'ACTIVE' },
       select: {
         id: true,
         title: true,
@@ -171,7 +171,7 @@ export async function GET() {
 
     // Calcul des économies totales générées
     const dealsWithPrices = await prisma.deal.findMany({
-      where: { isExpired: false },
+      where: { status: { not: 'EXPIRED' } },
       select: {
         dealPrice: true,
         originalPrice: true,

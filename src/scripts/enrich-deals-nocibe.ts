@@ -289,7 +289,7 @@ async function scrapeProductPage(page: Page, url: string): Promise<ScrapedProduc
     console.log(`  ⏱️ ${Date.now() - startTime}ms`);
     
     const availableSizes = variants.map(v => v.volumeValue && v.volumeUnit ? `${v.volumeValue}${v.volumeUnit}` : v.name).filter(Boolean);
-    
+
     return {
       brandNameSeo: brandNameSeo?.trim() || null,
       brandLine: brandLine?.trim() || null,
@@ -336,61 +336,6 @@ async function updateDealIfNeeded(deal: DealToEnrich, scrapedData: ScrapedProduc
     console.log(`  📝 Tailles disponibles: "${newAvailableSizes}"`);
     productUpdates.availableSizes = newAvailableSizes;
     hasChanges = true;
-  }
-  
-  // ========== COMPARER LE PRIX DU DEAL (variante sélectionnée) ==========
-  if (scrapedData.selectedVariant) {
-    const webPrice = scrapedData.selectedVariant.price;
-    const webOriginalPrice = scrapedData.selectedVariant.originalPrice;
-    const webVolume = scrapedData.selectedVariant.name;
-    const webVolumeValue = scrapedData.selectedVariant.volumeValue;
-    const webVolumeUnit = scrapedData.selectedVariant.volumeUnit;
-    
-    // Comparer le prix actuel
-    if (webPrice && Math.abs(webPrice - deal.dealPrice) > 0.01) {
-      console.log(`  📝 Prix différent:`);
-      console.log(`     BDD: ${deal.dealPrice}€`);
-      console.log(`     Web: ${webPrice}€`);
-      dealUpdates.dealPrice = webPrice;
-      hasChanges = true;
-      
-      // Recalculer le discount si on a le prix original
-      if (webOriginalPrice || deal.originalPrice) {
-        const originalPrice = webOriginalPrice || deal.originalPrice;
-        const discountAmount = originalPrice - webPrice;
-        const discountPercent = Math.round((discountAmount / originalPrice) * 100);
-        dealUpdates.discountAmount = discountAmount;
-        dealUpdates.discountPercent = discountPercent;
-      }
-    }
-    
-    // Comparer le prix original (barré)
-    if (webOriginalPrice && Math.abs(webOriginalPrice - deal.originalPrice) > 0.01) {
-      console.log(`  📝 Prix original différent:`);
-      console.log(`     BDD: ${deal.originalPrice}€`);
-      console.log(`     Web: ${webOriginalPrice}€`);
-      dealUpdates.originalPrice = webOriginalPrice;
-      hasChanges = true;
-    }
-    
-    // Comparer le volume
-    if (webVolumeValue && webVolumeUnit) {
-      if (deal.volumeValue !== webVolumeValue || deal.volumeUnit !== webVolumeUnit) {
-        console.log(`  📝 Volume différent:`);
-        console.log(`     BDD: ${deal.volumeValue} ${deal.volumeUnit}`);
-        console.log(`     Web: ${webVolumeValue} ${webVolumeUnit}`);
-        dealUpdates.volume = webVolume;
-        dealUpdates.volumeValue = webVolumeValue;
-        dealUpdates.volumeUnit = webVolumeUnit;
-        
-        // Recalculer le prix par unité
-        const priceForCalc = (webPrice || deal.dealPrice);
-        if (priceForCalc && webVolumeValue) {
-          dealUpdates.pricePerUnit = priceForCalc / webVolumeValue;
-        }
-        hasChanges = true;
-      }
-    }
   }
   
   // ========== APPLIQUER LES MISES À JOUR ==========
@@ -461,7 +406,7 @@ async function main() {
   // 1. Récupérer tous les deals actifs Nocibé avec sourceUrl
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
+      status: 'ACTIVE',
       sourceUrl: {
         contains: 'nocibe.fr',
         not: null,
@@ -510,7 +455,7 @@ async function main() {
   let processed = 0;
   let updated = 0;
   let errors = 0;
-  
+
   try {
     for (const deal of deals) {
       processed++;
@@ -521,7 +466,7 @@ async function main() {
         continue;
       }
       
-      // Scraper la page
+      // Scraper la page pour récupérer le rich content
       const scrapedData = await scrapeProductPage(page, deal.sourceUrl);
       
       if (!scrapedData) {
@@ -529,7 +474,7 @@ async function main() {
         continue;
       }
       
-      // Mettre à jour si nécessaire
+      // Mettre à jour le rich content si nécessaire
       const wasUpdated = await updateDealIfNeeded(deal as unknown as DealToEnrich, scrapedData);
       if (wasUpdated) {
         updated++;

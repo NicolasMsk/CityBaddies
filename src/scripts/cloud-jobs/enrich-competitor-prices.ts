@@ -133,7 +133,7 @@ async function main() {
     const deals = await prisma.deal.findMany({
       where: {
         score: { gte: MIN_SCORE },
-        isExpired: false,
+        status: { not: 'EXPIRED' },
         volume: { not: null }
       },
       include: {

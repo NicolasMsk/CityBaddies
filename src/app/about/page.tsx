@@ -7,13 +7,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
   title: 'À Propos de City Baddies | L\'Expert des Deals Beauté & Luxe',
-  description: 'Découvrez la technologie City Baddies : le premier comparateur de prix beauté intelligent qui scanne Sephora, Nocibé et Marionnaud pour dénicher les vraies promotions skincare, maquillage et parfums.',
+  description: 'Découvrez City Baddies : le comparateur de prix beauté qui déniche les vraies promotions Sephora, Nocibé et Marionnaud. Une équipe passionnée au service de votre budget skincare, maquillage et parfums.',
   keywords: [
     "comparateur prix beauté",
     "bons plans maquillage luxe",
     "erreurs de prix sephora",
     "promotions parfum authentique",
-    "technologie beauty tech",
+    "expert beauty deals",
     "city baddies concept",
     "expert deals cosmétiques"
   ],
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'À Propos de City Baddies | L\'Expert des Deals Beauté',
-    description: 'Plus qu\'un comparateur, une technologie de pointe au service de votre budget beauté. Découvrez notre algorithme de veille tarifaire.',
+    description: 'Plus qu\'un comparateur, une équipe passionnée au service de votre budget beauté. Découvrez comment on déniche les meilleures affaires.',
     url: `${BASE_URL}/about`,
     type: 'website',
   },
@@ -51,7 +51,7 @@ const structuredData = {
           "name": "Qu'est-ce que City Baddies ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "City Baddies est une plateforme technologique dédiée à la beauté qui agrège et compare les offres des plus grands distributeurs (Sephora, Nocibé, Marionnaud, etc.). Notre algorithme propriétaire vérifie la véracité des remises pour vous garantir les meilleurs prix sur le marché."
+            "text": "City Baddies est une plateforme dédiée à la beauté qui compare les offres des plus grands distributeurs (Sephora, Nocibé, Marionnaud, etc.). Notre équipe vérifie chaque jour la véracité des remises pour vous garantir les meilleurs prix sur le marché."
           }
         },
         {
@@ -59,7 +59,7 @@ const structuredData = {
           "name": "Comment garantissez-vous les meilleurs prix beauté ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Notre technologie de scraping scanne des milliers de références produits 24h/24 et 7j/7. Nous analysons l'historique des prix sur 30 jours pour détecter les fausses promotions et ne retenons que les baisses de prix réelles (minimum 20%)."
+            "text": "Notre équipe surveille quotidiennement des milliers de références produits. Nous analysons l'historique des prix sur 30 jours pour détecter les fausses promotions et ne retenons que les baisses de prix réelles (minimum 20%)."
           }
         },
         {
@@ -127,7 +127,7 @@ export default function AboutPage() {
                   <span className="text-white font-medium">Nous rétablissons la vérité.</span>
                 </p>
                 <p>
-                  Notre technologie propriétaire analyse en temps réel les catalogues des maisons les plus prestigieuses (Sephora, Nocibé, Marionnaud, LookFantastic). Nous ne traquons pas seulement les prix baissés, nous identifions les anomalies de marché, les erreurs de pricing et les opportunités fugaces que les algorithmes classiques ne voient pas.
+                  Notre équipe analyse chaque jour les catalogues des maisons les plus prestigieuses (Sephora, Nocibé, Marionnaud, LookFantastic). On ne traque pas seulement les prix baissés : on identifie les anomalies de marché, les erreurs de pricing et les opportunités fugaces que les comparateurs classiques ne voient pas.
                 </p>
               </div>
             </div>
@@ -195,14 +195,14 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-thin mb-8 uppercase tracking-wide">Le Protocole <br /><span className="font-serif text-[#d4a855] italic text-4xl normal-case">Intransigeant</span></h2>
               <p className="text-neutral-400 mb-6 font-light leading-relaxed">
-                Chaque offre publiée sur City Baddies a survécu à un processus de sélection drastique. Sur 1000 promotions détectées par nos robots, moins de 50 sont retenues.
+                Chaque offre publiée sur City Baddies a survécu à un processus de sélection drastique. Sur 1000 promotions repérées, moins de 50 sont retenues.
               </p>
               <ul className="space-y-8 mt-12">
                 <li className="flex items-start gap-6 group">
                   <span className="text-[#d4a855] font-serif italic text-2xl opacity-50 group-hover:opacity-100 transition-opacity">01.</span>
                   <div>
-                    <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Détection Technique</strong>
-                    <span className="text-neutral-500 text-sm leading-relaxed">Nos serveurs analysent les catalogues des retailers officiels en temps réel pour repérer les baisses de prix avant qu&apos;elles ne soient annoncées au grand public.</span>
+                    <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Veille Quotidienne</strong>
+                    <span className="text-neutral-500 text-sm leading-relaxed">Notre équipe surveille les catalogues des retailers officiels chaque jour pour repérer les baisses de prix avant qu&apos;elles ne soient annoncées au grand public.</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-6 group">

@@ -296,7 +296,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
-          isExpired: true,
+          status: 'EXPIRED',
           updatedAt: new Date(),
         },
       });
@@ -404,7 +404,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
-          isExpired: true,
+          status: 'EXPIRED',
           updatedAt: new Date(),
         },
       });
@@ -436,8 +436,7 @@ async function main() {
   const deals = await prisma.deal.findMany({
     where: {
       product: { merchantId: merchant.id },
-      isExpired: false,
-      isActive: true,
+      status: 'ACTIVE',
     },
     include: { product: { include: { merchant: true, brandRef: true } } },
     orderBy: { updatedAt: 'desc' },

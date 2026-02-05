@@ -341,7 +341,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
-          isExpired: true,
+          status: 'EXPIRED',
           updatedAt: new Date(),
         },
       });
@@ -365,6 +365,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
             pricePerUnit: priceInfo?.pricePerUnit || deal.pricePerUnit,
             description: `${newVariant.discountPercent}% de réduction !`,
             title: `${brandName} -${newVariant.discountPercent}% : ${deal.product?.name?.substring(0, 100) || ''}`,
+            status: 'ACTIVE',
             updatedAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -401,6 +402,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
             pricePerUnit: priceInfo?.pricePerUnit || deal.pricePerUnit,
             description: `${matchingVariant.discountPercent}% de réduction !`,
             title: `${brandName} -${matchingVariant.discountPercent}% : ${deal.product?.name?.substring(0, 100) || ''}`,
+            status: 'ACTIVE',
             updatedAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -425,6 +427,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
+          status: 'ACTIVE',
           lastSeenAt: new Date(),
         },
       });
@@ -450,7 +453,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
-          isExpired: true,
+          status: 'EXPIRED',
           updatedAt: new Date(),
         },
       });
@@ -505,8 +508,7 @@ async function main() {
     deals = await prisma.deal.findMany({
       where: {
         product: { merchantId: merchant.id },
-        isExpired: false,
-        isActive: true,
+        status: { not: 'EXPIRED' },  // PENDING et ACTIVE
       },
       include: { product: { include: { merchant: true, brandRef: true } } },
       orderBy: { updatedAt: 'desc' },

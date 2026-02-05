@@ -172,7 +172,7 @@ async function main() {
         id: { in: promoEnded.map(c => c.id) }
       },
       data: {
-        isExpired: true
+        status: 'EXPIRED'
       }
     });
     console.log(`[OK] ${promoEnded.length} deal(s) sans promo marques comme expires`);
@@ -186,7 +186,7 @@ async function main() {
         id: { in: priceIncreases.map(c => c.id) }
       },
       data: {
-        isExpired: true
+        status: 'EXPIRED'
       }
     });
     console.log(`[OK] ${priceIncreases.length} deal(s) avec hausse de prix marques comme expires`);
@@ -200,7 +200,7 @@ async function main() {
         id: { in: notSeen.map(c => c.id) }
       },
       data: {
-        isExpired: true
+        status: 'EXPIRED'
       }
     });
     console.log(`[OK] ${notSeen.length} deal(s) non vus marques comme expires`);

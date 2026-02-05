@@ -314,11 +314,10 @@ async function main() {
   console.log('🚀 [CLOUD JOB] Enrichissement Marionnaud...');
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
-  // Récupérer les deals Marionnaud à enrichir (actifs, non expirés, sans whyGoodDeal)
+  // Récupérer les deals Marionnaud à enrichir (actifs, sans whyGoodDeal)
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       whyGoodDeal: null,
       product: {
         productUrl: { contains: 'marionnaud.fr' },
@@ -394,7 +393,6 @@ async function main() {
 
   let success = 0;
   let errors = 0;
-  let deactivated = 0;
 
   try {
     for (let i = 0; i < deals.length; i++) {
@@ -404,23 +402,12 @@ async function main() {
       console.log(`[${i + 1}/${deals.length}] ${deal.title}`);
       console.log(`   URL: ${productUrl}`);
 
+      // Scraper la page pour récupérer le rich content
       const data = await scrapeMarionnaudPage(page, productUrl);
 
       if (!data) {
         errors++;
         console.log('   ❌ Échec scraping\n');
-        continue;
-      }
-      
-      // Vérifier si le deal est encore en promo
-      if (!data.hasPromo) {
-        console.log('   ⚠️ Plus de promo sur cette page! Désactivation du deal...');
-        await prisma.deal.update({
-          where: { id: deal.id },
-          data: { isActive: false, isExpired: true },
-        });
-        console.log('   ✓ Deal désactivé\n');
-        deactivated++;
         continue;
       }
 
@@ -460,7 +447,6 @@ async function main() {
   console.log('='.repeat(60));
   console.log(`⏱️  Durée: ${duration}s`);
   console.log(`✅ Réussis: ${success}`);
-  console.log(`🚫 Désactivés (plus de promo): ${deactivated}`);
   console.log(`❌ Erreurs: ${errors}`);
   console.log('\n✅ [CLOUD JOB] Enrichissement terminé!');
   

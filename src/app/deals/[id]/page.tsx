@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   // Deal inactif ou expiré - ne pas indexer
-  const shouldIndex = deal.isActive && !deal.isExpired;
+  const shouldIndex = deal.status === 'ACTIVE';
 
   const productName = deal.refinedTitle || deal.title;
   const brandName = deal.product.brand || '';
@@ -186,7 +186,7 @@ async function getDealData(id: string) {
 
   // Deal non trouvé OU deal inactif = 404
   // Les deals inactifs ne doivent pas être accessibles pour éviter les problèmes SEO
-  if (!deal || !deal.isActive) return null;
+  if (!deal || deal.status !== 'ACTIVE') return null;
 
   // Incrémenter les vues
   await prisma.deal.update({
@@ -208,8 +208,7 @@ async function getDealData(id: string) {
   const sameBrandDeals = deal.product.brand ? await prisma.deal.findMany({
     where: {
       id: { not: id },
-      isActive: true, // Deals actifs uniquement
-      isExpired: false, // Deals non expirés uniquement
+      status: 'ACTIVE',
       product: {
         brand: deal.product.brand,
       },
@@ -230,8 +229,7 @@ async function getDealData(id: string) {
   const sameCategoryDeals = await prisma.deal.findMany({
     where: {
       id: { not: id, notIn: sameBrandDeals.map(d => d.id) },
-      isActive: true, // Deals actifs uniquement
-      isExpired: false, // Deals non expirés uniquement
+      status: 'ACTIVE',
       dealPrice: { gte: priceRange.min, lte: priceRange.max },
       product: {
         categoryId: deal.product.categoryId,
@@ -306,7 +304,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       priceCurrency: "EUR",
       price: deal.dealPrice,
       priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      availability: deal.isExpired ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      availability: deal.status === 'EXPIRED' ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: deal.product.merchant ? {
         "@type": "Organization",

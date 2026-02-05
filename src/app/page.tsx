@@ -47,8 +47,7 @@ async function getHomeData() {
         include: {
           deals: {
             where: {
-              isActive: true,
-              isExpired: false,
+              status: 'ACTIVE',
             },
           },
         },
@@ -79,8 +78,7 @@ async function getHomeData() {
   // 1. D'abord les hotDeals (Sélection Virale)
   const hotDeals = await prisma.deal.findMany({
     where: { 
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
     },
     include: {
       product: {
@@ -102,8 +100,7 @@ async function getHomeData() {
   // 2. Ensuite les luxeDeals (Archives de Luxe) - en excluant les hotDeals
   const luxeDeals = await prisma.deal.findMany({
     where: { 
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       brandTier: 1,
       id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
     },
@@ -134,8 +131,7 @@ async function getHomeData() {
           some: {
             deals: {
               some: {
-                isActive: true,
-                isExpired: false,
+                status: 'ACTIVE',
                 id: { notIn: excludedIds }, // Exclure les deals des autres sections
               },
             },
@@ -152,8 +148,7 @@ async function getHomeData() {
       merchants.map(merchant =>
         prisma.deal.findMany({
           where: {
-            isActive: true,
-            isExpired: false,
+            status: 'ACTIVE',
             product: { merchantId: merchant.id },
             id: { notIn: excludedIds }, // Exclure les deals des autres sections
           },
@@ -189,7 +184,7 @@ async function getHomeData() {
   const [stats, dealsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
-      prisma.deal.count({ where: { isActive: true, isExpired: false } }),
+      prisma.deal.count({ where: { status: 'ACTIVE' } }),
       prisma.product.count(),
       prisma.merchant.count(),
     ]),
@@ -197,7 +192,7 @@ async function getHomeData() {
     prisma.deal.count({
       where: {
         createdAt: { gte: today },
-        isExpired: false,
+        status: { not: 'EXPIRED' },
       },
     }),
     // Top marques avec deals actifs (pour le bandeau)
@@ -208,8 +203,7 @@ async function getHomeData() {
           some: {
             deals: {
               some: {
-                isActive: true,
-                isExpired: false,
+                status: 'ACTIVE',
               },
             },
           },
@@ -508,7 +502,7 @@ export default async function HomePage() {
                   DERNIERS <span className="italic font-normal text-white">AJOUTS</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-sm border-l border-white/20 pl-6 leading-relaxed">
-                  Baisses de prix détectées en temps réel par nos algorithmes.
+                  Baisses de prix dénichées chaque jour par notre équipe.
                 </p>
               </div>
               <Link
@@ -583,7 +577,7 @@ export default async function HomePage() {
               <div>
                 <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">02 — La Solution</span>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  Nous avons construit un moteur sophistiqué qui scanne sans relâche les revendeurs premium. Nous éliminons le marketing pour ne révéler que les vraies baisses de prix. <span className="text-white">Données pures, pour les passionnés.</span>
+                  Notre équipe surveille quotidiennement les revendeurs premium pour vous dénicher les vraies pépites. On élimine le bruit marketing pour ne garder que les baisses de prix qui valent le coup. <span className="text-white">Sélection exigeante, pour les passionnées.</span>
                 </p>
               </div>
             </div>
@@ -597,9 +591,9 @@ export default async function HomePage() {
                   <div className="flex flex-col md:flex-row md:items-start gap-6">
                     <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">01</span>
                     <div>
-                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Curation Algorithmique</h4>
+                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Sélection Exigeante</h4>
                       <p className="text-neutral-500 font-light leading-relaxed">
-                        Nos robots surveillent des milliers de produits chez Sephora, Nocibé, Marionnaud et autres 24/7. Seules les réductions de 20%+ sont retenues. Pas de remplissage.
+                        Notre équipe surveille des milliers de produits chez Sephora, Nocibé, Marionnaud et autres chaque jour. Seules les réductions de 20%+ sont retenues. Pas de remplissage.
                       </p>
                     </div>
                   </div>
@@ -678,28 +672,10 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-4">
-            {/*
-              {
-                q: "Comment dénichez-vous ces prix ?",
-                a: "Notre algorithme propriétaire scanne Sephora, Nocibé, Marionnaud et d'autres partenaires 24h/24. Nous comparons les prix catalogues avec les prix remisés en temps réel pour isoler les vraies bonnes affaires des fausses promos."
-              },
-              {
-                q: "Est-ce que je commande chez vous ?",
-                a: "Non, City Baddies est un comparateur intelligent. Nous vous redirigeons directement vers le site officiel du marchand (Sephora, etc.) pour finaliser votre achat en toute sécurité. Vous profitez de leurs garanties et service client."
-              },
-              {
-                q: "Pourquoi City Baddies est gratuit ?",
-                a: "L'accès au site est 100% gratuit. Nous nous rémunérons grâce à l'affiliation : les marques nous versent une petite commission quand vous passez par nos liens, sans que cela ne change le prix pour vous (c'est transparent)."
-              },
-              {
-                q: "À quelle fréquence les deals sont mis à jour ?",
-                a: "En temps réel. Dès qu'un prix change ou qu'un stock s'épuise, notre base de données est mise à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
-              }
-            */}
             { [
               {
                 q: "Comment dénichez-vous ces prix ?",
-                a: "Notre algorithme propriétaire scanne Sephora, Nocibé, Marionnaud et d'autres partenaires 24h/24. Nous comparons les prix catalogues avec les prix remisés en temps réel pour isoler les vraies bonnes affaires des fausses promos."
+                a: "Notre équipe surveille chaque jour Sephora, Nocibé, Marionnaud et d'autres partenaires. On compare les prix catalogues avec les prix remisés pour isoler les vraies bonnes affaires des fausses promos."
               },
               {
                 q: "Est-ce que je commande chez vous ?",
@@ -711,7 +687,7 @@ export default async function HomePage() {
               },
               {
                 q: "À quelle fréquence les deals sont mis à jour ?",
-                a: "En temps réel. Dès qu'un prix change ou qu'un stock s'épuise, notre base de données est mise à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
+                a: "Tous les jours ! Dès qu'un prix change ou qu'un stock s'épuise, on met à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
               }
             ].map((item, i) => (
               <div key={i} className="group border border-white/10 bg-white/5 rounded-none overflow-hidden transition-all hover:bg-white/10">

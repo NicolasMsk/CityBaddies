@@ -17,10 +17,20 @@ import { calculatePricePerUnit, findOrCreateVariant } from '../utils/volume';
 import { calculateDealScore, tagsToString } from '../utils/scoring';
 
 // Configuration du connection pool pour éviter les timeouts
+// Supabase a un pool limit de ~5 connexions
+// On configure Prisma pour:
+// - connection_limit=3 : Limiter les connexions simultanées
+// - pool_timeout=30 : Attendre jusqu'à 30s pour une connexion
+const getDatabaseUrl = () => {
+  const baseUrl = process.env.DATABASE_URL || '';
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${separator}connection_limit=3&pool_timeout=30`;
+};
+
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: getDatabaseUrl(),
     },
   },
   // Log des requêtes lentes
@@ -28,7 +38,8 @@ const prisma = new PrismaClient({
 }) as any;
 
 // Nombre max de requêtes parallèles pour éviter d'épuiser le pool
-const MAX_CONCURRENT_UPDATES = 10;
+// Supabase a un pool limit de 5 connexions, on reste à 3 pour être safe
+const MAX_CONCURRENT_UPDATES = 3;
 
 // ============================================
 // CONFIGURATION PAR DÉFAUT
@@ -351,112 +362,105 @@ export class ImportEngine {
     });
     const lastPriceMap = new Map<number, number>(lastPrices.map((p: any) => [p.productId, p.price]));
 
-    // Préparer les updates en batch
-    const updatePromises: Promise<void>[] = [];
+    // Traiter les produits par petits batch SÉQUENTIELLEMENT
+    for (let i = 0; i < products.length; i += MAX_CONCURRENT_UPDATES) {
+      const batch = products.slice(i, i + MAX_CONCURRENT_UPDATES);
+      
+      await Promise.all(batch.map(async (product) => {
+        try {
+          const dbProduct = product._dbProduct;
+          const existingDeal = product._existingDeal;
 
-    for (const product of products) {
-      const updateFn = async () => {
-        const dbProduct = product._dbProduct;
-        const existingDeal = product._existingDeal;
-
-        // Mettre à jour les infos produit
-        await prisma.product.update({
-          where: { id: dbProduct.id },
-          data: {
-            imageUrl: product.imageUrl,
-            productUrl: product.productUrl,
-          },
-        });
-
-        // Créer/trouver la variante
-        const variant = await findOrCreateVariant(prisma, dbProduct.id, product.volume);
-
-        // Mettre à jour le deal si réduction suffisante
-        if (existingDeal && product.discountPercent >= this.options.minDiscountPercent) {
-          // FALLBACK: Recalculer le prix original si discountAmount = 0 mais discountPercent > 0
-          let { currentPrice, originalPrice, discountPercent } = product;
-          if (originalPrice === currentPrice && discountPercent > 0) {
-            originalPrice = Math.round((currentPrice / (1 - discountPercent / 100)) * 100) / 100;
-          }
-          const discountAmount = originalPrice - currentPrice;
-
-          const priceInfo = calculatePricePerUnit(currentPrice, product.volume);
-          const isTrending = product.isTrending || false;
-
-          const scoreResult = calculateDealScore({
-            discountPercent,
-            brandTier: existingDeal.brandTier,
-            pricePerUnit: priceInfo?.pricePerUnit || null,
-            isHot: existingDeal.votes >= 20,
-            isTrending,
-            categorySlug: product.category,
-            subcategorySlug: existingDeal.product?.subcategory || undefined,
-            subsubcategorySlug: existingDeal.product?.subsubcategory || undefined,
-            productName: product.name,
+          // Mettre à jour les infos produit
+          await prisma.product.update({
+            where: { id: dbProduct.id },
+            data: {
+              imageUrl: product.imageUrl,
+              productUrl: product.productUrl,
+            },
           });
 
-          await prisma.deal.update({
-            where: { id: existingDeal.id },
-            data: {
-              title: `${product.brand} -${discountPercent}% : ${product.name.substring(0, 100)}`,
-              dealPrice: currentPrice,
-              originalPrice,
+          // Créer/trouver la variante
+          const variant = await findOrCreateVariant(prisma, dbProduct.id, product.volume);
+
+          // Mettre à jour le deal si réduction suffisante
+          if (existingDeal && product.discountPercent >= this.options.minDiscountPercent) {
+            // FALLBACK: Recalculer le prix original si discountAmount = 0 mais discountPercent > 0
+            let { currentPrice, originalPrice, discountPercent } = product;
+            if (originalPrice === currentPrice && discountPercent > 0) {
+              originalPrice = Math.round((currentPrice / (1 - discountPercent / 100)) * 100) / 100;
+            }
+            const discountAmount = originalPrice - currentPrice;
+
+            const priceInfo = calculatePricePerUnit(currentPrice, product.volume);
+            const isTrending = product.isTrending || false;
+
+            const scoreResult = calculateDealScore({
               discountPercent,
-              discountAmount,
-              variantId: variant?.id || null,
-              volume: product.volume || null,
-              volumeValue: priceInfo?.volumeValue || null,
-              volumeUnit: priceInfo?.volumeUnit || null,
+              brandTier: existingDeal.brandTier,
               pricePerUnit: priceInfo?.pricePerUnit || null,
-              score: scoreResult.score,
-              tags: tagsToString(scoreResult.tags),
-              isTrending,
-              isActive: true,
-              isExpired: false,
               isHot: existingDeal.votes >= 20,
-              lastSeenAt: new Date(),
-              updatedAt: new Date(),
-            },
-          });
-        }
+              isTrending,
+              categorySlug: product.category,
+              subcategorySlug: existingDeal.product?.subcategory || undefined,
+              subsubcategorySlug: existingDeal.product?.subsubcategory || undefined,
+              productName: product.name,
+            });
 
-        // PriceHistory uniquement si prix changé (avec contenance)
-        const lastPrice = lastPriceMap.get(dbProduct.id);
-        if (lastPrice !== product.currentPrice) {
-          const volumeInfo = calculatePricePerUnit(product.currentPrice, product.volume);
-          await prisma.priceHistory.create({
-            data: {
-              productId: dbProduct.id,
-              price: product.currentPrice,
-              variantId: variant?.id || null,
-              volumeValue: volumeInfo?.volumeValue || null,
-              volumeUnit: volumeInfo?.volumeUnit || null,
-              volumeRaw: product.volume || null,
-              date: new Date(),
-            },
-          });
-          priceChanges++;
-        }
+            await prisma.deal.update({
+              where: { id: existingDeal.id },
+              data: {
+                title: `${product.brand} -${discountPercent}% : ${product.name.substring(0, 100)}`,
+                dealPrice: currentPrice,
+                originalPrice,
+                discountPercent,
+                discountAmount,
+                variantId: variant?.id || null,
+                volume: product.volume || null,
+                volumeValue: priceInfo?.volumeValue || null,
+                volumeUnit: priceInfo?.volumeUnit || null,
+                pricePerUnit: priceInfo?.pricePerUnit || null,
+                score: scoreResult.score,
+                tags: tagsToString(scoreResult.tags),
+                isTrending,
+                status: 'ACTIVE',
+                isHot: existingDeal.votes >= 20,
+                lastSeenAt: new Date(),
+                updatedAt: new Date(),
+              },
+            });
+          }
 
-        updated++;
-      };
+          // PriceHistory uniquement si prix changé (avec contenance)
+          const lastPrice = lastPriceMap.get(dbProduct.id);
+          if (lastPrice !== product.currentPrice) {
+            const volumeInfo = calculatePricePerUnit(product.currentPrice, product.volume);
+            await prisma.priceHistory.create({
+              data: {
+                productId: dbProduct.id,
+                price: product.currentPrice,
+                variantId: variant?.id || null,
+                volumeValue: volumeInfo?.volumeValue || null,
+                volumeUnit: volumeInfo?.volumeUnit || null,
+                volumeRaw: product.volume || null,
+                date: new Date(),
+              },
+            });
+            priceChanges++;
+          }
 
-      updatePromises.push(
-        updateFn().catch(err => {
+          updated++;
+        } catch (err) {
           errors.push({
             product: product.name,
             error: err instanceof Error ? err.message : String(err),
           });
-        })
-      );
-    }
+        }
+      }));
 
-    // Exécuter par petits batch pour ne pas épuiser le connection pool
-    const concurrencyLimit = MAX_CONCURRENT_UPDATES;
-    for (let i = 0; i < updatePromises.length; i += concurrencyLimit) {
-      await Promise.all(updatePromises.slice(i, i + concurrencyLimit));
-      if ((i + concurrencyLimit) % 50 === 0 || i + concurrencyLimit >= updatePromises.length) {
-        log(`⏳ ${Math.min(i + concurrencyLimit, updatePromises.length)}/${updatePromises.length} mis à jour...`, this.options.verbose);
+      // Log progress
+      if ((i + MAX_CONCURRENT_UPDATES) % 100 === 0 || i + MAX_CONCURRENT_UPDATES >= products.length) {
+        log(`⏳ ${Math.min(i + MAX_CONCURRENT_UPDATES, products.length)}/${products.length} mis à jour...`, this.options.verbose);
       }
     }
 
@@ -576,8 +580,7 @@ export class ImportEngine {
                 tags: tagsToString(scoreResult.tags),
                 isHot: false,
                 isTrending,
-                isActive: true,
-                isExpired: false,
+                status: 'PENDING',  // Nouveau deal = en attente de validation
                 lastSeenAt: new Date(),
                 votes: 0,
                 views: 0,

@@ -375,11 +375,10 @@ async function main() {
   console.log('🚀 [CLOUD JOB] Enrichissement Nocibé...');
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
-  // Récupérer TOUS les deals à enrichir (actifs, non expirés, sans whyGoodDeal)
+  // Récupérer TOUS les deals à enrichir (actifs, sans whyGoodDeal)
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       whyGoodDeal: null,
       product: {
         productUrl: { contains: 'nocibe.fr' },
@@ -478,7 +477,7 @@ async function main() {
         console.log('   ⚠️ Plus de promo sur cette page! Désactivation du deal...');
         await prisma.deal.update({
           where: { id: deal.id },
-          data: { isActive: false, isExpired: true },
+          data: { status: 'EXPIRED' },
         });
         console.log('   ✓ Deal désactivé\n');
         deactivated++;

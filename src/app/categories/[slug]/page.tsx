@@ -242,8 +242,7 @@ async function getCategoryDeals(slug: string) {
   // Récupérer les deals de cette catégorie
   const rawDeals = await (prisma.deal as any).findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       product: {
         categoryId: category.id,
       },
@@ -292,7 +291,7 @@ async function getCategoryDeals(slug: string) {
     startDate: d.startDate?.toISOString() || new Date().toISOString(),
     endDate: d.endDate?.toISOString(),
     isHot: d.isHot || false,
-    isExpired: d.isExpired || false,
+    status: d.status,
     votes: d.votes || 0,
     views: d.views || 0,
     createdAt: d.createdAt?.toISOString() || new Date().toISOString(),
@@ -447,7 +446,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 <div className="prose prose-invert max-w-none">
                   <p className="text-xl text-slate-200 leading-relaxed font-light mb-8 border-l-2 border-[#d4a855] pl-6 italic">
                     City Baddies compare chaque jour les prix des produits {category.name.toLowerCase()} chez les principales enseignes beauté françaises. 
-                    Notre algorithme détecte automatiquement les promotions et calcule le meilleur rapport qualité-prix.
+                    Notre équipe déniche les meilleures promotions et sélectionne le meilleur rapport qualité-prix.
                   </p>
                   <div className="text-slate-300 leading-relaxed font-light space-y-6">
                     {content.richContent.intro.split('\n\n').map((paragraph, index) => (

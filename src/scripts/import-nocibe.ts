@@ -208,7 +208,7 @@ async function importProducts() {
             tags: tagsToString(scoreResult.tags),
             sourceUrl: (product as any).sourceUrl || existingDeal.sourceUrl || null,
             isTrending,
-            isExpired: false,
+            status: 'ACTIVE',
             isHot: existingDeal.votes >= 20,
             updatedAt: new Date(),
           }
@@ -344,7 +344,7 @@ async function importProducts() {
               sourceUrl: (product as any).sourceUrl || null,
               isHot: false,
               isTrending,
-              isExpired: false,
+              status: 'PENDING',
               votes: 0, views: 0,
             }
           });

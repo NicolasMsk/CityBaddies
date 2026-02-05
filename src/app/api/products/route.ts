@@ -15,8 +15,7 @@ export async function GET(request: Request) {
 
     // Construire les filtres
     const where: any = {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
     };
 
     if (category) {

@@ -387,8 +387,7 @@ async function main() {
   // Récupérer les deals Nocibé actifs, non expirés, et pas encore enrichis (sans whyGoodDeal)
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       whyGoodDeal: null, // Seulement les deals pas encore enrichis par GPT
       product: {
         productUrl: {
@@ -485,7 +484,7 @@ async function main() {
         console.log('   ⚠️ Plus de promo sur cette page! Désactivation du deal...');
         await prisma.deal.update({
           where: { id: deal.id },
-          data: { isActive: false, isExpired: true },
+          data: { status: 'EXPIRED' },
         });
         console.log('   ✓ Deal désactivé\n');
         continue;

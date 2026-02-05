@@ -62,8 +62,7 @@ async function getDealsData(page: number) {
   const [deals, totalDeals, categoriesRaw, merchantsRaw, brandsRaw] = await Promise.all([
     prisma.deal.findMany({
       where: {
-        isActive: true,
-        isExpired: false,
+        status: 'ACTIVE',
       },
       include: {
         product: {
@@ -81,8 +80,7 @@ async function getDealsData(page: number) {
     }),
     prisma.deal.count({
       where: {
-        isActive: true,
-        isExpired: false,
+        status: 'ACTIVE',
       },
     }),
     // Catégories avec des deals actifs
@@ -92,8 +90,7 @@ async function getDealsData(page: number) {
           some: {
             deals: {
               some: {
-                isActive: true,
-                isExpired: false,
+                status: 'ACTIVE',
               },
             },
           },
@@ -108,8 +105,7 @@ async function getDealsData(page: number) {
           some: {
             deals: {
               some: {
-                isActive: true,
-                isExpired: false,
+                status: 'ACTIVE',
               },
             },
           },
@@ -120,8 +116,7 @@ async function getDealsData(page: number) {
     // Brands uniques avec des deals actifs
     prisma.deal.findMany({
       where: {
-        isActive: true,
-        isExpired: false,
+        status: 'ACTIVE',
       },
       select: {
         product: {
@@ -213,7 +208,7 @@ export default async function DealsPage({ searchParams }: PageProps) {
               La collection complète de nos trouvailles chez <span className="text-white">Sephora, Nocibé et Marionnaud</span>.
             </p>
             <p className="text-base text-neutral-500">
-              Chaque offre est vérifiée quotidiennement par nos algorithmes pour garantir sa validité.
+              Chaque offre est vérifiée quotidiennement par notre équipe pour garantir sa validité.
               {page === 1 && ` Utilise les filtres pour affiner ta recherche.`}
             </p>
           </div>

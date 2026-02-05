@@ -389,8 +389,7 @@ async function main() {
   // Récupérer les deals Sephora actifs, non enrichis
   const deals = await prisma.deal.findMany({
     where: {
-      isActive: true,
-      isExpired: false,
+      status: 'ACTIVE',
       whyGoodDeal: null, // Seulement les deals pas encore enrichis
       product: {
         productUrl: {
@@ -445,23 +444,12 @@ async function main() {
     console.log(`[${i + 1}/${deals.length}] ${deal.title.substring(0, 50)}...`);
     console.log(`  URL: ${url}`);
     
-    // Scraper la page
+    // Scraper la page pour récupérer le rich content
     const scrapedData = await scrapeSephoraPage(page, url);
     
     if (!scrapedData) {
       console.log('  ❌ Scraping echoue\n');
       errorCount++;
-      continue;
-    }
-    
-    // Vérifier si le deal est encore en promo
-    if (!scrapedData.hasPromo) {
-      console.log('  ⚠️ Plus de promo sur cette page! Désactivation du deal...');
-      await prisma.deal.update({
-        where: { id: deal.id },
-        data: { isActive: false, isExpired: true },
-      });
-      console.log('  ✓ Deal désactivé\n');
       continue;
     }
     

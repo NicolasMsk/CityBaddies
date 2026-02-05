@@ -1,0 +1,23 @@
+# Monitoring Daily - City Baddies
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Installer les dépendances (incluant googleapis)
+RUN npm ci --only=production && \
+    npm install googleapis && \
+    npx prisma generate
+
+# Copier le script
+COPY src/scripts/monitoring-daily.ts ./src/scripts/
+COPY tsconfig.json ./
+
+# Installer tsx pour exécuter TypeScript
+RUN npm install -g tsx
+
+# Commande d'exécution
+CMD ["tsx", "src/scripts/monitoring-daily.ts"]

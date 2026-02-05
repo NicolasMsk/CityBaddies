@@ -111,7 +111,7 @@ export function generateProductSchema(deal: {
   categoryName?: string;
   dealPrice: number;
   originalPrice: number;
-  isExpired: boolean;
+  status: 'PENDING' | 'ACTIVE' | 'EXPIRED';
   merchantName?: string;
   endDate?: Date | null;
 }) {
@@ -133,7 +133,7 @@ export function generateProductSchema(deal: {
       priceCurrency: "EUR",
       price: deal.dealPrice,
       priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : undefined,
-      availability: deal.isExpired ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      availability: deal.status === 'EXPIRED' ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
       seller: deal.merchantName ? {
         "@type": "Organization",
         name: deal.merchantName,

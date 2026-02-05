@@ -6,7 +6,7 @@
  * 1. Scrape la page produit pour récupérer toutes les variantes (contenances) avec leurs prix
  * 2. Compare avec le deal en base
  * 3. Actions possibles:
- *    - Si plus de promo → deal isExpired = true
+ *    - Si plus de promo → deal status = EXPIRED
  *    - Si prix différent → update le prix + recalcul description
  *    - Si prix identique → deal validé ✓
  */
@@ -722,7 +722,7 @@ async function applyValidationResult(result: ValidationResult): Promise<void> {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
-          isExpired: true,
+          status: 'EXPIRED',
           updatedAt: new Date(),
         },
       });
@@ -862,8 +862,7 @@ async function main() {
   const deals = await prisma.deal.findMany({
     where: {
       product: { merchantId: merchant.id },
-      isExpired: false,
-      isActive: true,
+      status: 'ACTIVE',
     },
     include: { product: { include: { merchant: true, brandRef: true } } },
     orderBy: { updatedAt: 'desc' },

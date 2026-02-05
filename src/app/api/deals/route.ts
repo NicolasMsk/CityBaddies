@@ -31,8 +31,7 @@ export async function GET(request: Request) {
 
     // Construire les filtres
     const where: any = {
-      isActive: true, // Deals actifs uniquement
-      isExpired: false, // Deals non expirés uniquement
+      status: 'ACTIVE',
     };
 
     if (hotOnly) {
@@ -199,7 +198,7 @@ export async function POST(request: Request) {
         productId: product.id,
         authorId: user.id,
         isHot: false,
-        isExpired: false,
+        status: 'PENDING',
         endDate: expiresAt ? new Date(expiresAt) : null,
       },
       include: {

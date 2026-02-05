@@ -15,7 +15,7 @@ interface Deal {
   imageUrl?: string | null;
   score: number;
   votes: number;
-  isExpired: boolean;
+  status: 'PENDING' | 'ACTIVE' | 'EXPIRED';
   brandTier?: number | null;
   createdAt: Date;
   product: {

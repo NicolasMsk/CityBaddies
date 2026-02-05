@@ -18,7 +18,7 @@ async function findDealWithHistory() {
       },
       deals: {
         some: {
-          isActive: true
+          status: 'ACTIVE'
         }
       }
     },
@@ -27,7 +27,7 @@ async function findDealWithHistory() {
         orderBy: { date: 'asc' }
       },
       deals: {
-        where: { isActive: true },
+        where: { status: 'ACTIVE' },
         take: 1
       }
     }

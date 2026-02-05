@@ -41,23 +41,18 @@ if ($LASTEXITCODE -eq 0) {
         --set-env-vars="DATABASE_URL=$DATABASE_URL"
 }
 
-# Creer/mettre a jour le scheduler pour 10h tous les jours (1h apres Sephora)
-Write-Host "  Configuration du scheduler (10h tous les jours)..." -ForegroundColor Gray
+# Creer le scheduler SEULEMENT s'il n'existe pas (ne modifie pas l'horaire existant)
+Write-Host "  Verification du scheduler..." -ForegroundColor Gray
 $SCHEDULER_NAME = "$JOB_NAME-daily"
 $SERVICE_ACCOUNT = "241509965456-compute@developer.gserviceaccount.com"
 $schedulerExists = gcloud scheduler jobs describe $SCHEDULER_NAME --location=$REGION 2>$null
 if ($LASTEXITCODE -eq 0) {
-    gcloud scheduler jobs update http $SCHEDULER_NAME `
-        --location=$REGION `
-        --schedule="0 10 * * *" `
-        --time-zone="Europe/Paris" `
-        --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT/jobs/${JOB_NAME}:run" `
-        --http-method=POST `
-        --oauth-service-account-email="$SERVICE_ACCOUNT"
+    Write-Host "  Scheduler existe deja - horaire conserve" -ForegroundColor Yellow
 } else {
+    Write-Host "  Creation du scheduler (7h tous les jours)..." -ForegroundColor Gray
     gcloud scheduler jobs create http $SCHEDULER_NAME `
         --location=$REGION `
-        --schedule="0 10 * * *" `
+        --schedule="0 7 * * *" `
         --time-zone="Europe/Paris" `
         --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT/jobs/${JOB_NAME}:run" `
         --http-method=POST `

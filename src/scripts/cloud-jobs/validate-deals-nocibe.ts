@@ -432,11 +432,11 @@ async function main() {
     return;
   }
 
-  // Récupérer TOUS les deals actifs Nocibe
+  // Récupérer TOUS les deals PENDING et ACTIVE Nocibe
   const deals = await prisma.deal.findMany({
     where: {
       product: { merchantId: merchant.id },
-      status: 'ACTIVE',
+      status: { in: ['PENDING', 'ACTIVE'] },
     },
     include: { product: { include: { merchant: true, brandRef: true } } },
     orderBy: { updatedAt: 'desc' },

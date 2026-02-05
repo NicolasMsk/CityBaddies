@@ -423,7 +423,9 @@ export class ImportEngine {
                 score: scoreResult.score,
                 tags: tagsToString(scoreResult.tags),
                 isTrending,
-                status: 'ACTIVE',
+                // Si EXPIRED re-détecté en promo → PENDING (doit passer par VALIDATE)
+                // Si ACTIVE ou PENDING → garder le status actuel
+                status: existingDeal.status === 'EXPIRED' ? 'PENDING' : existingDeal.status,
                 isHot: existingDeal.votes >= 20,
                 lastSeenAt: new Date(),
                 updatedAt: new Date(),

@@ -858,11 +858,11 @@ async function main() {
     return;
   }
 
-  // Récupérer TOUS les deals actifs Sephora
+  // Récupérer TOUS les deals PENDING et ACTIVE Sephora
   const deals = await prisma.deal.findMany({
     where: {
       product: { merchantId: merchant.id },
-      status: 'ACTIVE',
+      status: { in: ['PENDING', 'ACTIVE'] },
     },
     include: { product: { include: { merchant: true, brandRef: true } } },
     orderBy: { updatedAt: 'desc' },

@@ -208,7 +208,8 @@ async function importProducts() {
             tags: tagsToString(scoreResult.tags),
             sourceUrl: (product as any).sourceUrl || existingDeal.sourceUrl || null,
             isTrending,
-            status: 'ACTIVE',
+            // Si EXPIRED re-détecté en promo → PENDING, sinon garder le status
+            status: existingDeal.status === 'EXPIRED' ? 'PENDING' : existingDeal.status,
             isHot: existingDeal.votes >= 20,
             updatedAt: new Date(),
           }

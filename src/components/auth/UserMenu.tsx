@@ -48,16 +48,16 @@ export default function UserMenu() {
         </Link>
         
         {/* Desktop: Full Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2">
           <Link
             href="/auth/login"
-            className="text-xs lg:text-sm font-bold text-neutral-400 hover:text-[#d4a855] transition-colors uppercase tracking-widest"
+            className="text-[10px] lg:text-xs font-bold text-neutral-400 hover:text-[#d4a855] transition-colors uppercase tracking-wider"
           >
             Connexion
           </Link>
           <Link
             href="/auth/signup"
-            className="px-4 lg:px-6 py-2 text-xs lg:text-sm font-bold bg-[#d4a855] hover:bg-white text-black transition-colors uppercase tracking-widest"
+            className="px-3 lg:px-4 py-1.5 text-[10px] lg:text-xs font-bold bg-[#d4a855] hover:bg-white text-black transition-colors uppercase tracking-wider whitespace-nowrap"
             style={{ clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0% 100%)' }}
           >
             Inscription

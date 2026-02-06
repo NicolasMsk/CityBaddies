@@ -43,6 +43,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   position: relative;
+  overflow-x: hidden;
 }
 
 /* Premium grain overlay effect */

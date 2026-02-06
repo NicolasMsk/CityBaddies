@@ -35,16 +35,16 @@ export default function Footer() {
     <footer className="relative z-10 bg-[#0a0a0a] text-white border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer */}
-        <div className="py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             <Link href="/" className="inline-block">
               <Image
                 src="/images/logo.png"
                 alt="City Baddies"
-                width={240}
-                height={80}
-                className="h-20 w-auto object-contain"
+                width={180}
+                height={60}
+                className="h-14 w-auto object-contain"
               />
             </Link>
             <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">

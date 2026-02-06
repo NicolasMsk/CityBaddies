@@ -95,7 +95,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-[#0a0a0a]/95 backdrop-blur-xl sticky top-0 z-50 border-b border-white/5">
+    <header className="bg-[#0a0a0a]/95 backdrop-blur-xl sticky top-0 z-50 border-b border-white/5 overflow-hidden">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16 md:h-20">
           

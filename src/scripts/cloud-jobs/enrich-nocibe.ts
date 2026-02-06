@@ -335,29 +335,15 @@ async function updateDealWithScrapedData(
   
   if (selectedVariant) {
     const { value, unit } = parseVolume(selectedVariant.name);
-    const dealPrice = parsePrice(selectedVariant.price);
-    const originalPrice = parsePrice(selectedVariant.originalPrice || '');
     
+    // Compléter le volume SI manquant (ne pas écraser les prix !)
     if (value && unit) {
       dealUpdateData.volumeValue = value;
       dealUpdateData.volumeUnit = unit;
       dealUpdateData.volume = selectedVariant.name;
     }
     
-    if (dealPrice) {
-      dealUpdateData.dealPrice = dealPrice;
-      if (value) {
-        dealUpdateData.pricePerUnit = dealPrice / value * 100;
-      }
-    }
-    
-    if (originalPrice) {
-      dealUpdateData.originalPrice = originalPrice;
-      if (dealPrice) {
-        dealUpdateData.discountAmount = originalPrice - dealPrice;
-        dealUpdateData.discountPercent = Math.round((1 - dealPrice / originalPrice) * 100);
-      }
-    }
+    // NE PAS modifier les prix ! C'est VALIDATE qui gère ça.
   }
   
   await prisma.deal.update({

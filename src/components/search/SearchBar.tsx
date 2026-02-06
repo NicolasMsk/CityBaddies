@@ -219,7 +219,7 @@ export default function SearchBar({
           className={`
             ${isMobile 
               ? 'w-full pl-12 pr-10 py-4 bg-white/5 border border-white/10 rounded-none' 
-              : 'w-40 lg:w-56 pl-10 pr-8 py-2.5 bg-[#1a1a1a] border border-white/10 rounded-none hover:border-white/20'
+              : 'w-32 lg:w-44 pl-10 pr-8 py-2 bg-[#1a1a1a] border border-white/10 rounded-none hover:border-white/20'
             }
             text-xs lg:text-sm text-white placeholder-neutral-500 font-light tracking-wide
             focus:outline-none focus:border-[#d4a855] focus:bg-black

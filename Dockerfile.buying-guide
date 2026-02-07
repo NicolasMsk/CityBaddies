@@ -1,0 +1,25 @@
+# Dockerfile pour Cloud Run Job - Génération de Guides d'Achat (GPT-4o-mini, pas de Playwright)
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY tsconfig.json ./
+
+# Installer les dépendances
+RUN npm ci
+RUN npm install -g tsx
+
+# Générer le client Prisma
+RUN npx prisma generate
+
+# Copier le code source nécessaire
+COPY src/scripts/cloud-jobs/generate-buying-guide.ts ./src/scripts/cloud-jobs/
+
+# Variables d'environnement (seront override par Cloud Run)
+ENV NODE_ENV=production
+
+# Commande d'exécution
+CMD ["npx", "tsx", "src/scripts/cloud-jobs/generate-buying-guide.ts"]

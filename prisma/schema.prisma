@@ -267,10 +267,11 @@ model Deal {
   author          User?      @relation("DealAuthor", fields: [authorId], references: [id])
   
   // Relations
-  favorites        Favorite[]
-  voteRecords      Vote[]
-  comments         Comment[]
-  competitorPrices CompetitorPrice[]  // Prix du même produit chez les concurrents
+  favorites           Favorite[]
+  voteRecords         Vote[]
+  comments            Comment[]
+  competitorPrices    CompetitorPrice[]      // Prix du même produit chez les concurrents
+  buyingGuideProducts BuyingGuideProduct[]   // Apparitions dans les guides d'achat
   
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -353,6 +354,78 @@ model CompetitorPrice {
   @@index([dealId])
   @@index([merchantId])
   @@index([lastChecked])
+}
+
+// ============================================================================
+// GUIDES D'ACHAT (générés automatiquement par IA)
+// ============================================================================
+
+enum GuideStatus {
+  DRAFT      // Brouillon en cours de génération
+  PUBLISHED  // Publié et visible sur le site
+  ARCHIVED   // Archivé (ancien guide remplacé)
+}
+
+// Guide d'achat complet (généré quotidiennement par GPT)
+model BuyingGuide {
+  id              String      @id @default(cuid())
+  slug            String      @unique
+  title           String      // Titre principal du guide
+  metaTitle       String?     // Titre SEO (<60 chars)
+  metaDescription String?     // Description SEO (<155 chars)
+  heroImageUrl    String?     // Image principale (celle du meilleur deal)
+  introduction    String      @db.Text // Introduction accrocheuse (style City Baddies)
+  content         String      @db.Text // Contenu principal en HTML structuré
+  conclusion      String?     @db.Text // Conclusion avec CTA
+  faq             Json?       // FAQ structurée [{question, answer}] pour schema.org
+  criteria        Json?       // Critères de sélection ["Texture et absorption", "Rapport qualité/prix", ...]
+  
+  // Classification
+  category        String      // Catégorie principale (maquillage, skincare, etc.)
+  tags            String?     // Tags séparés par virgules (ex: "luxe,skincare,hiver")
+  season          String?     // Saison ciblée (printemps, été, automne, hiver, all)
+  targetKeywords  String?     @db.Text // Mots-clés SEO ciblés séparés par virgules
+  
+  // Statut & publication
+  status          GuideStatus @default(DRAFT)
+  publishedAt     DateTime?
+  
+  // Relations
+  products        BuyingGuideProduct[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+// Produit recommandé dans un guide d'achat
+model BuyingGuideProduct {
+  id          String      @id @default(cuid())
+  guideId     String
+  guide       BuyingGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  dealId      String
+  deal        Deal        @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  rank        Int         // Position dans le classement (1 = meilleur pick)
+  badge       String?     // Badge spécial (ex: "Le Choix Baddie", "Best Value", "Luxe Abordable")
+  miniReview  String      @db.Text // Mini-review du produit dans le contexte du guide
+  pros        String?     // Avantages séparés par | (ex: "Longue tenue|Pigmenté|Bon rapport qualité-prix")
+  cons        String?     // Inconvénients séparés par | (ex: "Packaging basique|Peu de teintes")
+  verdict     String?     // Verdict court (1-2 phrases)
+  rating      Float?      // Note sur 5 attribuée par la rédaction (ex: 4.5)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([guideId, dealId])
+  @@unique([guideId, rank])
+  @@index([guideId])
+  @@index([dealId])
 }
 
 // Abonnements newsletter

@@ -121,6 +121,14 @@ export default function Header() {
               Deals
             </Link>
 
+            {/* Guides d'achat */}
+            <Link
+              href="/guides"
+              className="px-2 xl:px-4 h-full flex items-center text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-400 hover:text-white transition-colors border-b-2 border-transparent hover:border-[#d4a855]"
+            >
+              Guides
+            </Link>
+
             {/* Catégories avec dropdown */}
             {categories.map((category) => (
               <div key={category.slug} className="relative group h-full flex items-center">
@@ -200,6 +208,15 @@ export default function Header() {
                 className="px-4 py-4 text-[12px] font-bold tracking-[0.2em] uppercase text-neutral-400 hover:text-white hover:bg-white/5 transition-all border-l-2 border-transparent hover:border-[#9b1515]"
               >
                 Tous les deals
+              </Link>
+
+              {/* Guides d'achat */}
+              <Link
+                href="/guides"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-4 text-[12px] font-bold tracking-[0.2em] uppercase text-neutral-400 hover:text-white hover:bg-white/5 transition-all border-l-2 border-transparent hover:border-[#d4a855]"
+              >
+                Guides d&apos;achat
               </Link>
 
               {/* Catégories avec sous-menus */}

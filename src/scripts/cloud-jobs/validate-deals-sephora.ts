@@ -12,7 +12,12 @@
  */
 
 import { chromium, Browser, Page } from 'playwright';
+import { chromium as playwrightExtra } from 'playwright-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { PrismaClient } from '@prisma/client';
+
+// Ajouter le plugin stealth pour éviter la détection (comme le scraper)
+playwrightExtra.use(StealthPlugin());
 
 // Fonction locale pour éviter les imports relatifs
 function calculatePricePerUnit(price: number, volumeStr: string | null | undefined): { pricePerUnit: number; volumeValue: number; volumeUnit: string } | null {
@@ -91,20 +96,32 @@ class SephoraProductScraper {
 
   async init() {
     console.log(`🌐 Lancement du navigateur (headless: ${this.headless})...`);
-    this.browser = await chromium.launch({
-      headless: this.headless,
-      args: [
-        '--disable-blink-features=AutomationControlled',
-        '--disable-dev-shm-usage',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--disable-infobars',
-        '--window-size=1920,1080',
-        '--start-maximized',
-      ],
-    });
+    
+    // Utiliser playwright-extra avec StealthPlugin en mode headless (comme le scraper)
+    if (this.headless) {
+      this.browser = await playwrightExtra.launch({
+        headless: true,
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--disable-dev-shm-usage',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--disable-infobars',
+          '--window-size=1920,1080',
+          '--start-maximized',
+        ],
+      });
+    } else {
+      this.browser = await chromium.launch({
+        headless: false,
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--no-sandbox',
+        ],
+      });
+    }
 
     // Créer un context avec options anti-bot (comme enrich-sephora)
     this.context = await this.browser.newContext({

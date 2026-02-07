@@ -23,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${BASE_URL}/guides`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/categories`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -120,5 +126,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: deal.score && deal.score > 50 ? 0.8 : 0.6,
   }));
 
-  return [...staticPages, ...paginationPages, ...categoryPages, ...dealPages];
+  // Récupérer les guides d'achat publiés
+  const guides = await prisma.buyingGuide.findMany({
+    where: { status: 'PUBLISHED' },
+    select: {
+      slug: true,
+      publishedAt: true,
+      updatedAt: true,
+    },
+    orderBy: { publishedAt: 'desc' },
+    take: 100,
+  });
+
+  const guidePages: MetadataRoute.Sitemap = guides.map((guide) => ({
+    url: `${BASE_URL}/guides/${guide.slug}`,
+    lastModified: guide.updatedAt || guide.publishedAt || new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...paginationPages, ...categoryPages, ...dealPages, ...guidePages];
 }

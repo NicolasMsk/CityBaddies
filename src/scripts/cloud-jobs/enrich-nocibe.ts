@@ -440,7 +440,6 @@ async function main() {
 
   let success = 0;
   let errors = 0;
-  let deactivated = 0;
 
   try {
     for (let i = 0; i < deals.length; i++) {
@@ -455,18 +454,6 @@ async function main() {
       if (!data) {
         errors++;
         console.log('   ❌ Échec scraping\n');
-        continue;
-      }
-      
-      // Vérifier si le deal est encore en promo
-      if (!data.hasPromo) {
-        console.log('   ⚠️ Plus de promo sur cette page! Désactivation du deal...');
-        await prisma.deal.update({
-          where: { id: deal.id },
-          data: { status: 'EXPIRED' },
-        });
-        console.log('   ✓ Deal désactivé\n');
-        deactivated++;
         continue;
       }
 
@@ -506,7 +493,6 @@ async function main() {
   console.log('='.repeat(60));
   console.log(`⏱️  Durée: ${duration}s`);
   console.log(`✅ Réussis: ${success}`);
-  console.log(`🚫 Désactivés (plus de promo): ${deactivated}`);
   console.log(`❌ Erreurs: ${errors}`);
   console.log('\n✅ [CLOUD JOB] Enrichissement terminé!');
   

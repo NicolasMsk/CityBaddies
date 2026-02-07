@@ -99,6 +99,25 @@ body::before {
 }
 
 @keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 5px rgba(212,168,85,0.2); }
+  50% { box-shadow: 0 0 20px rgba(212,168,85,0.5); }
+  100% { box-shadow: 0 0 5px rgba(212,168,85,0.2); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 3s infinite;
+}
+
+@keyframes shimmer {
   0% {
     background-position: -200% 0;
   }

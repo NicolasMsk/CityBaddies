@@ -149,6 +149,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
               fill
               className="object-cover opacity-60"
               priority
+              unoptimized
             />
           ) : (
              <div className="w-full h-full bg-neutral-900" />
@@ -243,6 +244,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                              fill
                              className="object-contain"
                              sizes="(max-width: 768px) 100vw, 50vw"
+                             unoptimized
                            />
                          </div>
                        )}
@@ -446,7 +448,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                   >
                      <div className="relative aspect-video">
                         {g.heroImageUrl ? (
-                          <Image src={g.heroImageUrl} alt={g.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <Image src={g.heroImageUrl} alt={g.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />
                         ) : (
                           <div className="w-full h-full bg-neutral-800" />
                         )}

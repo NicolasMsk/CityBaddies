@@ -1,4 +1,4 @@
-# Dockerfile pour Cloud Run Job - Génération Guide d'Achat (GPT-4o, pas de browser)
+# Dockerfile pour Cloud Run Job - Rafraîchissement Guides d'Achat
 FROM node:20-slim
 
 WORKDIR /app
@@ -18,11 +18,11 @@ RUN npm install -g tsx
 # Générer le client Prisma
 RUN npx prisma generate
 
-# Copier le code source nécessaire
-COPY src/scripts/cloud-jobs/generate-buying-guide.ts ./src/scripts/cloud-jobs/
+# Copier le script
+COPY src/scripts/cloud-jobs/refresh-buying-guides.ts ./src/scripts/cloud-jobs/
 
 # Variables d'environnement (seront override par Cloud Run)
 ENV NODE_ENV=production
 
 # Commande d'exécution
-CMD ["npx", "tsx", "src/scripts/cloud-jobs/generate-buying-guide.ts"]
+CMD ["npx", "tsx", "src/scripts/cloud-jobs/refresh-buying-guides.ts"]

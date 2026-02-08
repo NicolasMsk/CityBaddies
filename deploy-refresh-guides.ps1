@@ -1,14 +1,17 @@
-# Deploiement Cloud Run Job - Generation Guide d'Achat (via Cloud Build)
+# Deploiement Cloud Run Job - Rafraichissement Guides d'Achat (via Cloud Build)
+# Usage: .\deploy-refresh-guides.ps1
+# Schedule: 08h05 (apres generate-guide a 08h00)
+
 $ErrorActionPreference = "Stop"
 
-Write-Host "Deploiement Generation Guide d'Achat..." -ForegroundColor Cyan
+Write-Host "Deploiement Refresh Buying Guides..." -ForegroundColor Cyan
 
 $REGION = "europe-west1"
 $PROJECT = "city-baddies"
 $REGISTRY = "$REGION-docker.pkg.dev/$PROJECT/citybaddies-scrapers"
-$JOB_NAME = "generate-guide"
+$JOB_NAME = "refresh-buying-guides"
 
-# Recuperer les secrets depuis .env (avec Trim pour eviter les espaces)
+# Recuperer les secrets depuis .env
 $envContent = Get-Content .env -Raw
 if ($envContent -match 'DATABASE_URL="([^"]+)"') { $DATABASE_URL = $matches[1].Trim() }
 if ($envContent -match 'OPENAI_API_KEY="?([^"\s]+)"?') { $OPENAI_KEY = $matches[1].Trim() }
@@ -16,7 +19,7 @@ if ($envContent -match 'OPENAI_API_KEY="?([^"\s]+)"?') { $OPENAI_KEY = $matches[
 $env:PATH = "C:\Users\nicol\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;" + $env:PATH
 
 Write-Host "  Build & Push (Cloud Build)..." -ForegroundColor Gray
-gcloud builds submit --config=cloudbuild-generate-guide.yaml --substitutions=_IMAGE_TAG="$REGISTRY/${JOB_NAME}:latest"
+gcloud builds submit --config=cloudbuild-refresh-guides.yaml --substitutions=_IMAGE_TAG="$REGISTRY/${JOB_NAME}:latest"
 
 # Verifier si le job existe
 $jobExists = gcloud run jobs describe $JOB_NAME --region=$REGION 2>$null
@@ -38,16 +41,16 @@ if ($LASTEXITCODE -eq 0) {
         --set-env-vars="DATABASE_URL=$DATABASE_URL,OPENAI_API_KEY=$OPENAI_KEY"
 }
 
-# Creer le scheduler SEULEMENT s'il n'existe pas (ne modifie pas l'horaire existant)
+# Creer le scheduler SEULEMENT s'il n'existe pas
 Write-Host "  Verification du scheduler..." -ForegroundColor Gray
 $schedulerExists = gcloud scheduler jobs describe $JOB_NAME-daily --location=$REGION 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Scheduler existe deja - horaire conserve" -ForegroundColor Yellow
 } else {
-    Write-Host "  Creation du scheduler (08h00 tous les jours)..." -ForegroundColor Gray
+    Write-Host "  Creation du scheduler (08h05 tous les jours)..." -ForegroundColor Gray
     gcloud scheduler jobs create http $JOB_NAME-daily `
         --location=$REGION `
-        --schedule="0 8 * * *" `
+        --schedule="5 8 * * *" `
         --time-zone="Europe/Paris" `
         --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT/jobs/${JOB_NAME}:run" `
         --http-method=POST `
@@ -55,9 +58,6 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 Write-Host ""
-Write-Host "Generation Guide d'Achat deploye!" -ForegroundColor Green
-Write-Host ""
-Write-Host "Commandes utiles:" -ForegroundColor Yellow
-Write-Host "  - Executer maintenant: gcloud run jobs execute $JOB_NAME --region=$REGION"
-Write-Host "  - Voir les logs: gcloud run jobs executions list --job=$JOB_NAME --region=$REGION"
-Write-Host "  - Scheduler: gcloud scheduler jobs describe $JOB_NAME-daily --location=$REGION"
+Write-Host "Deploy termine avec succes!" -ForegroundColor Green
+Write-Host "  Schedule: tous les jours a 08:30 (apres expiration deals + generation guides)" -ForegroundColor Gray
+Write-Host "  Run manuel: gcloud run jobs execute $JOB_NAME --region=$REGION" -ForegroundColor Gray

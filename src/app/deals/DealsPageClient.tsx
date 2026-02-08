@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import Link from 'next/link';
+import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import DealCard from '@/components/deals/DealCard';
 import DealFilters, { FilterState } from '@/components/deals/DealFilters';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
@@ -18,22 +18,43 @@ interface DealsPageClientProps {
   totalDeals: number;
   totalPages: number;
   currentPage: number;
+  initialFilters: {
+    categories?: string[];
+    subcategories?: string[];
+    subsubcategories?: string[];
+    merchants?: string[];
+    brands?: string[];
+    tags?: string[];
+    search?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    hotOnly?: boolean;
+    minPrice?: number;
+    maxPrice?: number;
+  };
 }
 
-const DEALS_PER_PAGE = 24;
+// Construire l'URL avec les filtres actifs
+function buildUrl(filters: FilterState, page?: number): string {
+  const params = new URLSearchParams();
 
-const defaultFilters: FilterState = {
-  categories: [],
-  subcategories: [],
-  subsubcategories: [],
-  merchants: [],
-  brands: [],
-  tags: [],
-  search: '',
-  sortBy: 'createdAt',
-  sortOrder: 'desc',
-  hotOnly: false,
-};
+  if (page && page > 1) params.set('page', String(page));
+  if (filters.categories.length > 0) params.set('category', filters.categories.join(','));
+  if (filters.subcategories.length > 0) params.set('subcategory', filters.subcategories.join(','));
+  if (filters.subsubcategories.length > 0) params.set('subsubcategory', filters.subsubcategories.join(','));
+  if (filters.merchants.length > 0) params.set('merchant', filters.merchants.join(','));
+  if (filters.brands.length > 0) params.set('brand', filters.brands.join(','));
+  if (filters.tags.length > 0) params.set('tag', filters.tags.join(','));
+  if (filters.search) params.set('search', filters.search);
+  if (filters.sortBy && filters.sortBy !== 'createdAt') params.set('sortBy', filters.sortBy);
+  if (filters.sortOrder && filters.sortOrder !== 'desc') params.set('sortOrder', filters.sortOrder);
+  if (filters.hotOnly) params.set('hot', 'true');
+  if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
+  if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
+
+  const qs = params.toString();
+  return qs ? `/deals?${qs}` : '/deals';
+}
 
 export default function DealsPageClient({
   initialDeals,
@@ -43,103 +64,37 @@ export default function DealsPageClient({
   totalDeals,
   totalPages,
   currentPage,
+  initialFilters,
 }: DealsPageClientProps) {
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
 
-  // Filtrer et trier les deals côté client
-  const filteredDeals = useMemo(() => {
-    let result = [...initialDeals];
+  // Reconstruire le FilterState depuis les initialFilters serveur
+  const currentFilters: FilterState = {
+    categories: initialFilters.categories || [],
+    subcategories: initialFilters.subcategories || [],
+    subsubcategories: initialFilters.subsubcategories || [],
+    merchants: initialFilters.merchants || [],
+    brands: initialFilters.brands || [],
+    tags: initialFilters.tags || [],
+    search: initialFilters.search || '',
+    sortBy: initialFilters.sortBy || 'createdAt',
+    sortOrder: (initialFilters.sortOrder as 'asc' | 'desc') || 'desc',
+    hotOnly: initialFilters.hotOnly || false,
+    minPrice: initialFilters.minPrice,
+    maxPrice: initialFilters.maxPrice,
+  };
 
-    // Filtrer par catégorie
-    if (filters.categories.length > 0) {
-      result = result.filter(deal => 
-        deal.product?.category && filters.categories.includes(deal.product.category.slug)
-      );
-    }
-
-    // Filtrer par merchant
-    if (filters.merchants.length > 0) {
-      result = result.filter(deal => 
-        deal.product?.merchant && filters.merchants.includes(deal.product.merchant.slug)
-      );
-    }
-
-    // Filtrer par marque
-    if (filters.brands.length > 0) {
-      result = result.filter(deal => 
-        deal.product?.brand && filters.brands.includes(deal.product.brand.toLowerCase().replace(/\s+/g, '-'))
-      );
-    }
-
-    // Filtrer par tags
-    if (filters.tags.length > 0) {
-      result = result.filter(deal => {
-        const dealTags = deal.tags?.split(',').map((t: string) => t.trim()) || [];
-        return filters.tags.some(tag => dealTags.includes(tag));
-      });
-    }
-
-    // Filtrer par recherche
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(deal => 
-        deal.title?.toLowerCase().includes(searchLower) ||
-        deal.product?.name?.toLowerCase().includes(searchLower) ||
-        deal.product?.brand?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Filtrer par hot only
-    if (filters.hotOnly) {
-      result = result.filter(deal => deal.isHot);
-    }
-
-    // Filtrer par prix
-    if (filters.minPrice !== undefined) {
-      result = result.filter(deal => deal.dealPrice >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      result = result.filter(deal => deal.dealPrice <= filters.maxPrice!);
-    }
-
-    // Trier
-    result.sort((a, b) => {
-      let comparison = 0;
-      switch (filters.sortBy) {
-        case 'createdAt':
-          comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          break;
-        case 'discountPercent':
-          comparison = (b.discountPercent || 0) - (a.discountPercent || 0);
-          break;
-        case 'votes':
-          comparison = (b.votes || 0) - (a.votes || 0);
-          break;
-        case 'dealPrice':
-          comparison = (a.dealPrice || 0) - (b.dealPrice || 0);
-          break;
-        default:
-          comparison = 0;
-      }
-      return filters.sortOrder === 'asc' ? -comparison : comparison;
-    });
-
-    return result;
-  }, [initialDeals, filters]);
-
-  // Pagination côté client
-  const paginatedDeals = useMemo(() => {
-    const start = (page - 1) * DEALS_PER_PAGE;
-    return filteredDeals.slice(start, start + DEALS_PER_PAGE);
-  }, [filteredDeals, page]);
-
-  const clientTotalPages = Math.ceil(filteredDeals.length / DEALS_PER_PAGE);
-
+  // Quand les filtres changent, naviguer vers la nouvelle URL (page 1)
   const handleFilterChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to page 1 when filters change
-  }, []);
+    const url = buildUrl(newFilters, 1);
+    router.push(url);
+  }, [router]);
+
+  // Quand la page change, garder les filtres actuels
+  const handlePageChange = useCallback((newPage: number) => {
+    const url = buildUrl(currentFilters, newPage);
+    router.push(url);
+  }, [router, currentFilters]);
 
   return (
     <>
@@ -149,33 +104,33 @@ export default function DealsPageClient({
         merchants={merchants}
         brands={brands}
         onFilterChange={handleFilterChange}
-        currentFilters={filters}
+        currentFilters={currentFilters}
       />
 
       {/* Résultats */}
       <p className="text-white/40 text-sm mb-4 mt-6">
-        {filteredDeals.length} résultat{filteredDeals.length > 1 ? 's' : ''} 
-        {clientTotalPages > 1 && ` • Page ${page} sur ${clientTotalPages}`}
+        {totalDeals} résultat{totalDeals > 1 ? 's' : ''}
+        {totalPages > 1 && ` • Page ${currentPage} sur ${totalPages}`}
       </p>
 
-      {paginatedDeals.length > 0 ? (
+      {initialDeals.length > 0 ? (
         <>
           {/* Grille de deals */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedDeals.map((deal) => (
+            {initialDeals.map((deal) => (
               <DealCard key={deal.id} deal={deal} />
             ))}
           </div>
 
           {/* Pagination */}
-          {clientTotalPages > 1 && (
+          {totalPages > 1 && (
             <nav aria-label="Pagination des deals" className="flex items-center justify-center gap-2 mt-12">
               {/* Previous */}
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
                 className={`flex items-center gap-1 px-4 py-2 rounded-xl transition-all ${
-                  page === 1
+                  currentPage === 1
                     ? 'bg-white/5 text-white/20 cursor-not-allowed'
                     : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
                 }`}
@@ -186,12 +141,12 @@ export default function DealsPageClient({
 
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
-                {Array.from({ length: clientTotalPages }, (_, i) => i + 1)
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter(pageNum => {
                     return (
                       pageNum === 1 ||
-                      pageNum === clientTotalPages ||
-                      Math.abs(pageNum - page) <= 2
+                      pageNum === totalPages ||
+                      Math.abs(pageNum - currentPage) <= 2
                     );
                   })
                   .map((pageNum, index, array) => {
@@ -204,9 +159,9 @@ export default function DealsPageClient({
                           <span className="px-2 text-white/30">...</span>
                         )}
                         <button
-                          onClick={() => setPage(pageNum)}
+                          onClick={() => handlePageChange(pageNum)}
                           className={`w-10 h-10 rounded-xl font-medium flex items-center justify-center transition-all ${
-                            pageNum === page
+                            pageNum === currentPage
                               ? 'bg-[#7b0a0a] text-white'
                               : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
                           }`}
@@ -220,10 +175,10 @@ export default function DealsPageClient({
 
               {/* Next */}
               <button
-                onClick={() => setPage(p => Math.min(clientTotalPages, p + 1))}
-                disabled={page === clientTotalPages}
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
                 className={`flex items-center gap-1 px-4 py-2 rounded-xl transition-all ${
-                  page === clientTotalPages
+                  currentPage === totalPages
                     ? 'bg-white/5 text-white/20 cursor-not-allowed'
                     : 'bg-[#1a1a1a] text-white/60 hover:bg-[#7b0a0a]/20 hover:text-white border border-white/10'
                 }`}

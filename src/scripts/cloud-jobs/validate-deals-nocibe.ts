@@ -312,6 +312,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
         await prisma.deal.update({
           where: { id: result.dealId },
           data: {
+            status: 'ACTIVE',
             volume: newVariant.name,
             dealPrice: newVariant.currentPrice,
             originalPrice: newVariant.originalPrice,
@@ -349,6 +350,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
         await prisma.deal.update({
           where: { id: result.dealId },
           data: {
+            status: 'ACTIVE',
             dealPrice: matchingVariant.currentPrice,
             originalPrice: matchingVariant.originalPrice,
             discountPercent: matchingVariant.discountPercent,
@@ -380,6 +382,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
       await prisma.deal.update({
         where: { id: result.dealId },
         data: {
+          status: 'ACTIVE',
           lastSeenAt: new Date(),
         },
       });
@@ -397,7 +400,7 @@ async function applyValidationResult(result: ValidationResult, deal: any) {
         });
       }
 
-      console.log(`    ✅ Deal #${result.dealId} validé`);
+      console.log(`    ✅ Deal #${result.dealId} validé → ACTIVE`);
       break;
 
     case 'NOT_FOUND':
@@ -444,7 +447,7 @@ async function main() {
 
   console.log(`📋 ${deals.length} deals à valider\n`);
 
-  const stats = { valid: 0, priceChanged: 0, volumeChanged: 0, expired: 0, notFound: 0, error: 0 };
+  const stats = { valid: 0, priceChanged: 0, volumeChanged: 0, expired: 0, notFound: 0, error: 0, activated: 0 };
 
   for (const deal of deals) {
     console.log(`\n${'═'.repeat(60)}`);
@@ -487,6 +490,9 @@ async function main() {
       case 'NOT_FOUND': stats.notFound++; break;
       case 'ERROR': stats.error++; break;
     }
+    if (deal.status === 'PENDING' && ['VALID', 'PRICE_CHANGED', 'VOLUME_CHANGED'].includes(validationResult.status)) {
+      stats.activated++;
+    }
 
     // Délai entre les requêtes
     await new Promise(r => setTimeout(r, 500));
@@ -504,6 +510,7 @@ async function main() {
   console.log(`⚡ Expirés:           ${stats.expired}`);
   console.log(`❓ Non trouvés:       ${stats.notFound}`);
   console.log(`❌ Erreurs:           ${stats.error}`);
+  console.log(`🚀 Activés (PENDING→ACTIVE): ${stats.activated}`);
   console.log(`\nTotal: ${deals.length} deals traités`);
 }
 

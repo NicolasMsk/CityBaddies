@@ -295,14 +295,27 @@ export default function AIAssistant() {
                    {currentResponse.searchParams && (
                     <div className="mt-4">
                         <Link
-                        href={`/deals?${new URLSearchParams(
-                            Object.entries(currentResponse.searchParams)
-                            .filter(([, v]) => v !== undefined && v !== null)
-                            .map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
-                        ).toString()}`}
+                        href={(() => {
+                          // Mapper les noms de params du chatbot vers ceux de la page deals
+                          const paramMap: Record<string, string> = {
+                            categories: 'category',
+                            brands: 'brand',
+                            searchTerms: 'search',
+                            minPrice: 'minPrice',
+                            maxPrice: 'maxPrice',
+                          };
+                          const params = new URLSearchParams();
+                          Object.entries(currentResponse.searchParams!)
+                            .filter(([, v]) => v !== undefined && v !== null && v !== false)
+                            .forEach(([k, v]) => {
+                              const urlKey = paramMap[k] || k;
+                              params.set(urlKey, Array.isArray(v) ? v.join(',') : String(v));
+                            });
+                          return `/deals?${params.toString()}`;
+                        })()}
                         className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white hover:text-[#d4a855] transition-colors group/link"
                         >
-                        Voir tout les résultats
+                        Voir tous les résultats
                         <ArrowRight className="w-3 h-3 group-hover/link:translate-x-1 transition-transform" />
                         </Link>
                     </div>

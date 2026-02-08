@@ -44,8 +44,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
-  // Deal inactif ou expiré - ne pas indexer
-  const shouldIndex = deal.status === 'ACTIVE';
+  // Les deals actifs ET expirés sont indexables (SEO : garder les pages vivantes)
+  // Seuls les PENDING ne doivent pas être indexés
+  const shouldIndex = deal.status === 'ACTIVE' || deal.status === 'EXPIRED';
 
   const productName = deal.refinedTitle || deal.title;
   const brandName = deal.product.brand || '';
@@ -59,8 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
-    // Ne pas indexer les deals inactifs/expirés
-    robots: shouldIndex ? { index: true, follow: true } : { index: false, follow: true },
+    robots: shouldIndex ? { index: true, follow: true } : { index: false, follow: false },
     keywords: [
       productName,
       brandName,
@@ -184,15 +184,19 @@ async function getDealData(id: string) {
     },
   });
 
-  // Deal non trouvé OU deal inactif = 404
-  // Les deals inactifs ne doivent pas être accessibles pour éviter les problèmes SEO
-  if (!deal || deal.status !== 'ACTIVE') return null;
+  // Deal non trouvé = 404
+  if (!deal) return null;
 
-  // Incrémenter les vues
-  await prisma.deal.update({
-    where: { id },
-    data: { views: { increment: 1 } },
-  });
+  // Deal PENDING = 404 (pas encore validé)
+  if (deal.status === 'PENDING') return null;
+
+  // Deal EXPIRED = on retourne les données mais on ne compte pas les vues
+  if (deal.status === 'ACTIVE') {
+    await prisma.deal.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    });
+  }
 
   // Récupérer des deals similaires avec un meilleur algorithme
   // Priorité 1: Même marque + même catégorie
@@ -271,6 +275,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   }
 
   const { deal, similarDeals, priceStats } = data;
+  const isExpired = deal.status === 'EXPIRED';
   
   // Sélection de la citation rituel
   const ritualQuote = getRitualQuote(deal.product.category?.name, deal.id);
@@ -374,6 +379,99 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       />
       <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+          {/* ============================================================ */}
+          {/* EXPIRED DEAL BANNER                                          */}
+          {/* ============================================================ */}
+          {isExpired && (
+            <div className="mb-16">
+              {/* Expired Notice — Bold & Unmissable */}
+              <div className="relative overflow-hidden border-l-4 border-[#9b1515] bg-[#0d0d0d] p-8 md:p-12">
+                {/* Background Texture */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#9b1515]/8 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#9b1515]/5 blur-[100px] pointer-events-none" />
+                
+                {/* Top Bar — Status Indicator */}
+                <div className="relative z-10 flex items-center gap-3 mb-6 pb-6 border-b border-white/5">
+                  <div className="h-3 w-3 rounded-full bg-[#9b1515] animate-pulse shadow-[0_0_12px_rgba(155,21,21,0.5)]" />
+                  <span className="text-xs font-black tracking-[0.3em] uppercase text-[#9b1515]">Offre Expirée</span>
+                  <span className="text-[10px] tracking-widest text-neutral-600 ml-auto uppercase hidden md:block">Cette promotion n'est plus active</span>
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
+                  {/* Product Image Thumbnail */}
+                  {deal.product.imageUrl && (
+                    <div className="relative w-20 h-20 md:w-28 md:h-28 bg-white/5 overflow-hidden shrink-0">
+                      <Image
+                        src={deal.product.imageUrl}
+                        alt={deal.product.name}
+                        fill
+                        className="object-contain p-2 grayscale opacity-50"
+                        sizes="112px"
+                      />
+                      {/* Diagonal Strike */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-[140%] h-px bg-[#9b1515]/60 rotate-45" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <h2 className="text-xl md:text-2xl font-black text-white/80 tracking-tight mb-2 line-through decoration-[#9b1515]/40 decoration-2">
+                      {deal.refinedTitle || deal.title}
+                    </h2>
+                    <p className="text-sm text-neutral-400 leading-relaxed max-w-2xl">
+                      Le deal <span className="text-white/70 font-medium">{deal.product.brand}</span> à <span className="text-white/70 font-medium">{deal.dealPrice.toFixed(2)}€</span> au lieu de {deal.originalPrice.toFixed(2)}€ n&apos;est plus disponible.
+                      Découvrez nos alternatives actives ci-dessous.
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 flex flex-col gap-3">
+                    <Link
+                      href={deal.product.brand ? `/deals?brand=${encodeURIComponent(deal.product.brand)}` : '/deals'}
+                      className="inline-flex items-center gap-3 px-6 py-3 bg-white text-black text-[10px] font-black tracking-[0.15em] uppercase hover:bg-[#d4a855] transition-colors duration-300"
+                    >
+                      Offres {deal.product.brand || 'similaires'}
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                    <Link
+                      href="/deals"
+                      className="inline-flex items-center justify-center gap-3 px-6 py-3 border border-white/10 text-white/50 text-[10px] font-bold tracking-[0.15em] uppercase hover:text-white hover:border-white/30 transition-all duration-300"
+                    >
+                      Tous les deals
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Alternatives */}
+              {similarDeals.length > 0 && (
+                <div className="mt-12">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-white/5" />
+                    <h3 className="text-[10px] font-black tracking-[0.3em] uppercase text-neutral-500">Alternatives Disponibles</h3>
+                    <div className="h-px flex-1 bg-white/5" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {similarDeals.map((similarDeal: any) => (
+                      <DealCard key={similarDeal.id} deal={similarDeal} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Browse All CTA */}
+              <div className="mt-12 text-center">
+                <Link
+                  href="/deals"
+                  className="inline-flex items-center gap-3 text-[10px] font-black tracking-[0.2em] uppercase text-neutral-500 hover:text-white transition-colors"
+                >
+                  Explorer tous les deals actifs
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          )}
           
           {/* Breadcrumb Navigation */}
           <nav aria-label="Fil d'Ariane" className="mb-8">
@@ -432,6 +530,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                 imageUrl={deal.product.imageUrl}
                 productName={deal.product.name}
                 discountPercent={deal.discountPercent}
+                isExpired={isExpired}
               />
               
               {/* Share Actions - Minimal */}
@@ -480,7 +579,12 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             {/* Price Section - Editorial Typography */}
-            <div className="mb-12">
+            <div className={`mb-12 ${isExpired ? 'opacity-50' : ''}`}>
+                {isExpired && (
+                  <div className="mb-4 text-[10px] font-black tracking-[0.3em] uppercase text-[#9b1515]">
+                    Prix constaté lors de la promotion
+                  </div>
+                )}
                 <div className="flex items-baseline gap-6 mb-4">
                   <span className="text-4xl md:text-5xl font-light text-white tracking-tighter">
                     {deal.dealPrice.toFixed(2)}€
@@ -511,15 +615,28 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
 
             {/* Merchant Access */}
             <div className="flex items-center gap-6 mb-16">
-               <a
-                  href={deal.product.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 bg-white text-black h-14 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] uppercase hover:bg-neutral-200 transition-colors"
-                >
-                  <Store className="h-4 w-4" />
-                  ACHETER CHEZ {deal.product.merchant.name.toUpperCase()}
-                </a>
+               {isExpired ? (
+                 <a
+                    href={deal.product.productUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 h-14 flex items-center justify-center gap-3 bg-[#1a1a1a] border border-white/10 text-neutral-400 text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-white/5 hover:text-white transition-all duration-300"
+                  >
+                    <Store className="h-3.5 w-3.5" />
+                    VOIR CHEZ {deal.product.merchant.name.toUpperCase()}
+                    <span className="text-[8px] tracking-[0.15em] text-[#9b1515] font-black ml-1">· SANS PROMO</span>
+                  </a>
+               ) : (
+                 <a
+                    href={deal.product.productUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-white text-black h-14 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] uppercase hover:bg-neutral-200 transition-colors"
+                  >
+                    <Store className="h-4 w-4" />
+                    ACHETER CHEZ {deal.product.merchant.name.toUpperCase()}
+                  </a>
+               )}
                 <DealFeedback 
                   dealId={deal.id} 
                   initialViews={deal.views} 
@@ -829,8 +946,8 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
-        {/* Similar Deals - Bottom Carousel Layout */}
-        {similarDeals.length > 0 && (
+        {/* Similar Deals - Bottom Carousel Layout (hidden when expired, shown in top banner instead) */}
+        {!isExpired && similarDeals.length > 0 && (
           <div className="mt-32 pt-16 border-t border-white/10">
             <h2 className="text-xl md:text-2xl font-thin text-white mb-12 flex items-center gap-6">
               VOUS AIMEREZ AUSSI <span className="h-px flex-1 bg-white/10"></span>

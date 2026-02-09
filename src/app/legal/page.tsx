@@ -249,11 +249,16 @@ export default function LegalPage() {
                   <p>Nous utilisons des cookies pour :</p>
                   <ul className="list-disc list-inside space-y-2 ml-2">
                     <li><strong className="text-white">Cookies essentiels</strong> : maintenir ta session connectée</li>
-                    <li><strong className="text-white">Cookies de préférences</strong> : retenir tes choix (thème, filtres)</li>
+                    <li><strong className="text-white">Cookies de préférences</strong> : retenir tes choix (thème, filtres, consentement cookies)</li>
+                    <li><strong className="text-white">Cookies analytiques (Google Analytics 4)</strong> : mesurer la fréquentation du site (pages vues, navigation). Ces cookies ne sont déposés <strong className="text-white">qu&apos;après ton consentement explicite</strong> via notre bandeau cookies. Les données sont anonymisées (IP anonymisée) et ne sont jamais partagées à des fins publicitaires.</li>
                   </ul>
                   <p className="mt-4">
-                    Nous n&apos;utilisons <strong className="text-white">aucun cookie publicitaire</strong> ou de 
-                    tracking tiers (Google Analytics, Facebook Pixel, etc.).
+                    Nous n&apos;utilisons <strong className="text-white">aucun cookie publicitaire</strong>, 
+                    aucun pixel de tracking (Facebook Pixel, TikTok Pixel, etc.) et aucun outil de retargeting.
+                  </p>
+                  <p className="mt-2">
+                    Tu peux <strong className="text-white">retirer ton consentement à tout moment</strong> en supprimant 
+                    tes cookies navigateur ou en nous contactant. Sans consentement, seuls les cookies essentiels au fonctionnement du site sont utilisés.
                   </p>
                 </div>
               </div>

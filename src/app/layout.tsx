@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/auth";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import CookieConsent from "@/components/analytics/CookieConsent";
 import Script from "next/script";
 
 const inter = Inter({
@@ -85,9 +86,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Ajouter les codes de vérification une fois obtenus
-    // google: 'votre-code-google',
-    // yandex: 'votre-code-yandex',
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION || '',
   },
 };
 
@@ -152,6 +151,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0a] text-neutral-100 min-h-screen flex flex-col`}>
         <GoogleAnalytics />
+        <CookieConsent />
         <AuthProvider>
           <Header />
           <main className="flex-1">{children}</main>

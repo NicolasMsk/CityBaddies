@@ -1,0 +1,350 @@
+{
+  "promoCodes": [
+    {
+      "code": "GOODIES0126",
+      "slug": "7-mini-produits-en-cadeau-avec-sephora-des-119-euros",
+      "title": "7 mini produits en cadeau avec Sephora dès 119€",
+      "description": "Valable sur tout le site Sephora. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 119,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site hors exclusions",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-07-28T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    },
+    {
+      "code": null,
+      "slug": "economisez-30-sur-selection-saint-valentin-sephora",
+      "title": "Économisez 30% sur sélection Saint-Valentin Sephora",
+      "description": "Applicable sur la sélection Saint-Valentin chez Sephora. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 30,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "sélection Saint-Valentin",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-14T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "gourde-en-cadeau-avec-sephora-collection",
+      "title": "Gourde en cadeau avec Sephora Collection",
+      "description": "Valable sur les produits soin de la marque Sephora Collection. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 30,
+      "maximumDiscount": null,
+      "applicableTo": "produits soin de la marque Sephora Collection",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-22T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": "PARF0226",
+      "slug": "code-promo-sephora-5-pourcent-sur-parfums",
+      "title": "Code promo Sephora : 5% sur parfums dès 80ml",
+      "description": "Valable sur les parfums dès 80ml pour les adhérents fidélité. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 5,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "parfums dès 80ml pour adhérents fidélité",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-14T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": true,
+      "isFeatured": true,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    },
+    {
+      "code": null,
+      "slug": "brosse-a-cheveux-en-cadeau-avec-sephora",
+      "title": "Brosse à cheveux en cadeau avec Sephora",
+      "description": "Valable sur la gamme Dolce & Gabbana pour les professionnels. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 100,
+      "maximumDiscount": null,
+      "applicableTo": "gamme Dolce & Gabbana pour professionnels",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-07-31T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": true,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "soin-n3-hair-perfector-en-cadeau-avec-sephora",
+      "title": "Soin N°3 Hair Perfector en cadeau avec Sephora",
+      "description": "Valable sur la gamme Olaplex. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 35,
+      "maximumDiscount": null,
+      "applicableTo": "gamme Olaplex",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-03-31T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "livraison-gratuite-sephora",
+      "title": "Livraison gratuite à domicile avec Sephora",
+      "description": "Valable sur tout le site Sephora dès 60€ d'achat. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "FREE_SHIPPING",
+      "discountValue": null,
+      "minimumPurchase": 60,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site dès 60€",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": true,
+      "successRate": 97.1,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 98
+    },
+    {
+      "code": null,
+      "slug": "50-pourcent-sur-deux-soins-achetes-sephora",
+      "title": "50% sur le second soin acheté chez Sephora",
+      "description": "Valable sur l'achat de deux soins. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 50,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "deux soins achetés",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "UNVERIFIED",
+      "expiresAt": "2026-03-29T00:00:00Z",
+      "isVerified": false,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "huile-a-levre-en-cadeau-avec-sephora",
+      "title": "Huile à lèvre en cadeau avec Sephora",
+      "description": "Valable sur les produits de la marque Gisou dès 60€. Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 60,
+      "maximumDiscount": null,
+      "applicableTo": "produits de la marque Gisou",
+      "conditions": "Hors petits prix, prix web, points rouges, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-03-31T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": null,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "25-pourcent-sur-selection-maquillage-sephora",
+      "title": "25% sur sélection maquillage chez Sephora",
+      "description": "Valable sur sélection de maquillage. Hors points rouges, petits prix, prix web, coffrets, cartes cadeaux, DROM.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 25,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "sélection de maquillage",
+      "conditions": "Hors points rouges, petits prix, prix web, coffrets, cartes cadeaux, DROM.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": true,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Sephora.php",
+      "sourceType": "ma-reduc",
+      "votes": 6
+    }
+  ],
+  "merchantPromoPage": {
+    "canonicalSlug": "sephora",
+    "metaTitle": "Code Promo Sephora : Jusqu'à -30% | Février 2026",
+    "metaDescription": "5 codes promo Sephora vérifiés en février 2026. Jusqu'à -30% sur tout le site. Codes testés et mis à jour quotidiennement.",
+    "heroTitle": "Codes Promo Sephora : les meilleurs en ce moment",
+    "heroSubtitle": "2 codes vérifiés • Jusqu'à -30% • Février 2026",
+    "introduction": "<p>Tu cherches un <strong>code promo Sephora</strong> qui marche vraiment ? Ce mois-ci, on a déniché pour toi les meilleures offres avec jusqu'à 30% de réduction. Profite de ces <strong>promotions Sephora</strong> pour te faire plaisir sans te ruiner.</p><p>Avec 2 codes promo actifs en février 2026, tu es sûre de trouver ton bonheur. Que ce soit pour un parfum ou du maquillage, Sephora a ce qu'il te faut.</p>",
+    "merchantDescription": "<p><strong>Sephora</strong> est un incontournable pour toutes les passionnées de beauté. Connue pour sa vaste sélection de produits de maquillage, soins et parfums, Sephora propose des marques phares comme Fenty Beauty, Too Faced et Dior. C'est l'endroit idéal pour découvrir des exclusivités et des nouveautés.</p><p>Le site offre une expérience d'achat agréable, mais attention aux exclusions fréquentes sur certaines promotions. Malgré cela, Sephora reste une référence pour les beauty addicts.</p>",
+    "merchantAdvantages": [
+      {
+        "icon": "🚚",
+        "title": "Livraison rapide",
+        "text": "Profite de la livraison rapide à domicile dès 60€ d'achat."
+      },
+      {
+        "icon": "🎁",
+        "title": "Cadeaux exclusifs",
+        "text": "Des mini-produits offerts pour te faire découvrir de nouvelles marques."
+      },
+      {
+        "icon": "💳",
+        "title": "Programme fidélité",
+        "text": "Accumule des points et bénéficie d'avantages exclusifs."
+      },
+      {
+        "icon": "🔄",
+        "title": "Retours faciles",
+        "text": "Retourne facilement tes produits en magasin ou par voie postale."
+      }
+    ],
+    "shippingInfo": "<p>Sephora propose la livraison gratuite à domicile dès 60€ d'achat. Les délais varient selon la région, mais en général, tu peux recevoir tes produits sous 3 à 5 jours ouvrés.</p>",
+    "returnPolicy": "<p>Les retours sont acceptés sous 14 jours, mais les produits doivent être intacts et dans leur emballage d'origine. Les articles ouverts ou utilisés ne peuvent pas être retournés.</p>",
+    "loyaltyProgram": "<p>Le programme de fidélité Sephora est plutôt sympa. Chaque euro dépensé te rapporte des points, et tu peux les échanger contre des cadeaux ou des réductions. Les membres Gold bénéficient même de la livraison gratuite.</p>",
+    "howToUse": [
+      {
+        "step": 1,
+        "title": "Trouve ton code",
+        "description": "Parcourez notre sélection pour trouver un code promo Sephora qui te convient."
+      },
+      {
+        "step": 2,
+        "title": "Ajoute au panier",
+        "description": "Sélectionne tes produits préférés et ajoute-les à ton panier."
+      },
+      {
+        "step": 3,
+        "title": "Applique le code",
+        "description": "Dans le panier, saisis ton code promo dans l'encart dédié pour voir la réduction s'appliquer."
+      },
+      {
+        "step": 4,
+        "title": "Finalise ta commande",
+        "description": "Vérifie que la réduction est bien appliquée, puis passe à la caisse pour finaliser ton achat."
+      }
+    ],
+    "howToUseHtml": "<ol><li>Trouve ton code : Parcourez notre sélection pour trouver un code promo Sephora qui te convient.</li><li>Ajoute au panier : Sélectionne tes produits préférés et ajoute-les à ton panier.</li><li>Applique le code : Dans le panier, saisis ton code promo dans l'encart dédié pour voir la réduction s'appliquer.</li><li>Finalise ta commande : Vérifie que la réduction est bien appliquée, puis passe à la caisse pour finaliser ton achat.</li></ol>",
+    "tips": [
+      {
+        "title": "Profite des ventes privées",
+        "content": "Inscris-toi au programme fidélité pour accéder aux ventes privées et bénéficier de réductions exclusives."
+      },
+      {
+        "title": "Utilise les échantillons",
+        "content": "Demande des échantillons en magasin pour tester avant d'acheter en grand format."
+      },
+      {
+        "title": "Achète en période de soldes",
+        "content": "Les soldes d'été et d'hiver sont idéales pour faire de bonnes affaires sur tes produits préférés."
+      },
+      {
+        "title": "Cible les coffrets",
+        "content": "Les coffrets cadeaux offrent souvent un meilleur rapport qualité-prix que les produits achetés séparément."
+      }
+    ],
+    "bestTimeToShop": "Le Black Friday et les soldes d'été et d'hiver sont les meilleurs moments pour acheter chez Sephora.",
+    "faq": [
+      {
+        "question": "Comment utiliser un code promo Sephora ?",
+        "answer": "Pour utiliser un code promo Sephora, ajoute tes produits au panier, puis saisis le code dans l'encart dédié avant de finaliser ta commande."
+      },
+      {
+        "question": "Est-ce que les codes promo Sephora fonctionnent ?",
+        "answer": "Oui, les codes promo Sephora fonctionnent si tu respectes les conditions d'utilisation. Vérifie toujours les exclusions avant d'appliquer un code."
+      },
+      {
+        "question": "Quel est le meilleur code promo Sephora en février 2026 ?",
+        "answer": "Le meilleur code promo Sephora en février 2026 offre 5% de réduction sur les parfums dès 80ml pour les adhérents fidélité."
+      },
+      {
+        "question": "Peut-on cumuler les codes promo Sephora ?",
+        "answer": "Non, les codes promo Sephora ne sont généralement pas cumulables. Assure-toi de choisir le code le plus avantageux pour toi."
+      },
+      {
+        "question": "Sephora livraison gratuite code promo",
+        "answer": "La livraison est gratuite chez Sephora dès 60€ d'achat, sans besoin de code promo spécifique."
+      },
+      {
+        "question": "Combien de codes promo Sephora sont disponibles ?",
+        "answer": "En février 2026, il y a 2 codes promo Sephora vérifiés disponibles."
+      },
+      {
+        "question": "Quels sont les avantages du programme fidélité Sephora ?",
+        "answer": "Le programme fidélité Sephora te permet de cumuler des points pour obtenir des réductions et des cadeaux exclusifs."
+      },
+      {
+        "question": "Quels produits sont exclus des promotions Sephora ?",
+        "answer": "Les promotions Sephora excluent souvent les petits prix, prix web, points rouges, coffrets, cartes cadeaux et DROM."
+      }
+    ],
+    "averageDiscount": 5,
+    "bestCurrentDiscount": 5,
+    "totalActiveOffers": 2,
+    "conclusion": "<p>Avec <strong>Sephora</strong>, tu as accès à une multitude de produits de beauté de qualité. N'oublie pas de vérifier nos codes promo pour économiser sur tes achats. Bon shopping !</p>",
+    "relatedMerchants": "nocibe,marionnaud,dr-pierre-ricaud,lookfantastic,notino",
+    "targetKeywords": "code promo sephora, codes promo sephora, bon de réduction sephora, réduction sephora, promo sephora février 2026, sephora code promo, coupon sephora, parfum, maquillage, soin"
+  }
+}

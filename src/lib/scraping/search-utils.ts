@@ -39,6 +39,8 @@ export interface CompetitorPriceResult {
   inStock?: boolean;
   error?: string;
   rawLLMResponse?: string;
+  matchConfidence?: number;  // Score 0-100
+  matchMethod?: string;      // "internal_search" | "serper_fallback"
 }
 
 export interface VisionAnalysisResult {

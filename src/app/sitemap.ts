@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
+import { getAllPromoPages } from '@/lib/promo-queries';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -194,6 +195,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Récupérer les pages codes promo
+  const promoPages = await getAllPromoPages();
+
+  const promoCodePages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/codes-promo`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    ...promoPages.map((page) => ({
+      url: `${BASE_URL}/codes-promo/${page.canonicalSlug}`,
+      lastModified: page.updatedAt || new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.85,
+    })),
+  ];
+
   return [
     ...staticPages,
     ...categoryPages,
@@ -201,5 +220,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...dealsBrandPages,       // /deals?category=parfums&brand=Guerlain (premium)
     ...dealPages,
     ...guidePages,
+    ...promoCodePages,        // /codes-promo + /codes-promo/sephora, nocibe, etc.
   ];
 }

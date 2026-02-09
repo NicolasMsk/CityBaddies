@@ -31,10 +31,12 @@ model User {
   updatedAt     DateTime   @updatedAt
   
   // Relations
-  favorites     Favorite[]
-  votes         Vote[]
-  comments      Comment[]
-  postedDeals   Deal[]     @relation("DealAuthor")
+  favorites       Favorite[]
+  votes           Vote[]
+  comments        Comment[]
+  postedDeals     Deal[]           @relation("DealAuthor")
+  promoCodes      PromoCode[]      @relation("PromoCodeAuthor")
+  promoCodeVotes  PromoCodeVote[]
   
   @@index([email])
   @@index([username])
@@ -110,6 +112,8 @@ model Merchant {
   products         Product[]
   scrapingSources  ScrapingSource[]
   competitorPrices CompetitorPrice[]
+  promoCodes       PromoCode[]       @relation("MerchantPromoCodes")
+  promoPage        MerchantPromoPage?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 }
@@ -346,6 +350,8 @@ model CompetitorPrice {
   discountPercent Int?     // % de réduction (si promo)
   volume          String?  // Contenance (ex: "50 ml")
   inStock         Boolean  @default(true)
+  matchConfidence Int?     // Score de confiance du match (0-100)
+  matchMethod     String?  // Méthode: "internal_search", "serper_fallback"
   lastChecked     DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -426,6 +432,162 @@ model BuyingGuideProduct {
   @@unique([guideId, rank])
   @@index([guideId])
   @@index([dealId])
+}
+
+// ============================================================================
+// PAGE CODE PROMO MARCHAND (contenu riche SEO par marchand)
+// ============================================================================
+
+// Page landing "/codes-promo/sephora" — contenu éditorial riche généré par IA
+model MerchantPromoPage {
+  id                  String   @id @default(cuid())
+  merchantId          String   @unique
+  merchant            Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  
+  // SEO
+  metaTitle           String?          // Ex: "Codes promo Sephora — Février 2026 | City Baddies"
+  metaDescription     String?          // Ex: "Découvrez tous les codes promo Sephora valides…" (<155 chars)
+  canonicalSlug       String   @unique // Ex: "sephora" → /codes-promo/sephora
+  
+  // Contenu éditorial principal
+  heroTitle           String?          // Titre H1 (ex: "Codes promo Sephora — Février 2026")
+  heroSubtitle        String?          // Sous-titre accrocheur
+  introduction        String?  @db.Text // Paragraphe d'intro SEO (contexte, saison, événements en cours)
+  
+  // Description du marchand (contexte code promo)
+  merchantDescription String?  @db.Text // Présentation du marchand orientée promo (histoire, positionnement, marques phares)
+  merchantAdvantages  Json?            // Avantages clés [{icon, title, text}] ex: "Livraison offerte dès 60€", "Programme fidélité"
+  shippingInfo        String?  @db.Text // Infos livraison (seuils, délais, click & collect)
+  returnPolicy        String?          // Politique retour résumée
+  loyaltyProgram      String?  @db.Text // Description programme fidélité si existant
+  
+  // Guide "Comment utiliser un code promo"
+  howToUse            Json?            // Étapes [{step, title, description, imageUrl?}] — tutoriel pas à pas
+  howToUseHtml        String?  @db.Text // Version HTML rendue du tutoriel (pour SSR)
+  
+  // Astuces & conseils
+  tips                Json?            // Conseils [{title, content}] ex: "Cumulez avec les soldes", "Inscrivez-vous à la newsletter"
+  bestTimeToShop      String?  @db.Text // Meilleurs moments pour acheter (soldes, Black Friday, ventes privées)
+  
+  // FAQ structurée (schema.org FAQPage)
+  faq                 Json?            // [{question, answer}] ex: "Les codes promo Sephora sont-ils cumulables ?"
+  
+  // Statistiques affichées sur la page
+  averageDiscount     Float?           // Réduction moyenne constatée (ex: 15.5 pour 15,5%)
+  totalActiveOffers   Int      @default(0) // Nombre d'offres actives (mis à jour automatiquement)
+  bestCurrentDiscount Float?           // Meilleure réduction en cours (ex: 30 pour -30%)
+  lastVerifiedAt      DateTime?        // Date dernière vérification des codes
+  
+  // Contenu additionnel
+  conclusion          String?  @db.Text // Paragraphe de conclusion avec CTA
+  relatedMerchants    String?          // Slugs marchands similaires séparés par virgules (ex: "nocibe,marionnaud")
+  targetKeywords      String?  @db.Text // Mots-clés SEO ciblés (ex: "code promo sephora, réduction sephora, bon de réduction")
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([canonicalSlug])
+  @@index([merchantId])
+}
+
+// ============================================================================
+// CODES PROMO (agrégés depuis les marchands beauté)
+// ============================================================================
+
+enum PromoCodeStatus {
+  ACTIVE     // Code actif et vérifié
+  EXPIRED    // Code expiré
+  UNVERIFIED // Pas encore vérifié (soumis par la communauté)
+}
+
+enum DiscountType {
+  PERCENTAGE      // Ex: -20%
+  FIXED_AMOUNT    // Ex: -10€
+  FREE_SHIPPING   // Livraison gratuite
+  GIFT            // Cadeau offert (ex: "trousse offerte dès 50€")
+  CASHBACK        // Remboursement (ex: "10€ remboursés")
+}
+
+// Code promo valable chez un marchand
+model PromoCode {
+  id                String          @id @default(cuid())
+  code              String          // Le code promo (ex: "BEAUTY20", "SEPHORA10")
+  slug              String          @unique // Slug unique pour l'URL (ex: "sephora-beauty20-fevrier-2026")
+  title             String          // Titre accrocheur (ex: "-20% sur tout le site Sephora")
+  description       String?         @db.Text // Description détaillée des conditions
+  
+  // Marchand associé
+  merchantId        String
+  merchant          Merchant        @relation("MerchantPromoCodes", fields: [merchantId], references: [id])
+  
+  // Type et valeur de la réduction
+  discountType      DiscountType    @default(PERCENTAGE)
+  discountValue     Float?          // Valeur numérique (20 pour 20%, 10 pour 10€) — null si GIFT
+  
+  // Conditions d'utilisation
+  minimumPurchase   Float?          // Montant minimum de commande (ex: 50€)
+  maximumDiscount   Float?          // Plafond de réduction (ex: "20% max 30€")
+  applicableTo      String?         // Catégories/marques concernées (ex: "parfums", "tout le site", "marque Dior")
+  conditions        String?         @db.Text // Conditions textuelles libres (ex: "Hors coffrets, 1 utilisation par client")
+  isNewCustomerOnly Boolean         @default(false) // Réservé aux nouveaux clients
+  isStackable       Boolean         @default(false) // Cumulable avec d'autres promos
+  
+  // Validité
+  status            PromoCodeStatus @default(UNVERIFIED)
+  startDate         DateTime        @default(now())
+  expiresAt         DateTime?       // Null = pas de date d'expiration connue
+  
+  // Engagement communautaire
+  isVerified        Boolean         @default(false) // Vérifié par l'équipe ou la communauté
+  isExclusive       Boolean         @default(false) // Exclusif City Baddies
+  isFeatured        Boolean         @default(false) // Mis en avant sur la homepage
+  successRate       Int?            // % de réussite rapporté par les utilisateurs (0-100)
+  usesCount         Int             @default(0) // Nombre de fois utilisé (clics)
+  views             Int             @default(0) // Nombre de vues
+  votes             Int             @default(0) // Score de votes communautaires
+  
+  // Traçabilité
+  sourceUrl         String?         // Où on a trouvé ce code (newsletter, site, influenceur)
+  sourceType        String?         // "scraping", "newsletter", "influencer", "community", "official"
+  
+  // Auteur (si soumis par un utilisateur)
+  authorId          String?
+  author            User?           @relation("PromoCodeAuthor", fields: [authorId], references: [id])
+  
+  // Relations
+  voteRecords       PromoCodeVote[]
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([code, merchantId]) // Un même code ne peut pas exister 2 fois pour le même marchand
+  @@index([merchantId])
+  @@index([status])
+  @@index([status, expiresAt])
+  @@index([merchantId, status])
+  @@index([isVerified])
+  @@index([isFeatured])
+  @@index([discountType])
+  @@index([votes])
+  @@index([createdAt])
+  @@index([authorId])
+  @@index([slug])
+}
+
+// Votes sur les codes promo (le code marche / ne marche pas)
+model PromoCodeVote {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCodeId String
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  value       Int       // +1 = ça marche, -1 = ça ne marche pas
+  comment     String?   // Commentaire optionnel (ex: "marche avec 50€ minimum")
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, promoCodeId])
+  @@index([userId])
+  @@index([promoCodeId])
 }
 
 // Abonnements newsletter

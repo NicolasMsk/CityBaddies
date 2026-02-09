@@ -363,6 +363,9 @@ class SephoraProductScraper {
                 // Si pas de nom, ignorer (ex: coffrets)
                 if (!name) return;
                 
+                // Ignorer les recharges/rechargeables (pas le même produit)
+                if (/recharg/i.test(name)) return;
+                
                 // Extraire volume du nom (ex: "100 ml" ou "01 Light Glow (10 g)" → "10 g")
                 let volumeMatch = name.match(/^(\d+(?:[.,]\d+)?)\s*(ml|g)$/i); // Format simple: "50 ml"
                 if (!volumeMatch) {

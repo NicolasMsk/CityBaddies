@@ -1,0 +1,400 @@
+{
+  "promoCodes": [
+    {
+      "code": "P101794",
+      "slug": "20-sur-tout-nocibe-sans-excuse",
+      "title": "20% sur tout Nocibé sans excuse",
+      "description": "Valable sur tout le site Nocibé. Hors petits prix, prix web, produits outlet, coffrets institut, cartes cadeaux.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 20,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site hors exclusions",
+      "conditions": "Hors petits prix, prix web, prix Nocibé, meilleurs prix, points rouges, produits outlet, coffrets institut, cartes cadeaux, cartes institut, prestations institut, emballages payants, chèques fidélité Nocibé, DROM et Monaco.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-13T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": true,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    },
+    {
+      "code": "P101359",
+      "slug": "20-sur-tout-nocibe-sans-minimum",
+      "title": "20% sur tout Nocibé sans minimum",
+      "description": "Valable sur tout le site Nocibé sauf soldes et promos. Hors petits prix, prix web, produits outlet, coffrets institut, cartes cadeaux.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 20,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site sauf soldes et promos",
+      "conditions": "Hors petits prix, prix web, prix Nocibé, meilleurs prix, points rouges, produits outlet, coffrets institut, cartes cadeaux, cartes institut, prestations institut, emballages payants, chèques fidélité Nocibé, DROM et Monaco.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-07-22T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": true,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 2
+    },
+    {
+      "code": "30DAYS",
+      "slug": "30-supplementaire-sur-tout-nocibe-des-69-euros",
+      "title": "30% supplémentaire sur tout Nocibé dès 69€",
+      "description": "Valable sur tout le site Nocibé, cumulable avec les soldes. Hors petits prix, prix web, produits outlet, coffrets institut, cartes cadeaux.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 30,
+      "minimumPurchase": 69,
+      "maximumDiscount": null,
+      "applicableTo": "dès 69€ sur tout le site",
+      "conditions": "Hors petits prix, prix web, prix Nocibé, meilleurs prix, points rouges, produits outlet, coffrets institut, cartes cadeaux, cartes institut, prestations institut, emballages payants, chèques fidélité Nocibé, DROM et Monaco.",
+      "isNewCustomerOnly": false,
+      "isStackable": true,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-09T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": true,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 2
+    },
+    {
+      "code": "P101793",
+      "slug": "30-sur-tout-nocibe-des-149-euros",
+      "title": "30% sur tout Nocibé dès 149€",
+      "description": "Valable sur tout le site Nocibé. Hors petits prix, prix web, produits outlet, coffrets institut, cartes cadeaux.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 30,
+      "minimumPurchase": 149,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site hors exclusions",
+      "conditions": "Hors petits prix, prix web, prix Nocibé, meilleurs prix, points rouges, produits outlet, coffrets institut, cartes cadeaux, cartes institut, prestations institut, emballages payants, chèques fidélité Nocibé, DROM et Monaco.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-06-30T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    },
+    {
+      "code": null,
+      "slug": "exclu-fidelite-200-points-10-euros",
+      "title": "Exclu fidélité : 200 points = 10€",
+      "description": "Cumulez 200 points de fidélité sur Nocibé et obtenez 10€ de réduction.",
+      "discountType": "FIXED_AMOUNT",
+      "discountValue": 10,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": true,
+      "isFeatured": false,
+      "successRate": 94.44,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 16
+    },
+    {
+      "code": null,
+      "slug": "fidelite-points-doubles-anniversaire",
+      "title": "Fidélité : points doublés à l'anniversaire",
+      "description": "Vos points de fidélité sont doublés pour tout achat le mois de votre anniversaire chez Nocibé.",
+      "discountType": "CASHBACK",
+      "discountValue": null,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": true,
+      "isFeatured": false,
+      "successRate": 95.45,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 20
+    },
+    {
+      "code": null,
+      "slug": "livraison-offerte-click-collect",
+      "title": "Livraison offerte en 1H en Click & Collect",
+      "description": "Frais de livraison gratuits en 1H avec le Click & Collect chez Nocibé.",
+      "discountType": "FREE_SHIPPING",
+      "discountValue": null,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    },
+    {
+      "code": null,
+      "slug": "livraison-gratuite-des-60-euros",
+      "title": "Livraison gratuite dès 60€ d'achat",
+      "description": "Profitez de la livraison gratuite chez Nocibé dès 60€ de commande.",
+      "discountType": "FREE_SHIPPING",
+      "discountValue": null,
+      "minimumPurchase": 60,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 19
+    },
+    {
+      "code": null,
+      "slug": "jusqu-a-30-sur-selection-outlet",
+      "title": "Jusqu'à 30% sur la sélection outlet",
+      "description": "Économisez jusqu'à 30% sur la sélection outlet de Nocibé.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 30,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "la sélection outlet",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "UNVERIFIED",
+      "expiresAt": null,
+      "isVerified": false,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 9
+    },
+    {
+      "code": null,
+      "slug": "trousse-vanity-guess-en-cadeau",
+      "title": "Trousse vanity Guess en cadeau",
+      "description": "Recevez une trousse vanity Guess en cadeau dès 55€ d'achat sur la marque Guess chez Nocibé.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": 55,
+      "maximumDiscount": null,
+      "applicableTo": "la marque Guess",
+      "conditions": "Dans la limite des stocks disponibles.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-02-17T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 0
+    },
+    {
+      "code": null,
+      "slug": "2-echantillons-en-cadeau",
+      "title": "2 échantillons en cadeau",
+      "description": "Profitez de 2 échantillons gratuits chez Nocibé sans minimum d'achat.",
+      "discountType": "GIFT",
+      "discountValue": null,
+      "minimumPurchase": null,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site",
+      "conditions": null,
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": null,
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 21
+    },
+    {
+      "code": "P101790",
+      "slug": "30-sur-tout-nocibe-des-69-euros",
+      "title": "30% sur tout Nocibé dès 69€",
+      "description": "Valable sur tout le site Nocibé. Hors petits prix, prix web, produits outlet, coffrets institut, cartes cadeaux.",
+      "discountType": "PERCENTAGE",
+      "discountValue": 30,
+      "minimumPurchase": 69,
+      "maximumDiscount": null,
+      "applicableTo": "tout le site hors exclusions",
+      "conditions": "Hors petits prix, prix web, prix Nocibé, meilleurs prix, points rouges, produits outlet, coffrets institut, cartes cadeaux, cartes institut, prestations institut, emballages payants, chèques fidélité Nocibé, DROM et Monaco.",
+      "isNewCustomerOnly": false,
+      "isStackable": false,
+      "status": "ACTIVE",
+      "expiresAt": "2026-06-30T00:00:00Z",
+      "isVerified": true,
+      "isExclusive": false,
+      "isFeatured": false,
+      "successRate": 100,
+      "sourceUrl": "https://www.ma-reduc.com/reductions-pour-Nocibe.php",
+      "sourceType": "ma-reduc",
+      "votes": 1
+    }
+  ],
+  "merchantPromoPage": {
+    "canonicalSlug": "nocibe",
+    "metaTitle": "Code Promo Nocibé : Jusqu'à -30% | Février 2026",
+    "metaDescription": "5 codes promo Nocibé vérifiés en février 2026. Jusqu'à -30% sur tout le site. Codes testés et mis à jour quotidiennement.",
+    "heroTitle": "Codes Promo Nocibé",
+    "heroSubtitle": "5 codes vérifiés • Jusqu'à -30% • Février 2026",
+    "introduction": "<p>Tu cherches un <strong>code promo Nocibé</strong> qui marche vraiment ? On a déniché pour toi les meilleures offres du moment avec des réductions allant jusqu'à 30% en février 2026. Profite de ces <strong>promos</strong> pour te faire plaisir sans te ruiner.</p><p>Avec 5 codes actifs, tu es sûre de trouver celui qui te convient. Que tu cherches des parfums, du maquillage ou des soins, Nocibé a tout ce qu'il te faut. Alors, prête à faire de bonnes affaires ?</p>",
+    "merchantDescription": "<p><strong>Nocibé</strong> est une référence dans le monde de la beauté en France. Avec une vaste gamme de produits allant des parfums aux soins en passant par le maquillage, Nocibé propose des marques phares comme Dior, Chanel et Lancôme. Le site est idéal pour celles qui aiment les nouveautés et les bons plans. Cependant, attention aux exclusions sur certaines promotions.</p>",
+    "merchantAdvantages": [
+      {
+        "icon": "🚚",
+        "title": "Livraison rapide",
+        "text": "Nocibé offre une livraison rapide avec plusieurs options, y compris le Click & Collect en 1 heure."
+      },
+      {
+        "icon": "💄",
+        "title": "Large choix de marques",
+        "text": "Retrouve des marques de renom comme Dior, Chanel et Lancôme pour tous tes besoins beauté."
+      },
+      {
+        "icon": "🎁",
+        "title": "Programme fidélité avantageux",
+        "text": "Cumule des points à chaque achat et profite de réductions ou de cadeaux exclusifs."
+      },
+      {
+        "icon": "🔄",
+        "title": "Retours faciles",
+        "text": "Les retours sont simples et gratuits en magasin, avec un délai de 30 jours pour changer d'avis."
+      }
+    ],
+    "shippingInfo": "<p>Nocibé propose la livraison gratuite dès 60€ d'achat. Plusieurs options sont disponibles, comme le Click & Collect en 1 heure. Pour les commandes inférieures à 60€, les frais varient entre 2,95€ et 9,95€ selon le mode choisi.</p>",
+    "returnPolicy": "<p>Tu as 30 jours pour retourner tes produits chez Nocibé. Les retours sont gratuits en magasin, mais les produits doivent être non ouverts et dans leur emballage d'origine. Pour les commandes via des partenaires, le retour se fait par colis postal.</p>",
+    "loyaltyProgram": "<p>Le programme de fidélité Nocibé te permet de cumuler des points à chaque achat : 1€ dépensé = 1 point. Dès 200 points, tu peux obtenir un bon d'achat de 10€ ou choisir un cadeau. Les membres bénéficient aussi d'offres exclusives et de points doublés lors de leur anniversaire.</p>",
+    "howToUse": [
+      {
+        "step": 1,
+        "title": "Choisis ton code",
+        "description": "Parcourez notre sélection et choisissez le code promo Nocibé qui te convient."
+      },
+      {
+        "step": 2,
+        "title": "Ajoute tes produits",
+        "description": "Mets dans ton panier les produits de beauté que tu souhaites acheter."
+      },
+      {
+        "step": 3,
+        "title": "Applique le code",
+        "description": "Lors du paiement, saisis ton code promo dans le champ dédié et clique sur 'Appliquer'."
+      },
+      {
+        "step": 4,
+        "title": "Finalise ta commande",
+        "description": "Vérifie que la réduction est bien appliquée, puis valide ton achat."
+      }
+    ],
+    "howToUseHtml": "<ol><li>Choisis ton code : Parcourez notre sélection et choisis le code promo Nocibé qui te convient.</li><li>Ajoute tes produits : Mets dans ton panier les produits de beauté que tu souhaites acheter.</li><li>Applique le code : Lors du paiement, saisis ton code promo dans le champ dédié et clique sur 'Appliquer'.</li><li>Finalise ta commande : Vérifie que la réduction est bien appliquée, puis valide ton achat.</li></ol>",
+    "tips": [
+      {
+        "title": "Profite des ventes privées",
+        "content": "Inscris-toi à la newsletter de Nocibé pour être informée des ventes privées et bénéficier de réductions exclusives."
+      },
+      {
+        "title": "Utilise le Click & Collect",
+        "content": "Évite les frais de livraison en utilisant le Click & Collect pour récupérer ta commande gratuitement en magasin."
+      },
+      {
+        "title": "Cumule les points fidélité",
+        "content": "Achète régulièrement chez Nocibé pour cumuler des points et obtenir des réductions ou des cadeaux."
+      },
+      {
+        "title": "Vérifie les exclusions",
+        "content": "Avant d'utiliser un code promo, lis bien les exclusions pour t'assurer qu'il s'applique à tes achats."
+      },
+      {
+        "title": "Surveille les périodes de soldes",
+        "content": "Les soldes d'été et d'hiver sont des moments idéaux pour faire de bonnes affaires chez Nocibé."
+      }
+    ],
+    "bestTimeToShop": "Les meilleurs moments pour acheter chez Nocibé sont pendant le Black Friday, les soldes d'été et d'hiver, ainsi que lors des ventes privées pour les membres fidélité.",
+    "faq": [
+      {
+        "question": "Comment utiliser un code promo Nocibé ?",
+        "answer": "Choisis un code promo actif, ajoute tes produits au panier, puis saisis le code lors du paiement pour appliquer la réduction."
+      },
+      {
+        "question": "Est-ce que les codes promo Nocibé fonctionnent ?",
+        "answer": "Oui, les codes promo Nocibé fonctionnent tant qu'ils sont valides et que les conditions d'utilisation sont respectées."
+      },
+      {
+        "question": "Quel est le meilleur code promo Nocibé en février 2026 ?",
+        "answer": "Le meilleur code promo Nocibé en février 2026 offre 30% de réduction sur tout le site dès 69€ d'achat."
+      },
+      {
+        "question": "Peut-on cumuler les codes promo Nocibé ?",
+        "answer": "Non, les codes promo Nocibé ne sont généralement pas cumulables entre eux."
+      },
+      {
+        "question": "Nocibé livraison gratuite code promo",
+        "answer": "La livraison est gratuite chez Nocibé dès 60€ d'achat, sans besoin de code promo spécifique."
+      },
+      {
+        "question": "Combien de codes promo Nocibé sont disponibles ?",
+        "answer": "Actuellement, il y a 5 codes promo Nocibé vérifiés disponibles pour février 2026."
+      },
+      {
+        "question": "Quels avantages offre le programme de fidélité Nocibé ?",
+        "answer": "Le programme de fidélité Nocibé permet de cumuler des points pour obtenir des réductions et des cadeaux exclusifs."
+      },
+      {
+        "question": "Comment retourner un produit chez Nocibé ?",
+        "answer": "Tu peux retourner un produit en magasin gratuitement ou par colis postal dans un délai de 30 jours."
+      }
+    ],
+    "averageDiscount": 25,
+    "bestCurrentDiscount": 30,
+    "totalActiveOffers": 5,
+    "conclusion": "<p>En résumé, <strong>Nocibé</strong> offre de belles opportunités pour économiser sur tes achats beauté. Profite des codes promo et des bons plans pour te faire plaisir sans te ruiner.</p>",
+    "relatedMerchants": "sephora,dr-pierre-ricaud,lookfantastic,marionnaud,boticinal",
+    "targetKeywords": "code promo nocibe,codes promo nocibe,bon de réduction nocibe,rédution nocibe,promo nocibe février 2026,nocibe code promo,coupon nocibe,parfum nocibe,maquillage nocibe,soin nocibe"
+  }
+}

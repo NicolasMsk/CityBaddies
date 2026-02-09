@@ -33,17 +33,19 @@ export { CompetitorPriceResult, closeBrowser };
 
 /**
  * Recherche le prix d'un produit sur un site concurrent spécifique
+ * @param dealInfo - Infos du deal original (brand, name, category) pour le matching GPT (Nocibé V2)
  */
 export async function searchCompetitorPrice(
   searchQuery: string,
   site: CompetitorSite,
-  targetVolume?: string
+  targetVolume?: string,
+  dealInfo?: { brand: string; name: string; category?: string }
 ): Promise<CompetitorPriceResult> {
   switch (site) {
     case 'sephora':
-      return searchSephoraPrice(searchQuery, targetVolume);
+      return searchSephoraPrice(searchQuery, targetVolume, dealInfo);
     case 'nocibe':
-      return searchNocibePrice(searchQuery, targetVolume);
+      return searchNocibePrice(searchQuery, targetVolume, dealInfo);
     case 'marionnaud':
       return searchMarionnaudPrice(searchQuery, targetVolume);
     default:

@@ -1,0 +1,597 @@
+
+Tu es un expert en structuration de données e-commerce beauté.
+Voici les données brutes scrapées de Ma-Reduc.com pour le marchand "sephora".
+
+═══ OFFRES SCRAPÉES (31) ═══
+
+
+--- Offre 1 ---
+Type: code
+Titre: 7 mini produits en cadeau avec Sephora dès 119€ d'achat
+Code: GOODIES0126
+Description: Partagé par MaReduc (138 utilisations) - Expire le 28/07/2026 Offre applicable sur l'ensemble du site dans la limite des stocks disponibles. À partir d'un montant d'achat minimum de 119€ pour recevoir le cadeau.
+Conditions: <ul> <li> En cadeau dÃ¨s 119â¬ d'achats : 7 mini produits </li> <li> Valable sur tous les articles </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"119€","Valable sur":"tout le site tout le site"}
+Expiration: 28/07/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +1 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 2 ---
+Type: bon_plan
+Titre: ALERTE BON PLAN ! Économisez 30% au plus sur la sélection Saint-Valentin
+Code: N/A
+Description: Partagé par MaReduc (37 utilisations) - Expire le 14/02/2026 Il n'y a pas de montant d'achat minimum requis pour profiter de cette offre. Applicable sur la sélection Saint-Valentin. Une fois les conditions remplies, profitez immédiatement de la réduc sans saisir de code promo.
+Conditions: <ul> <li> Profitez jusqu'Ã  30% de rÃ©duction </li> <li> Valable sur la sÃ©lection Saint-Valentin </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"jusqu'à 30%","Valable sur":"la sélection Saint-Valentin"}
+Expiration: 14/02/2026
+Réduction: 30%
+Badge: 30%
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: Plus que 5 jours
+Popup détails: expire bientôt
+
+--- Offre 3 ---
+Type: bon_plan
+Titre: GRATUIT ! En cadeau : une gourde avec Sephora, profitez-en !
+Code: N/A
+Description: Partagé par Snoopy74 (50 utilisations) - Expire le 22/02/2026 Valable sur les produits soin de la marque Sephora Collection. Il est nécessaire d'atteindre un montant minimum d'achat de 30€ pour bénéficier du cadeau. Ce bon plan fonctionne sans code promo.
+Conditions: <ul> <li> En cadeau Ã  partir 30â¬ d'achats : une gourde </li> <li> Valable sur les produits soin de la marque Sephora Collection </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"30€","Valable sur":"les produits soin de la marque Sephora Collection"}
+Expiration: 22/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 4 ---
+Type: code
+Titre: Code promo Sephora : empochez 5% de réduction sur les parfums dès 80ml
+Code: PARF0226
+Description: Partagé par Snoopy74 (3 utilisations) - Expire le 14/02/2026 Aucun montant minimum d'achat n'est requis pour profiter de ce code promo. Applicable sur les parfums dès 80ml. Souscrivez au programme fidélité Sephora pour bénéficier dès à présent de cet avantage.
+Conditions: <ul> <li> Profitez de 5% de remise </li> <li> Valable sur les parfums dÃ¨s 80ml </li> <li> Offre rÃ©servÃ©e aux porteurs de la carte fidÃ©litÃ© Sephora </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"5%","Valable sur":"les parfums dès 80ml","Valable pour":"les adhérents fidélité"}
+Expiration: 14/02/2026
+Réduction: 5%
+Badge: 5%
+Vérifié: Oui
+Votes: +1 / -0
+Popup titre: N/A
+Popup expiration: Plus que 5 jours
+Popup détails: nouveau
+
+--- Offre 5 ---
+Type: bon_plan
+Titre: Vous allez aimer ! En cadeau : une brosse à cheveux avec Sephora
+Code: N/A
+Description: Partagé par Snoopy74 (10 utilisations) - Expire le 31/07/2026 Valable sur la gamme Dolce & Gabbana dans la limite des stocks disponibles. Il vous faut atteindre un montant minimum d'achat de 100€ pour recevoir le cadeau. Offre limitée aux professionnels. Aucun code de réduction n'est nécessaire pour bénéficier de ce bon plan.
+Conditions: <ul> <li> En cadeau chez Sephora dÃ¨s 100â¬ d'achats : une brosse Ã  cheveux </li> <li> Valable sur la gamme Dolce & Gabbana </li> <li> Professionnels uniquement </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"100€","Valable sur":"la gamme Dolce & Gabbana","Offre réservée":"aux professionnels"}
+Expiration: 31/07/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 6 ---
+Type: bon_plan
+Titre: En cadeau : un soin N°3 Hair Perfector 20ml avec Sephora
+Code: N/A
+Description: Partagé par Snoopy74 (3 utilisations) - Expire le 31/03/2026 Valable sur la gamme Olaplex. Il est nécessaire d'atteindre un montant d'achat minimum de 35€ pour recevoir le cadeau. Aucun code promo Sephora n'est nécessaire pour activer ce bon plan.
+Conditions: <ul> <li> Sephora vous offre un cadeau : un soin NÂ°3 Hair Perfector 20ml Ã  partir 35â¬ d'achats </li> <li> Valable sur la gamme Olaplex </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"35€","Valable sur":"la gamme Olaplex"}
+Expiration: 31/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 7 ---
+Type: bon_plan
+Titre: L'envoi est offert à domicile sans code promo Sephora, profitez-en rapidement !
+Code: N/A
+Description: Partagé par MaReduc (914 utilisations) - Validité permanente Sephora vous fait profiter gratuitement de la livraison à domicile à partir de 60 € d'achat.
+Conditions: <ul> <li> Frais de livraison offerts pour 60â¬ d'achats </li> <li> Valable sur l'ensemble du site </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"60€","Valable sur":"tout le site"}
+Expiration: Validité permanente
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +101 / -3
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 8 ---
+Type: bon_plan
+Titre: MOITIÉ PRIX ! Recevez 50% de remise sur Deux soins achetés, profitez d’une réduction 50% sur le second ! Durant cette promo Sephora
+Code: N/A
+Description: Partagé par parislif55 (264 utilisations) - Expire le 29/03/2026 Pour l’achat de deux soins, bénéficiez d’une réduction spéciale sur le deuxième. Offrez-vous le double de bien-être à prix malin !
+Conditions: <ul> <li> BÃ©nÃ©ficiez de 50% de rÃ©duction </li> <li> Valable sur Deux soins achetÃ©s, profitez dâune rÃ©duction 50% sur le second ! </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par parislif55</li></ul>
+Tableau conditions: {"Réduction":"50%","Valable sur":"Deux soins achetés, profitez d’une réduction 50% sur le second !"}
+Expiration: 29/03/2026
+Réduction: 50%
+Badge: 50%
+Vérifié: Non
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 9 ---
+Type: bon_plan
+Titre: En cadeau : une huile à lèvre Honey Infused Lip Oil (8 ml) avec Sephora, c'est le moment ou jamais d'en bénéficier !
+Code: N/A
+Description: Partagé par Snoopy74 (13 utilisations) - Expire le 31/03/2026 Applicable sur les produits de la marque Gisou et jusqu'à épuisement du stock. Valable dès un minimum d'achat de 60€ pour recevoir le cadeau. Ce bon plan est actif AUTOMATIQUEMENT, sans code promo.
+Conditions: <ul> <li> Sephora vous offre un cadeau : une huile Ã  lÃ¨vre Honey Infused Lip Oil (8 ml) dÃ¨s 60â¬ d'achats </li> <li> Valable sur les produits de la marque Gisou </li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"60€","Valable sur":"les produits de la marque Gisou"}
+Expiration: 31/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 10 ---
+Type: bon_plan
+Titre: Obtenez 25% de réduction sur sélection de maquillage pendant cette promo Sephora
+Code: N/A
+Description: Partagé par Claire (4169 utilisations) - Validité permanente Cette offre n'est soumise à aucun montant d'achat minimum. Valable sur sélection de maquillage, hors point rouges. Si les conditions sont respectées, la réduction s'applique AUTOMATIQUEMENT.
+Conditions: <ul> <li> BÃ©nÃ©ficiez de 25% offerts </li> <li> Valable sur sÃ©lection de maquillage </li> <li>Sauf point rouges</li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"25%","Valable sur":"sélection de maquillage, hors point rouges"}
+Expiration: Validité permanente
+Réduction: 25%
+Badge: 25%
+Vérifié: Oui
+Votes: +6 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 11 ---
+Type: bon_plan
+Titre: 25% de remise sur les soins cheveux pendant cette promo Sephora
+Code: N/A
+Description: Partagé par Claire (664 utilisations) - Validité permanente Cette offre n'est soumise à AUCUN montant d'achat MINIMUM. Valable sur les soins cheveux. La réduction se déclenche instantanément dans votre panier dès que les conditions sont réunies.
+Conditions: <ul> <li> Profitez de 25% de rÃ©duction </li> <li> Valable sur les soins cheveux </li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"25%","Valable sur":"les soins cheveux"}
+Expiration: Validité permanente
+Réduction: 25%
+Badge: 25%
+Vérifié: Oui
+Votes: +6 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 12 ---
+Type: bon_plan
+Titre: -25% sur les soins visage
+Code: N/A
+Description: Partagé par Claire (1922 utilisations) - Validité permanente Aucun minimum d'achat n'est nécessaire pour bénéficier de cette offre. Applicable sur les soins visage. La réduction est déjà activée, vous n'avez pas besoin de code promo Sephora.
+Conditions: <ul> <li> BÃ©nÃ©ficiez de 25% de rÃ©duction </li> <li> Valable sur les soins visage </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"25%","Valable sur":"les soins visage"}
+Expiration: Validité permanente
+Réduction: 25%
+Badge: 25%
+Vérifié: Oui
+Votes: +4 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 13 ---
+Type: bon_plan
+Titre: TOP rapport qualité/prix ! Craquez pour le coffret L’Interdit Givenchy à -25% chez Sephora ! À 86€ seulement
+Code: N/A
+Description: Partagé par mariaa222 (2 utilisations) - Expire le 23/04/2026 Profitez de -25% sur le coffret iconique L’Interdit Eau de Parfum de Givenchy — une touche d’élégance à prix doux chez Sephora
+Conditions: <ul> <li> Craquez pour le coffret LâInterdit Givenchy Ã  -25% chez Sephora ! Pour un tarif exceptionnel de 86â¬ ! </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par mariaa222</li></ul>
+Tableau conditions: {"Valable sur":"Craquez pour le coffret L’Interdit Givenchy à -25% chez Sephora !"}
+Expiration: 23/04/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Non
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 14 ---
+Type: bon_plan
+Titre: Empochez 25% de remise sur les coffrets parfum et les parfums dès 50 ml chez Sephora - Profitez-en vite !
+Code: N/A
+Description: Partagé par Yoyo_ - Expire le 14/02/2026 Cette offre n'est soumise à AUCUN montant MINIMUM d'achat. Valable sur les coffrets parfum et les parfums dès 50 ml, hors points rouges. Avantage exclusivement réservé aux titulaires d'un compte de fidélité Sephora . Lorsque les conditions sont réunies, la remise s'active AUTOMATIQUEMENT dans votre panier.
+Conditions: <ul> <li> BÃ©nÃ©ficiez de 25% de rÃ©duction </li> <li> Valable sur les coffrets parfum et les parfums dÃ¨s 50 ml </li> <li>Hors points rouges</li> <li> Carte de fidÃ©litÃ© indispensable </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Réduction":"25%","Valable sur":"les coffrets parfum et les parfums dès 50 ml, hors points rouges","Valable pour":"les membres fidélité"}
+Expiration: 14/02/2026
+Réduction: 25%
+Badge: 25%
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: Plus que 5 jours
+Popup détails: nouveau
+
+--- Offre 15 ---
+Type: bon_plan
+Titre: En cadeau : une trousse en cuir avec Sephora
+Code: N/A
+Description: Partagé par Snoopy74 (9 utilisations) - Expire le 28/02/2026 Valable sur la marque Laura Mercier et jusqu'à liquidation des stocks. Valable dès un montant d'achat minimum de 59€ pour recevoir le cadeau. Un code promo Sephora n'est pas nécessaire pour activer ce bon plan.
+Conditions: <ul> <li> En cadeau avec Sephora pour un minimum de 59â¬ d'achats : une trousse en cuir </li> <li> Valable sur la marque Laura Mercier </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"59€","Valable sur":"la marque Laura Mercier"}
+Expiration: 28/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 16 ---
+Type: bon_plan
+Titre: GRATUIT ! Recevez en cadeau un masque visage Eclat Or Rose avec Sephora
+Code: N/A
+Description: Partagé par Snoopy74 (5 utilisations) - Expire le 28/02/2026 Applicable sur la gamme 111Skin jusqu'à épuisement du stock. À partir d'un montant minimum d'achat de 100€ pour bénéficier du cadeau. Aucun code promo Sephora n'est requis pour profiter de ce bon plan.
+Conditions: <ul> <li> Sephora vous fait profiter d'un cadeau : un masque visage Eclat Or Rose Ã  partir 100â¬ d'achats </li> <li> Valable sur la gamme 111Skin </li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"100€","Valable sur":"la gamme 111Skin"}
+Expiration: 28/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 17 ---
+Type: bon_plan
+Titre: Sephora fait chuter les prix : la sélection Hot On Social Media à partir de 4,99€
+Code: N/A
+Description: Partagé par Saoussan - Expire le 22/02/2026 Il n'y a pas de minimum d'achat requis pour profiter de cette offre. Valable sur la sélection Hot On Social Media. Un code promo ? Pas besoin. Cette offre s'active toute seule dans votre panier dès que les conditions sont validées.
+Conditions: <ul> <li> Valable sur la sÃ©lection Hot On Social Media </li> <li>Profitez des petits prix Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"la sélection Hot On Social Media"}
+Expiration: 22/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 18 ---
+Type: bon_plan
+Titre: GRATUIT ! Recevez en cadeau un mini DreamBeam Sunlit avec Sephora, profitez-en vite !
+Code: N/A
+Description: Partagé par Snoopy74 (3 utilisations) - Expire le 28/02/2026 Valable sur la gamme Kosas. Nécessite un montant minimum d'achat de 40€ pour recevoir le cadeau. Ce bon plan Sephora fonctionne AUTOMATIQUEMENT, sans code promo.
+Conditions: <ul> <li> En cadeau pour un minimum de 40â¬ de commande : un mini DreamBeam Sunlit </li> <li> Valable sur la gamme Kosas </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Minimum d'achat":"40€","Valable sur":"la gamme Kosas"}
+Expiration: 28/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 19 ---
+Type: info
+Titre: Recyclez vos flacons de parfum
+Code: N/A
+Description: Partagé par Claire - Validité permanente Info utile : Depuis 2010, Sephora recycle vos bouteilles de parfum en échange de coupons de réduction.
+Conditions: <ul> <li> Sephora pense Ã  la planÃ¨te. Venez recycler vos bouteilles de parfum en magasin et en Ã©change obtenez des coupons de rÃ©duction. </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: N/A
+Expiration: Validité permanente
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 20 ---
+Type: bon_plan
+Titre: Sephora : la gamme contour des yeux à partir de 3,99€
+Code: N/A
+Description: Partagé par Snoopy74 (2 utilisations) - Expire le 18/02/2026 Aucun montant d'achat minimum n'est exigé pour bénéficier de cette offre. Applicable sur la gamme contour des yeux. Cette offre est déjà activée sans code promo.
+Conditions: <ul> <li> Valable sur la gamme contour des yeux </li> <li>Profitez des petits prix chez Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"la gamme contour des yeux"}
+Expiration: 18/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 21 ---
+Type: bon_plan
+Titre: MEILLEUR PRIX ! Sephora vous propose les baumes à lèvres dès 4,50€
+Code: N/A
+Description: Partagé par Snoopy74 (2 utilisations) - Expire le 18/02/2026 Cette offre n'est soumise à aucun minimum d'achat. Applicable sur les baumes à lèvres. Profitez immédiatement de l'offre, aucun code promo n'est requis.
+Conditions: <ul> <li> Valable sur les baumes Ã  lÃ¨vres </li> <li>BÃ©nÃ©ficiez des petits prix Sephora</li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les baumes à lèvres"}
+Expiration: 18/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 22 ---
+Type: bon_plan
+Titre: Budget serré ! Les huiles de bain à partir de 7€ avec les petits prix Sephora, n'attendez pas !
+Code: N/A
+Description: Partagé par Snoopy74 (2 utilisations) - Expire le 18/02/2026 Cette offre n'est soumise à aucun montant minimum d'achat. Applicable sur les huiles de bain. Ce bon plan fonctionne sans code promo.
+Conditions: <ul> <li> Valable sur les huiles de bain </li> <li>BÃ©nÃ©ficiez des petits prix chez Sephora</li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les huiles de bain"}
+Expiration: 18/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 23 ---
+Type: bon_plan
+Titre: Prix défiant toute concurrence ! Laissez-vous tenter par les shampoings secs à partir de 9€ avec Sephora
+Code: N/A
+Description: Partagé par Snoopy74 - Expire le 18/02/2026 Cette offre n'est soumise à aucun montant minimum d'achat. Valable sur les shampoings secs. Ce bon plan fonctionne sans code promo.
+Conditions: <ul> <li> Valable sur les shampoings secs </li> <li>BÃ©nÃ©ficiez des petits prix chez Sephora</li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les shampoings secs"}
+Expiration: 18/02/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 24 ---
+Type: bon_plan
+Titre: Bon plan ! Craquez pour les coffrets maquillage pour les yeux dès 11,99€ seulement avec les petits prix Sephora
+Code: N/A
+Description: Partagé par Saoussan (61 utilisations) - Validité permanente Aucun montant d'achat minimum n'est requis pour bénéficier de cette offre. Valable sur les coffrets maquillage pour les yeux. Cette offre est déjà appliquée sans code promo.
+Conditions: <ul> <li> Valable sur les coffrets maquillage pour les yeux </li> <li>BÃ©nÃ©ficiez des petits prix chez Sephora</li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les coffrets maquillage pour les yeux"}
+Expiration: Validité permanente
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +22 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 25 ---
+Type: bon_plan
+Titre: Budget serré ! Les gels douche à moins de 15€ avec les petits prix Sephora
+Code: N/A
+Description: Partagé par Snoopy74 (2 utilisations) - Expire le 01/03/2026 Pas de minimum d'achat imposé pour profiter de cette offre. Valable sur les gels douche. Un code promo Sephora n'est pas requis pour bénéficier de ce bon plan.
+Conditions: <ul> <li> Valable sur les gels douche </li> <li>Profitez des petits prix chez Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les gels douche"}
+Expiration: 01/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 26 ---
+Type: bon_plan
+Titre: Prix plus qu'intéressant ! La sélection The next BIG thing dès 19€ avec Sephora
+Code: N/A
+Description: Partagé par Saoussan - Expire le 06/04/2026 Cette offre n'est soumise à AUCUN montant d'achat MINIMUM. Valable sur la sélection The next BIG thing. Ce bon plan est actif immédiatement, sans code promo.
+Conditions: <ul> <li> Valable sur la sÃ©lection The next BIG thing </li> <li>Profitez des petits prix Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"la sélection The next BIG thing"}
+Expiration: 06/04/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 27 ---
+Type: bon_plan
+Titre: Prix plus qu'intéressant ! Sephora : les laits hydratants à moins de 30€
+Code: N/A
+Description: Partagé par Snoopy74 (2 utilisations) - Expire le 06/03/2026 Il n'y a pas de minimum d'achat requis pour bénéficier de cette offre. Applicable sur les laits hydratants. Aucun code promo Sephora n'est nécessaire pour bénéficier de ce bon plan.
+Conditions: <ul> <li> Valable sur les laits hydratants </li> <li>Profitez des petits prix chez Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les laits hydratants"}
+Expiration: 06/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 28 ---
+Type: bon_plan
+Titre: Prix plus qu'intéressant ! Les palettes de maquillage pour les yeux à moins de 50€ chez Sephora
+Code: N/A
+Description: Partagé par Snoopy74 - Expire le 21/03/2026 Cette offre n'est soumise à aucun minimum d'achat. Applicable sur les palettes de maquillage pour les yeux. Aucun code promo Sephora n'est nécessaire pour bénéficier de ce bon plan.
+Conditions: <ul> <li> Valable sur les palettes de maquillage pour les yeux </li> <li>Profitez des petits prix chez Sephora</li> <li> Pas besoin de code promo pour bÃ©nÃ©ficier de cette offre </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: {"Valable sur":"les palettes de maquillage pour les yeux"}
+Expiration: 21/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 29 ---
+Type: bon_plan
+Titre: SUPER OFFRE ! Calendrier de l’Avent Beauté – 24 surprises pour 54,99€ au lieu de 156,62€ ! Au prix exceptionnel de 54,99€
+Code: N/A
+Description: Partagé par parislif55 (18 utilisations) - Expire le 26/03/2026 Découvrez 24 surprises irrésistibles (maquillage, soins, bain et accessoires) avec le Calendrier de l’Avent, d’une valeur de 156,62€ pour seulement 54,99€ ! Faites-vous plaisir chaque jour jusqu’à Noël sans vous ruiner.
+Conditions: <ul> <li> Calendrier de lâAvent BeautÃ© â 24 surprises pour 54,99â¬ au lieu de 156,62â¬ ! Pour un tarif exceptionnel de 54.99â¬ ! </li> <li> Aucun code n'est nÃ©cessaire pour profiter de ce bon plan </li> <li>AjoutÃ© par parislif55</li></ul>
+Tableau conditions: {"Valable sur":"Calendrier de l’Avent Beauté – 24 surprises pour 54,99€ au lieu de 156,62€ !"}
+Expiration: 26/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Non
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 30 ---
+Type: bon_plan
+Titre: EXCELLENT PRIX ! Offrez-vous la magie du Calendrier de l’Avent Premium – 24 surprises irrésistibles à seulement 89,99€ sur Sephora, n'attendez pas !
+Code: N/A
+Description: Partagé par parislif55 (8 utilisations) - Expire le 26/03/2026 Offrez-vous le Calendrier de l’Avent Premium : une valeur de plus de 240€ pour seulement 89,99€ ! Profitez de 24 surprises généreuses pour patienter jusqu’à Noël à prix irrésistible.
+Conditions: <ul> <li> Offrez-vous la magie du Calendrier de lâAvent Premium â 24 surprises irrÃ©sistibles pour 89.99â¬ seulement ! </li> <li> Aucun code requis pour profiter de cette offre </li> <li>AjoutÃ© par parislif55</li></ul>
+Tableau conditions: {"Valable sur":"Offrez-vous la magie du Calendrier de l’Avent Premium – 24 surprises irrésistibles"}
+Expiration: 26/03/2026
+Réduction: N/A
+Badge: N/A
+Vérifié: Non
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+--- Offre 31 ---
+Type: info
+Titre: Paiement en 4X SANS FRAIS disponible avec Sephora !
+Code: N/A
+Description: Partagé par Arthemis - Validité permanente Faites-vous plaisir chez Sephora et étalez le coût de votre commande grâce au paiement en 4 fois sans frais supplémentaires. Possibilité de régler en 3x sans frais également. Voir les modalités sur le site.
+Conditions: <ul> <li> BÃ©nÃ©ficiez du paiement de votre commande en 4X sans frais </li> <li>AjoutÃ© par MaReduc</li></ul>
+Tableau conditions: N/A
+Expiration: Validité permanente
+Réduction: 4X
+Badge: 4X
+Vérifié: Oui
+Votes: +0 / -0
+Popup titre: N/A
+Popup expiration: N/A
+Popup détails: N/A
+
+
+═══ RICH CONTENT ═══
+
+Titre page: Code promo Sephora
+Sous-titre: 32 réductions disponibles - Février 2026
+Description marchand: <p>Sephora c’est le site incontournable de la beauté et du maquillage. Ma Reduc propose ici les meilleurs codes promo et promotions valable sur le site Sephora. Pour pouvoir acheter des produits de grandes marques à prix réduit consulter notre page Sephora! Chaque jour une nouvelle offre. Les meilleures remises c'est pendant le Black Friday au mois de novembre.&nbsp;</p>
+Note: Notes et avis Sephora            72  votes    Note moyenne 4/5 d'après 72 votes.
+Votes: N/A
+Dernière MAJ: 09/02/2026
+Trust signals: Les meilleurs codes du moment sont ici + de 500 codes sont ajoutés chaque jour | Des codes promo qui fonctionnent 100% des codes sont testés par nos soins | Une équipe à votre écoute Nous répondons à 100% de vos questions | Les meilleurs codes du moment sont ici + de 500 codes sont ajoutés chaque jour | Des codes promo qui fonctionnent 100% des codes sont testés par nos soins | Une équipe à votre écoute Nous répondons à 100% de vos questions
+Actu Deal Guru: N/A
+Marchands similaires: Code promo Nocibé, Bons plans Marionnaud, Bons plans Dr Pierre Ricaud, Code promo LOOKFANTASTIC, Codes promo Notino, Réductions YesStyle, Remises Yves Rocher, Réduction GLOSSYBOX, Bons plans Christophe Robin, Code promo Banana Beauty, Réduction Stylevana, Réductions Biotherm, Réductions Bianochy, Code promo Clarins, Bons plans Make Up For ever, Remises Bobbi brown, Réductions WAAM Cosmetics, Codes promo Weleda, Codes promo Madara, Réduction Beauté Privée, Codes promo Parfumdreams, Bons plans Kiko, Réduction Kalista Parfums, Code promo Daylily Paris, Bons plans Centifolia, Code promo Les Secrets de Loly, Réduction Royal Extension, Bons plans Manucurist, Bons plans Activilong, Code promo L'Artisan Parfumeur, Blissim, L'Occitane, Maquillage et Parfums
+
+Tableau récap:
+  Réduction | Détail du code | Date d'expiration
+  -5% | Code promo Sephora : empochez 5% de réduction sur les parfums dès 80ml | 14/02/2026
+  -30% | ALERTE BON PLAN ! Économisez 30% au plus sur la sélection Saint-Valentin | 14/02/2026
+  -50% | MOITIÉ PRIX ! Recevez 50% de remise sur Deux soins achetés, profitez d’une réduction 50% sur le second ! Durant cette promo Sephora | 29/03/2026
+  -25% | Obtenez 25% de réduction sur sélection de maquillage pendant cette promo Sephora | 09/08/2026
+  -25% | 25% de remise sur les soins cheveux pendant cette promo Sephora | 09/08/2026
+  -25% | -25% sur les soins visage | 09/08/2026
+
+Sections SEO / FAQ:
+  ## Sommaire
+  Quels sont les incontournables produits beauté chez Sephora ?Comment utiliser un code promo Sephora ?Les retours sont-ils possibles pour les produits de maquillage ou de soins déjà ouverts ?Pourquoi e...
+
+  ## Quels sont les incontournables produits beauté chez Sephora ?
+  Sephora regroupe des produits iconiques, certains exclusifs, qui séduisent autant les novices que les passionnés. Parmi eux, on retrouve la Sephora Collection, les gloss tendances Fenty Beauty, le mas...
+
+  ## Comment utiliser un code promo Sephora ?
+  Pour appliquer votre code promotionnel : Rendez-vous sur la page panier et saisissez le code dans l'encart dédié aux réductions "Code promotionnel". Le montant de votre commande sera automatiquement d...
+
+  ## Les retours sont-ils possibles pour les produits de maquillage ou de soins déjà ouverts ?
+  Les retours de produits de maquillage ou de soins déjà ouverts ne sont pas acceptés, car les articles doivent être intacts, non utilisés et dans leur emballage d’origine pour être remboursés. D'autres...
+
+  ## Pourquoi est-il intéressant de rejoindre le programme de fidélité Sephora ?
+  Rejoindre le programme de fidélité Sephora permet de profiter d’avantages exclusifs tout au long de l’année. Chaque euro dépensé rapporte 1 point, et tous les 150 points, vous pouvez choisir un cadeau...
+
+  ## Des conseils et diagnostics beauté sont-ils disponibles chez Sephora ?
+  Sephora propose bien des diagnostics beauté personnalisés en magasin : leurs conseiller(ère)s sont disponibles pour analyser vos besoins et vous orienter vers les produits les plus adaptés. En ligne, ...
+
+  ## Sephora offre-t-il des échantillons gratuits avec les commandes ?
+  Oui, Sephora peut proposer des échantillons gratuits avec certaines commandes, surtout lors d’offres spéciales ou de lancements de produits. Selon la période ou la promotion en cours, des mini-produit...
+
+  ## Comment choisir son parfum en ligne ?
+  Pour choisir son parfum en ligne chez Sephora, commencez par filtrer selon vos préférences : familles olfactives, notes principales ou marques. Consultez les descriptions, les avis clients, les consei...
+
+  ## Comment bénéficier de la livraison par coursier chez Sephora ?
+  Pour profiter de la livraison par coursier, sélectionnez cette option lors du choix de la livraison et indiquez votre adresse. Plusieurs créneaux sur 3 jours, à partir de 3 h après votre commande, vou...
+
+═══ INSTRUCTIONS ═══
+
+À partir de ces données, génère du JSON structuré avec 2 objets :
+
+1. **promoCodes** : un tableau de PromoCode (Prisma) avec :
+   - code (string) — le code promo tel quel
+   - slug (string) — généré depuis le titre, format kebab-case unique
+   - title (string) — titre reformulé proprement en français
+   - description (string | null) — description complète
+   - discountType ("PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING" | "GIFT")
+   - discountValue (number | null) — ex: 20 pour -20%, 10 pour -10€
+   - minimumPurchase (number | null) — montant minimum d'achat
+   - maximumDiscount (number | null) — réduction max si plafonnée
+   - applicableTo (string | null) — catégorie/marque concernée
+   - conditions (string | null) — conditions d'utilisation
+   - isNewCustomerOnly (boolean)
+   - status ("ACTIVE" | "UNVERIFIED") — ACTIVE si vérifié, sinon UNVERIFIED
+   - expiresAt (string ISO | null)
+   - isVerified (boolean)
+   - sourceUrl ("https://www.ma-reduc.com/reductions-pour-Sephora.php")
+   - sourceType ("ma-reduc")
+   - votes (number) — votesUp - votesDown
+
+2. **merchantPromoPage** : un objet MerchantPromoPage (Prisma) avec :
+   - canonicalSlug: "sephora"
+   - metaTitle (string) — optimisé SEO
+   - metaDescription (string) — 155 chars max, optimisé SEO
+   - heroTitle (string)
+   - heroSubtitle (string)
+   - introduction (string) — 2-3 paragraphes HTML
+   - merchantDescription (string) — HTML
+   - merchantAdvantages (JSON[]) — [{icon, title, text}]
+   - howToUse (JSON[]) — [{step, title, description}]
+   - tips (JSON[]) — [{title, content}]
+   - bestTimeToShop (string)
+   - faq (JSON[]) — [{question, answer}] basé sur le contenu SEO
+   - averageDiscount (number)
+   - bestCurrentDiscount (number)
+   - totalActiveOffers (number)
+   - conclusion (string) — HTML
+   - relatedMerchants (string) — slugs séparés par virgule
+   - targetKeywords (string) — mots-clés SEO séparés par virgule
+
+Réponds UNIQUEMENT avec le JSON valide, sans markdown ni commentaire.

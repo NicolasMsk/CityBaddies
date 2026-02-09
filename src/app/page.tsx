@@ -7,6 +7,7 @@ import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 import { AIAssistant } from '@/components/ai';
+import { getAllPromoPages, stripHtml } from '@/lib/promo-queries';
 import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
@@ -214,12 +215,37 @@ async function getHomeData() {
     }),
   ]);
 
+  // Codes promo pages pour la section homepage
+  const promoPages = await getAllPromoPages();
+
+  // Guides d'achat publiés
+  const guides = await prisma.buyingGuide.findMany({
+    where: { status: 'PUBLISHED' },
+    include: {
+      products: {
+        include: {
+          deal: {
+            include: {
+              product: { include: { brandRef: true } },
+            },
+          },
+        },
+        orderBy: { rank: 'asc' },
+        take: 3,
+      },
+    },
+    orderBy: { publishedAt: 'desc' },
+    take: 6,
+  });
+
   return {
     hotDeals,
     luxeDeals,
     latestDeals,
     categories,
     topBrands,
+    promoPages,
+    guides,
     stats: {
       deals: stats[0],
       products: stats[1],
@@ -230,7 +256,7 @@ async function getHomeData() {
 }
 
 export default async function HomePage() {
-  const { hotDeals, luxeDeals, latestDeals, categories, topBrands, stats } = await getHomeData();
+  const { hotDeals, luxeDeals, latestDeals, categories, topBrands, promoPages, guides, stats } = await getHomeData();
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative selection:bg-[#d4a855] selection:text-black">
@@ -531,6 +557,287 @@ export default async function HomePage() {
       )}
 
 
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* SECTION CODES PROMO — SEO optimized                       */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      {promoPages.length > 0 && (
+        <section className="relative z-10 py-16 md:py-24 border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="h-px w-8 bg-[#d4a855]" />
+                  <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#d4a855]">
+                    Codes Promo
+                  </span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-thin text-white tracking-tight leading-none">
+                  CODES <span className="italic font-normal text-[#d4a855]">PROMO</span>
+                </h2>
+                <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-md border-l border-white/20 pl-6 leading-relaxed">
+                  Codes promo beauté vérifiés et testés. Économise sur Sephora, Nocibé et plus.
+                </p>
+              </div>
+              <Link
+                href="/codes-promo"
+                className="hidden md:flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-[#d4a855] hover:text-white transition-colors group"
+              >
+                Tous les codes
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {promoPages.map((page) => {
+                const codeCount = page.merchant?._count?.promoCodes ?? 0;
+                const intro = page.introduction ? stripHtml(page.introduction).substring(0, 120) + '…' : null;
+                const logoUrl = page.merchant?.logoUrl;
+                const merchantName = page.merchant?.name || page.canonicalSlug;
+
+                return (
+                  <Link
+                    key={page.id}
+                    href={`/codes-promo/${page.canonicalSlug}`}
+                    className="group relative bg-white/[0.02] border border-white/5 hover:border-[#d4a855]/30 hover:bg-white/[0.04] transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="p-6 md:p-8">
+                      {/* Header with logo */}
+                      <div className="flex items-start justify-between mb-5">
+                        <div className="flex items-center gap-3">
+                          {logoUrl && (
+                            <div className="w-10 h-10 bg-white rounded-sm flex items-center justify-center p-1.5 shrink-0">
+                              <Image
+                                src={logoUrl}
+                                alt={merchantName}
+                                width={32}
+                                height={32}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="text-base font-medium text-white group-hover:text-[#d4a855] transition-colors">
+                              {merchantName}
+                            </h3>
+                            {codeCount > 0 && (
+                              <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500">
+                                {codeCount} code{codeCount > 1 ? 's' : ''} actif{codeCount > 1 ? 's' : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {page.bestCurrentDiscount && (
+                          <span className="text-2xl font-serif text-[#d4a855] opacity-80">
+                            -{page.bestCurrentDiscount}%
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-4 mb-4">
+                        {page.bestCurrentDiscount && (
+                          <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-emerald-500 border border-emerald-500/20 px-2 py-0.5">
+                            Jusqu&apos;à -{page.bestCurrentDiscount}%
+                          </span>
+                        )}
+                        <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-600">
+                          Vérifié
+                        </span>
+                      </div>
+
+                      {/* Description preview */}
+                      {intro && (
+                        <p className="text-xs text-neutral-500 font-light leading-relaxed line-clamp-2 mb-4">
+                          {intro}
+                        </p>
+                      )}
+
+                      {/* CTA */}
+                      <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-400 group-hover:text-[#d4a855] transition-colors flex items-center gap-2">
+                        Voir les codes
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </div>
+
+                    {/* Bottom accent line */}
+                    <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-[#d4a855] to-[#9b1515] transition-all duration-500" />
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Mobile CTA */}
+            <div className="mt-8 text-center md:hidden">
+              <Link
+                href="/codes-promo"
+                className="inline-flex items-center gap-2 text-sm font-medium text-[#d4a855]"
+              >
+                Tous les codes promo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* SECTION GUIDES D'ACHAT — Dynamic from DB                 */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      {guides.length > 0 && (
+        <section className="relative z-10 py-16 md:py-24 border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="h-px w-8 bg-[#9b1515]" />
+                  <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#9b1515]">
+                    Expertise
+                  </span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-thin text-white tracking-tight leading-none">
+                  GUIDES <span className="italic font-normal text-white">D&apos;ACHAT</span>
+                </h2>
+                <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-md border-l border-white/20 pl-6 leading-relaxed">
+                  Nos experts beauté t&apos;aident à choisir les meilleurs produits selon ton type de peau, tes besoins et ton budget.
+                </p>
+              </div>
+              <Link
+                href="/guides"
+                className="hidden md:flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white transition-colors group"
+              >
+                Tous les guides
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className={`grid gap-4 ${
+              guides.length === 1
+                ? 'max-w-lg mx-auto'
+                : guides.length === 2
+                  ? 'md:grid-cols-2 max-w-4xl mx-auto'
+                  : 'md:grid-cols-2 lg:grid-cols-3'
+            }`}>
+              {guides.map((guide, i) => {
+                const categoryStyles: Record<string, string> = {
+                  'maquillage': 'text-pink-400',
+                  'soins-visage': 'text-violet-400',
+                  'soins-corps': 'text-amber-400',
+                  'cheveux': 'text-emerald-400',
+                  'parfums': 'text-indigo-400',
+                  'ongles': 'text-rose-400',
+                  'accessoires': 'text-cyan-400',
+                };
+                const catColor = categoryStyles[guide.category ?? ''] || 'text-[#d4a855]';
+                const catLabel = (guide.category ?? 'beauté').replace(/-/g, ' ');
+
+                return (
+                  <Link
+                    key={guide.id}
+                    href={`/guides/${guide.slug}`}
+                    className="group relative bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all duration-300 overflow-hidden"
+                  >
+                    {/* Hero image if available */}
+                    {guide.heroImageUrl && (
+                      <div className="relative aspect-[16/9] w-full overflow-hidden">
+                        <Image
+                          src={guide.heroImageUrl}
+                          alt={guide.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+                      </div>
+                    )}
+
+                    <div className="p-6 md:p-8">
+                      {/* Category */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className={`text-[10px] font-bold tracking-[0.2em] uppercase ${catColor}`}>
+                          {catLabel}
+                        </span>
+                        {guide.tags && guide.tags.length > 0 && (
+                          <span className="text-[10px] tracking-[0.1em] uppercase text-neutral-600">
+                            {guide.tags[0]}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Number watermark */}
+                      <span className="text-5xl font-serif text-white/[0.03] block mb-3 leading-none group-hover:text-[#d4a855]/10 transition-colors">
+                        0{i + 1}
+                      </span>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-light text-white mb-2 group-hover:text-[#d4a855] transition-colors leading-tight">
+                        {guide.title}
+                      </h3>
+                      {guide.introduction && (
+                        <p className="text-xs text-neutral-500 font-light leading-relaxed mb-4 line-clamp-2">
+                          {guide.introduction.replace(/<[^>]*>/g, '').slice(0, 120)}…
+                        </p>
+                      )}
+
+                      {/* Product thumbnails + CTA */}
+                      <div className="flex items-center justify-between">
+                        {guide.products && guide.products.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {guide.products.map((gp: any) => (
+                              <div
+                                key={gp.id || gp.dealId}
+                                className="w-7 h-7 rounded-full border-2 border-[#0a0a0a] bg-neutral-800 overflow-hidden"
+                              >
+                                {gp.deal?.product?.imageUrl ? (
+                                  <Image
+                                    src={gp.deal.product.imageUrl}
+                                    alt={gp.deal.product.name || ''}
+                                    width={28}
+                                    height={28}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-neutral-700" />
+                                )}
+                              </div>
+                            ))}
+                            {guide.products.length > 0 && (
+                              <span className="ml-3 text-[10px] text-neutral-500 self-center">
+                                {guide.products.length} produit{guide.products.length > 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-neutral-600 border border-white/5 px-2 py-0.5">
+                            Guide
+                          </span>
+                        )}
+                        <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-500 group-hover:text-white transition-colors flex items-center gap-1">
+                          Lire
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bottom accent line */}
+                    <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-[#9b1515] to-[#d4a855] transition-all duration-500" />
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Mobile CTA */}
+            <div className="mt-8 text-center md:hidden">
+              <Link
+                href="/guides"
+                className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400"
+              >
+                Voir tous les guides
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Visual Interlude - Baddies 5 */}
       <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">

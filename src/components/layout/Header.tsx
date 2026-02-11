@@ -215,17 +215,19 @@ export default function Header() {
                   Tous les deals →
                 </Link>
                 {dealCategories.map((cat) => (
-                  <button
+                  <Link
                     key={cat.slug}
+                    href={`/categories/${cat.slug}`}
+                    onClick={() => setMegaOpen(false)}
                     onMouseEnter={() => setActiveCategory(cat.slug)}
-                    className={`w-full text-left px-3 py-2.5 text-xs tracking-wide rounded-sm transition-all ${
+                    className={`block w-full text-left px-3 py-2.5 text-xs tracking-wide rounded-sm transition-all ${
                       activeCategory === cat.slug
                         ? 'text-white bg-white/5 font-medium'
                         : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.02] font-light'
                     }`}
                   >
                     {cat.label}
-                  </button>
+                  </Link>
                 ))}
               </div>
 

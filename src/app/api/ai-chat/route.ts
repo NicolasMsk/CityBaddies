@@ -97,7 +97,9 @@ RÈGLES IMPORTANTES:
 2. PRIVILÉGIE la recherche (search_deals) plutôt que de poser des questions. Si l'utilisateur mentionne quelque chose de concret, cherche.
 3. Utilise ask_clarification UNIQUEMENT si c'est vraiment trop vague (ex: "je sais pas", "aide moi").
 4. Tu parles français uniquement.
-5. IMPORTANT: Quand tu présentes des résultats, sois honnête. Si rien ne correspond exactement, dis-le.
+5. HONNÊTETÉ ABSOLUE: Si 0 résultat, dis clairement qu'on n'a pas ce produit. NE JAMAIS montrer des produits qui ne correspondent pas à la demande.
+6. PRÉCISION: Quand l'utilisateur demande un produit spécifique (ex: "brosse à cheveux", "éponge konjac"), utilise TOUJOURS searchTerms avec le nom exact du produit. Ne te contente JAMAIS d'une catégorie seule si un produit précis est demandé.
+7. PERTINENCE: Mieux vaut 0 résultat que des résultats hors-sujet. "Brosse à cheveux" ≠ colle à ongles.
 
 CATALOGUE — CATÉGORIES ET SOUS-CATÉGORIES (utilise les slugs exacts):
 
@@ -279,54 +281,9 @@ async function executeSearchDeals(params: {
     take: 12,
   });
 
-  // --- FALLBACK PROGRESSIF ---
-  // Étape 1: Si 0 résultat avec searchTerms → retenter avec juste catégorie + sous-catégorie + prix
-  if (deals.length === 0 && params.searchTerms) {
-    const fallback1: any = { status: 'ACTIVE', product: {} as any };
-    if (params.categories?.length) {
-      (fallback1.product as any).category = { slug: { in: params.categories } };
-    }
-    if (params.subcategories?.length) {
-      (fallback1.product as any).subcategory = { in: params.subcategories };
-    }
-    if (params.maxPrice) fallback1.dealPrice = { lte: params.maxPrice };
-    if (params.brands?.length) {
-      (fallback1.product as any).brand = { contains: params.brands[0], mode: 'insensitive' };
-    }
-    if (Object.keys(fallback1.product).length === 0) delete fallback1.product;
-
-    deals = await prisma.deal.findMany({
-      where: fallback1,
-      include: { product: { include: { category: true, merchant: true } } },
-      orderBy: [{ score: 'desc' }, { discountPercent: 'desc' }],
-      take: 12,
-    });
-
-    // Si c'est un fallback, on flag pour que le LLM le sache
-    if (deals.length > 0) {
-      (deals as any).__fallback = 'dropped_searchTerms';
-    }
-  }
-
-  // Étape 2: Si toujours 0 et qu'on a une sous-catégorie → retenter avec juste catégorie (sans sous-catégorie)
-  if (deals.length === 0 && params.subcategories?.length && params.categories?.length) {
-    const fallback2: any = {
-      status: 'ACTIVE',
-      product: { category: { slug: { in: params.categories } } },
-    };
-    if (params.maxPrice) fallback2.dealPrice = { lte: params.maxPrice };
-
-    deals = await prisma.deal.findMany({
-      where: fallback2,
-      include: { product: { include: { category: true, merchant: true } } },
-      orderBy: [{ score: 'desc' }, { discountPercent: 'desc' }],
-      take: 12,
-    });
-
-    if (deals.length > 0) {
-      (deals as any).__fallback = 'dropped_subcategory';
-    }
-  }
+  // PAS DE FALLBACK ÉLARGI — mieux vaut 0 résultat que des résultats hors-sujet.
+  // Si la recherche principale ne retourne rien, on retourne un tableau vide
+  // et le chatbot dira honnêtement qu'il n'a rien trouvé.
 
   return deals;
 }
@@ -368,7 +325,6 @@ export async function POST(request: NextRequest) {
       if (functionName === 'search_deals') {
         // Exécuter la recherche
         const deals = await executeSearchDeals(functionArgs);
-        const fallbackType = (deals as any).__fallback;
 
         // Formater les résultats pour le frontend
         const formattedDeals = deals.map((deal) => ({
@@ -387,21 +343,15 @@ export async function POST(request: NextRequest) {
           productUrl: deal.product.productUrl,
         }));
 
-        // Générer un message adapté au résultat
+        // Générer un message adapté au résultat — TOUJOURS honnête
         let presentationMessage = '';
         if (formattedDeals.length === 0) {
-          // Aucun résultat → message honnête avec suggestions
           const searchDesc = [
-            functionArgs.categories?.join(', '),
+            functionArgs.searchTerms,
             functionArgs.subcategories?.join(', '),
             functionArgs.brands?.join(', '),
-            functionArgs.searchTerms,
           ].filter(Boolean).join(' / ');
-          presentationMessage = `Désolée, je n'ai trouvé aucun deal${searchDesc ? ` pour "${searchDesc}"` : ''} en ce moment 😕 Essaie avec une recherche plus large, une autre catégorie ou une marque différente !`;
-        } else if (fallbackType === 'dropped_searchTerms') {
-          presentationMessage = `Je n'ai pas trouvé exactement ce que tu cherches, mais voici ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} dans la même catégorie qui pourraient t'intéresser :`;
-        } else if (fallbackType === 'dropped_subcategory') {
-          presentationMessage = `Pas de deal dans cette sous-catégorie précise, mais voici ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} dans la catégorie plus large :`;
+          presentationMessage = `Désolée, je n'ai trouvé aucun deal${searchDesc ? ` pour "${searchDesc}"` : ''} en ce moment 😕 On n'a peut-être pas ce type de produit dans notre sélection. Essaie autre chose !`;
         } else if (formattedDeals.length <= 3) {
           presentationMessage = `J'ai trouvé ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} pour toi :`;
         } else {

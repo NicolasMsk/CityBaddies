@@ -20,19 +20,24 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'search_deals',
-      description: 'Recherche des deals beauté selon les critères de l\'utilisateur. Utilise cette fonction quand tu as assez d\'informations pour faire une recherche.',
+      description: 'Recherche des deals beauté dans notre base. Utilise cette fonction quand tu sais ce que l\'utilisateur veut (catégorie, sous-catégorie, type de produit ou marque). TOUJOURS utiliser le paramètre subcategories quand possible pour des résultats précis.',
       parameters: {
         type: 'object',
         properties: {
           categories: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Catégories à filtrer: maquillage, soins-visage, soins-corps, cheveux, parfums, ongles, accessoires',
+            description: 'Catégories principales (slugs EXACTS): maquillage, soins-visage, soins-corps, cheveux, parfums, ongles, accessoires',
+          },
+          subcategories: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Sous-catégories pour affiner (slugs EXACTS). MAQUILLAGE: teint, yeux, levres, sourcils, palettes. SOINS VISAGE: nettoyants, serums, cremes, masques, contour-yeux. CHEVEUX: shampoings, apres-shampoings, masques-capillaires, huiles, coiffants. PARFUMS: eau-de-parfum, eau-de-toilette, brumes, coffrets-parfums. SOINS CORPS: hydratants, gommages, solaires, douche, deodorants. ONGLES: vernis, semi-permanent, faux-ongles, soins-ongles. ACCESSOIRES: pinceaux, eponges, trousses, miroirs.',
           },
           brands: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Marques spécifiques recherchées (ex: Dior, Chanel, Charlotte Tilbury, Lancôme, YSL...)',
+            description: 'Marques spécifiques (ex: Dior, Chanel, Charlotte Tilbury, Lancôme, YSL, Olaplex, Clarins, Nars...)',
           },
           minPrice: {
             type: 'number',
@@ -44,15 +49,15 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           searchTerms: {
             type: 'string',
-            description: 'Termes de recherche libre (ex: rouge à lèvres, sérum, mascara...)',
+            description: 'Termes de recherche libre pour affiner (ex: vitamine C, retinol, hydratant, anti-âge). NE PAS mettre le nom de la catégorie ou sous-catégorie ici, utilise les paramètres dédiés.',
           },
           forGift: {
             type: 'boolean',
-            description: 'Si le produit est destiné à être offert en cadeau',
+            description: 'Si le produit est destiné à être offert en cadeau → chercher coffrets',
           },
           luxuryOnly: {
             type: 'boolean',
-            description: 'Si l\'utilisateur cherche uniquement des produits de luxe/premium',
+            description: 'Si l\'utilisateur cherche uniquement des produits de luxe/premium (tier 1)',
           },
         },
         required: [],
@@ -63,7 +68,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'ask_clarification',
-      description: 'Pose une question à l\'utilisateur pour mieux comprendre ses besoins. Utilise cette fonction si tu as besoin de plus d\'informations.',
+      description: 'Pose une question à l\'utilisateur pour mieux comprendre ses besoins. Utilise cette fonction UNIQUEMENT si la demande est trop vague pour chercher.',
       parameters: {
         type: 'object',
         properties: {
@@ -84,53 +89,81 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 ];
 
 // Système prompt pour l'assistant
-const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un site de bons plans beauté.
+const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un site de bons plans beauté premium.
+Tu aides les utilisateurs à trouver les meilleurs deals parmi notre sélection chez Sephora, Nocibé et Marionnaud.
 
-Ton rôle est d'aider les utilisateurs à trouver les meilleurs deals sur le maquillage, skincare, parfums et soins.
+RÈGLES IMPORTANTES:
+1. Sois amicale, concise et efficace. Ton branché mais pas forcé.
+2. PRIVILÉGIE la recherche (search_deals) plutôt que de poser des questions. Si l'utilisateur mentionne quelque chose de concret, cherche.
+3. Utilise ask_clarification UNIQUEMENT si c'est vraiment trop vague (ex: "je sais pas", "aide moi").
+4. Tu parles français uniquement.
+5. IMPORTANT: Quand tu présentes des résultats, sois honnête. Si rien ne correspond exactement, dis-le.
 
-Règles:
-1. Sois amical et utilise un ton branché mais évite les emojis excessifs
-2. POSE DES QUESTIONS pour bien cerner les besoins avant de chercher
-3. Si la demande est VAGUE (ex: "maquillage", "skincare", "parfum"), utilise ask_clarification pour demander des précisions
-4. Utilise search_deals SEULEMENT quand tu as un produit SPÉCIFIQUE (ex: "mascara", "fond de teint", "sérum vitamine C")
-5. Privilégie les réponses courtes et punchy avec des suggestions cliquables
-6. Tu parles français
+CATALOGUE — CATÉGORIES ET SOUS-CATÉGORIES (utilise les slugs exacts):
 
-QUAND POSER DES QUESTIONS (utilise ask_clarification):
-- "maquillage" → Demande : teint, yeux, lèvres ou ongles ?
-- "skincare" ou "soins" → Demande : nettoyant, sérum, crème, masque ?
-- "parfum" → Demande : pour femme/homme ? notes préférées (floral, boisé, fruité) ?
-- "cheveux" → Demande : shampoing, masque, huile, styling ?
-- "cadeau" → Demande : pour qui ? quel type de produit ?
+📦 MAQUILLAGE (slug: "maquillage")
+  Sous-catégories: teint, yeux, levres, sourcils, palettes
+  Produits: fond de teint, correcteur, poudre, blush, bronzer, highlighter, primer, mascara, eyeliner, fard à paupières, rouge à lèvres, gloss, crayon lèvres
 
-QUAND CHERCHER DIRECTEMENT (utilise search_deals):
-- Produit précis mentionné : "rouge à lèvres", "mascara", "fond de teint", "sérum", "crème hydratante"
-- Marque + catégorie : "Dior parfum", "Charlotte Tilbury"
-- Demande très spécifique : "anti-cernes waterproof", "huile démaquillante"
+📦 SOINS VISAGE (slug: "soins-visage")
+  Sous-catégories: nettoyants, serums, cremes, masques, contour-yeux
+  Produits: gel nettoyant, eau micellaire, huile démaquillante, sérum hydratant, sérum anti-âge, sérum éclat, crème hydratante, crème de nuit, masque purifiant, crème contour yeux
 
-Mapping catégories (utilise le slug exact):
-- skincare, routine, peau, visage, sérum, crème → categories: ["soins-visage"]
-- maquillage, make-up, teint, rouge à lèvres, mascara, fond de teint → categories: ["maquillage"]
-- parfum, fragrance, eau de toilette → categories: ["parfums"]
-- corps, body, huile → categories: ["soins-corps"]
-- cheveux, shampoing, masque capillaire → categories: ["cheveux"]
+📦 CHEVEUX (slug: "cheveux")
+  Sous-catégories: shampoings, apres-shampoings, masques-capillaires, huiles, coiffants
+  Produits: shampoing, après-shampoing, masque capillaire, huile cheveux, sérum pointes, laque, mousse coiffante, spray
 
-Mapping budget:
-- "petit budget", "pas cher" → maxPrice: 25
+📦 PARFUMS (slug: "parfums")
+  Sous-catégories: eau-de-parfum, eau-de-toilette, brumes, coffrets-parfums
+  Produits: eau de parfum femme/homme, eau de toilette, brume corps, coffret miniatures
+
+📦 SOINS CORPS (slug: "soins-corps")
+  Sous-catégories: hydratants, gommages, solaires, douche, deodorants
+  Produits: lait corps, crème corps, gommage, gel douche, protection solaire, autobronzant, déodorant
+
+📦 ONGLES (slug: "ongles")
+  Sous-catégories: vernis, semi-permanent, faux-ongles, soins-ongles
+  Produits: vernis, gel UV, faux ongles, base coat, top coat
+
+📦 ACCESSOIRES (slug: "accessoires")
+  Sous-catégories: pinceaux, eponges, trousses, miroirs
+  Produits: pinceau teint, beauty blender, trousse, miroir grossissant
+
+MAPPING REQUÊTES → RECHERCHE:
+- "rouge à lèvres" / "lipstick" → categories: ["maquillage"], subcategories: ["levres"], searchTerms: "rouge à lèvres"
+- "mascara" → categories: ["maquillage"], subcategories: ["yeux"], searchTerms: "mascara"
+- "fond de teint" → categories: ["maquillage"], subcategories: ["teint"], searchTerms: "fond de teint"
+- "sérum" / "serum" → categories: ["soins-visage"], subcategories: ["serums"]
+- "crème visage" / "crème hydratante" → categories: ["soins-visage"], subcategories: ["cremes"]
+- "shampoing" → categories: ["cheveux"], subcategories: ["shampoings"]
+- "parfum femme" → categories: ["parfums"], searchTerms: "femme"
+- "parfum homme" → categories: ["parfums"], searchTerms: "homme"
+- "coffret" / "idée cadeau" → forGift: true, searchTerms: "coffret"
+- "routine skincare" → categories: ["soins-visage"] (sans sous-catégorie pour tout voir)
+- "Dior" (seul) → brands: ["Dior"]
+- "Dior parfum" → brands: ["Dior"], categories: ["parfums"]
+- "maquillage pas cher" → categories: ["maquillage"], maxPrice: 25
+- "anti-âge" → categories: ["soins-visage"], searchTerms: "anti-âge rides"
+- "peau grasse" → categories: ["soins-visage"], searchTerms: "matifiant purifiant"
+- "peau sèche" → categories: ["soins-visage"], searchTerms: "hydratant nourrissant"
+- "solaire" / "SPF" → categories: ["soins-corps"], subcategories: ["solaires"]
+- "top deals" / "best-sellers" / "meilleures promos" → (pas de filtre, les meilleurs scores)
+
+BUDGET:
+- "pas cher" / "petit budget" → maxPrice: 25
 - "budget moyen" → maxPrice: 50
 - "budget confort" → maxPrice: 100
 
-Mapping peau:
-- "peau grasse" → searchTerms: "matifiant purifiant contrôle sébum"
-- "peau sèche" → searchTerms: "hydratant nourrissant"
-- "peau sensible" → searchTerms: "apaisant doux sensible"
-- "anti-âge" → searchTerms: "anti-âge rides fermeté"
+QUAND UTILISER ask_clarification (rare):
+- L'utilisateur dit juste "aide moi" ou "je sais pas quoi chercher"
+- La demande est totalement ambiguë
 
-Exemples de conversation:
-- User: "Maquillage < 30€" → ask_clarification: "Quel type de maquillage t'intéresse ?" avec suggestions: ["Teint & fond de teint", "Yeux & mascara", "Lèvres", "Tout le maquillage"]
-- User: "Teint & fond de teint" → search_deals avec categories: ["maquillage"], maxPrice: 30, searchTerms: "fond de teint teint"
-- User: "Je cherche un mascara" → search_deals directement avec categories: ["maquillage"], searchTerms: "mascara"
-- User: "Parfum Dior" → search_deals avec brands: ["Dior"], categories: ["parfums"]`;
+QUAND CHERCHER DIRECTEMENT (majorité des cas):
+- Tout mot-clé produit, marque, catégorie ou besoin → search_deals immédiatement
+- "maquillage" seul → search_deals avec categories: ["maquillage"] (montre les meilleurs deals maquillage)
+- "skincare" seul → search_deals avec categories: ["soins-visage"]
+- "parfum" seul → search_deals avec categories: ["parfums"]
+- "cheveux" seul → search_deals avec categories: ["cheveux"]`;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -145,6 +178,7 @@ interface ChatRequest {
 // Fonction pour exécuter la recherche de deals
 async function executeSearchDeals(params: {
   categories?: string[];
+  subcategories?: string[];
   brands?: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -152,8 +186,9 @@ async function executeSearchDeals(params: {
   forGift?: boolean;
   luxuryOnly?: boolean;
 }) {
+  // --- Construire le filtre principal ---
   const where: any = {
-    status: 'ACTIVE', // Deals actifs uniquement
+    status: 'ACTIVE',
   };
 
   const productFilter: any = {};
@@ -163,11 +198,20 @@ async function executeSearchDeals(params: {
     productFilter.category = { slug: { in: params.categories } };
   }
 
-  // Filtre par marque (plus souple avec contains)
+  // Filtre par sous-catégorie (utilise le champ product.subcategory)
+  if (params.subcategories && params.subcategories.length > 0) {
+    productFilter.subcategory = { in: params.subcategories };
+  }
+
+  // Filtre par marque (souple avec contains)
   if (params.brands && params.brands.length > 0) {
-    productFilter.OR = params.brands.map(brand => ({
-      brand: { contains: brand, mode: 'insensitive' }
-    }));
+    if (params.brands.length === 1) {
+      productFilter.brand = { contains: params.brands[0], mode: 'insensitive' };
+    } else {
+      productFilter.OR = params.brands.map(brand => ({
+        brand: { contains: brand, mode: 'insensitive' }
+      }));
+    }
   }
 
   // Filtre par prix
@@ -177,11 +221,10 @@ async function executeSearchDeals(params: {
     if (params.maxPrice) where.dealPrice.lte = params.maxPrice;
   }
 
-  // Recherche textuelle améliorée - recherche chaque mot séparément avec OR
+  // Recherche textuelle — chaque mot en OR sur titre/nom/marque
   if (params.searchTerms) {
     const searchWords = params.searchTerms.split(/\s+/).filter(w => w.length > 2);
     if (searchWords.length > 0) {
-      // Créer des conditions OR pour chaque mot
       const searchConditions = searchWords.flatMap(word => [
         { title: { contains: word, mode: 'insensitive' } },
         { refinedTitle: { contains: word, mode: 'insensitive' } },
@@ -197,11 +240,28 @@ async function executeSearchDeals(params: {
     productFilter.brandRef = { tier: 1 };
   }
 
+  // Filtre cadeau → chercher coffrets
+  if (params.forGift) {
+    const giftWords = ['coffret', 'set', 'kit', 'cadeau'];
+    const giftConditions = giftWords.flatMap(word => [
+      { title: { contains: word, mode: 'insensitive' } },
+      { refinedTitle: { contains: word, mode: 'insensitive' } },
+      { product: { name: { contains: word, mode: 'insensitive' } } },
+    ]);
+    // Ajouter aux conditions OR existantes ou créer
+    if (where.OR) {
+      where.AND = [{ OR: where.OR }, { OR: giftConditions }];
+      delete where.OR;
+    } else {
+      where.OR = giftConditions;
+    }
+  }
+
   if (Object.keys(productFilter).length > 0) {
     where.product = productFilter;
   }
 
-  // Exécuter la recherche
+  // --- Recherche principale ---
   let deals = await prisma.deal.findMany({
     where,
     include: {
@@ -219,35 +279,53 @@ async function executeSearchDeals(params: {
     take: 12,
   });
 
-  // FALLBACK: Si aucun résultat et qu'on avait des searchTerms, réessayer sans eux (juste catégorie + prix)
-  if (deals.length === 0 && params.searchTerms && params.categories && params.categories.length > 0) {
-    const fallbackWhere: any = {
-      status: 'ACTIVE', // Deals actifs uniquement
-      product: {
-        category: { slug: { in: params.categories } },
-      },
-    };
-    
-    if (params.maxPrice) {
-      fallbackWhere.dealPrice = { lte: params.maxPrice };
+  // --- FALLBACK PROGRESSIF ---
+  // Étape 1: Si 0 résultat avec searchTerms → retenter avec juste catégorie + sous-catégorie + prix
+  if (deals.length === 0 && params.searchTerms) {
+    const fallback1: any = { status: 'ACTIVE', product: {} as any };
+    if (params.categories?.length) {
+      (fallback1.product as any).category = { slug: { in: params.categories } };
     }
+    if (params.subcategories?.length) {
+      (fallback1.product as any).subcategory = { in: params.subcategories };
+    }
+    if (params.maxPrice) fallback1.dealPrice = { lte: params.maxPrice };
+    if (params.brands?.length) {
+      (fallback1.product as any).brand = { contains: params.brands[0], mode: 'insensitive' };
+    }
+    if (Object.keys(fallback1.product).length === 0) delete fallback1.product;
 
     deals = await prisma.deal.findMany({
-      where: fallbackWhere,
-      include: {
-        product: {
-          include: {
-            category: true,
-            merchant: true,
-          },
-        },
-      },
-      orderBy: [
-        { score: 'desc' },
-        { discountPercent: 'desc' },
-      ],
+      where: fallback1,
+      include: { product: { include: { category: true, merchant: true } } },
+      orderBy: [{ score: 'desc' }, { discountPercent: 'desc' }],
       take: 12,
     });
+
+    // Si c'est un fallback, on flag pour que le LLM le sache
+    if (deals.length > 0) {
+      (deals as any).__fallback = 'dropped_searchTerms';
+    }
+  }
+
+  // Étape 2: Si toujours 0 et qu'on a une sous-catégorie → retenter avec juste catégorie (sans sous-catégorie)
+  if (deals.length === 0 && params.subcategories?.length && params.categories?.length) {
+    const fallback2: any = {
+      status: 'ACTIVE',
+      product: { category: { slug: { in: params.categories } } },
+    };
+    if (params.maxPrice) fallback2.dealPrice = { lte: params.maxPrice };
+
+    deals = await prisma.deal.findMany({
+      where: fallback2,
+      include: { product: { include: { category: true, merchant: true } } },
+      orderBy: [{ score: 'desc' }, { discountPercent: 'desc' }],
+      take: 12,
+    });
+
+    if (deals.length > 0) {
+      (deals as any).__fallback = 'dropped_subcategory';
+    }
   }
 
   return deals;
@@ -290,6 +368,7 @@ export async function POST(request: NextRequest) {
       if (functionName === 'search_deals') {
         // Exécuter la recherche
         const deals = await executeSearchDeals(functionArgs);
+        const fallbackType = (deals as any).__fallback;
 
         // Formater les résultats pour le frontend
         const formattedDeals = deals.map((deal) => ({
@@ -308,14 +387,25 @@ export async function POST(request: NextRequest) {
           productUrl: deal.product.productUrl,
         }));
 
-        // Générer un message de présentation
+        // Générer un message adapté au résultat
         let presentationMessage = '';
         if (formattedDeals.length === 0) {
-          presentationMessage = "Aucun deal ne correspond à ces critères pour le moment. Essaie une recherche plus large ou une autre catégorie.";
+          // Aucun résultat → message honnête avec suggestions
+          const searchDesc = [
+            functionArgs.categories?.join(', '),
+            functionArgs.subcategories?.join(', '),
+            functionArgs.brands?.join(', '),
+            functionArgs.searchTerms,
+          ].filter(Boolean).join(' / ');
+          presentationMessage = `Désolée, je n'ai trouvé aucun deal${searchDesc ? ` pour "${searchDesc}"` : ''} en ce moment 😕 Essaie avec une recherche plus large, une autre catégorie ou une marque différente !`;
+        } else if (fallbackType === 'dropped_searchTerms') {
+          presentationMessage = `Je n'ai pas trouvé exactement ce que tu cherches, mais voici ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} dans la même catégorie qui pourraient t'intéresser :`;
+        } else if (fallbackType === 'dropped_subcategory') {
+          presentationMessage = `Pas de deal dans cette sous-catégorie précise, mais voici ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} dans la catégorie plus large :`;
         } else if (formattedDeals.length <= 3) {
-          presentationMessage = `J'ai trouvé ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} pour toi.`;
+          presentationMessage = `J'ai trouvé ${formattedDeals.length} deal${formattedDeals.length > 1 ? 's' : ''} pour toi :`;
         } else {
-          presentationMessage = `Voici ${formattedDeals.length} deals qui correspondent à ta recherche :`;
+          presentationMessage = `Voici ${formattedDeals.length} deals qui correspondent à ta recherche 🔥`;
         }
 
         return NextResponse.json({

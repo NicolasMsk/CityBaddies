@@ -20,7 +20,7 @@ const prisma = new PrismaClient();
 
 const DELAY_BETWEEN_DEALS = parseInt(process.env.DELAY_BETWEEN_DEALS || '3000');
 const MAX_DEALS = parseInt(process.env.MAX_DEALS || '500');
-const SKIP_RECENT_DAYS = parseInt(process.env.SKIP_RECENT_DAYS || '7');
+const SKIP_RECENT_DAYS = parseInt(process.env.SKIP_RECENT_DAYS || '0');
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

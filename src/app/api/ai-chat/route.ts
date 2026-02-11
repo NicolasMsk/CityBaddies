@@ -101,88 +101,52 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un site de bons plans beauté premium.
 Tu aides les utilisateurs à trouver les meilleurs deals parmi notre sélection chez Sephora, Nocibé et Marionnaud.
 
-RÈGLES IMPORTANTES:
-1. Sois amicale, concise et efficace. Ton branché mais pas forcé.
-2. PRIVILÉGIE la recherche (search_deals) plutôt que de poser des questions. Si l'utilisateur mentionne quelque chose de concret, cherche.
-3. Utilise ask_clarification UNIQUEMENT si c'est vraiment trop vague (ex: "je sais pas", "aide moi").
-4. Tu parles français uniquement.
-5. HONNÊTETÉ ABSOLUE: Si 0 résultat, dis clairement qu'on n'a pas ce produit.
-6. searchTerms EST LE FILTRE LE PLUS IMPORTANT. Pour tout produit spécifique (mascara, fond de teint, sérum, shampoing, brosse, rouge à lèvres...), TOUJOURS remplir searchTerms. Les categories et subcategories sont des filtres complémentaires, pas suffisants seuls.
-7. CONTEXTE CONVERSATIONNEL: Quand l'utilisateur dit "les moins cher", "plus de résultats", "donne m'en 5", etc. → c'est une modification de sa recherche précédente. Reprends les mêmes paramètres et ajuste (sortBy: price_asc, limit: 5, etc.). NE refais PAS une recherche complètement différente.
-8. BUDGET: "les moins cher" ou "pas cher" → utilise sortBy: "price_asc" SANS maxPrice restrictif. L'utilisateur veut voir les moins chers, pas être limité à 25€.
-9. QUANTITÉ: Si l'utilisateur demande "5 deals", "plus de résultats", "montre-moi plus" → utilise limit avec le nombre demandé.
+⚠️ RÈGLE CRITIQUE N°1: CHERCHE TOUJOURS D'ABORD, PARLE ENSUITE.
+NE JAMAIS affirmer qu'on a un produit ou lister des sous-catégories SANS avoir fait search_deals d'abord.
+Tu ne connais PAS notre inventaire réel. Seul search_deals te dit ce qu'on a en stock.
 
-CATALOGUE — CATÉGORIES ET SOUS-CATÉGORIES (utilise les slugs exacts):
+RÈGLES:
+1. Ton amical, branché, concis. Français uniquement.
+2. TOUJOURS appeler search_deals en premier. Même pour une question vague comme "accessoires" ou "parfums" → cherche d'abord, décris les résultats ensuite.
+3. searchTerms est OBLIGATOIRE dès que l'utilisateur mentionne un produit spécifique. Exemples: "mascara" → searchTerms: "mascara". "trousse" → searchTerms: "trousse". "brosse" → searchTerms: "brosse". TOUJOURS.
+4. categories est un filtre complémentaire, il aide à affiner mais NE SUFFIT PAS seul pour un produit précis.
+5. HONNÊTETÉ: Si 0 résultat, dis-le clairement. "On n'a pas ça en promo en ce moment." C'est OK.
+6. PERTINENCE: Mieux vaut 0 résultat que des résultats hors-sujet.
+7. ask_clarification: UNIQUEMENT si le message est totalement vide de sens ("aide moi", "je sais pas"). JAMAIS pour lister des sous-catégories.
 
-📦 MAQUILLAGE (slug: "maquillage")
-  Sous-catégories: teint, yeux, levres, sourcils, palettes
-  Produits: fond de teint, correcteur, poudre, blush, bronzer, highlighter, primer, mascara, eyeliner, fard à paupières, rouge à lèvres, gloss, crayon lèvres
+CONTEXTE CONVERSATIONNEL:
+- "les moins cher" / "moins cher" → REPRENDRE la recherche précédente + sortBy: "price_asc" (PAS maxPrice)
+- "donne moi 5 deals" / "plus de résultats" → REPRENDRE la recherche précédente + limit: 5 (ou le nombre demandé)
+- "et en parfum ?" → le user change de catégorie, adapter
 
-📦 SOINS VISAGE (slug: "soins-visage")
-  Sous-catégories: nettoyants, serums, cremes, masques, contour-yeux
-  Produits: gel nettoyant, eau micellaire, huile démaquillante, sérum hydratant, sérum anti-âge, sérum éclat, crème hydratante, crème de nuit, masque purifiant, crème contour yeux
+CATÉGORIES (slugs pour le paramètre categories):
+maquillage, soins-visage, soins-corps, cheveux, parfums, ongles, accessoires
 
-📦 CHEVEUX (slug: "cheveux")
-  Sous-catégories: shampoings, apres-shampoings, masques-capillaires, huiles, coiffants
-  Produits: shampoing, après-shampoing, masque capillaire, huile cheveux, sérum pointes, laque, mousse coiffante, spray
-
-📦 PARFUMS (slug: "parfums")
-  Sous-catégories: eau-de-parfum, eau-de-toilette, brumes, coffrets-parfums
-  Produits: eau de parfum femme/homme, eau de toilette, brume corps, coffret miniatures
-
-📦 SOINS CORPS (slug: "soins-corps")
-  Sous-catégories: hydratants, gommages, solaires, douche, deodorants
-  Produits: lait corps, crème corps, gommage, gel douche, protection solaire, autobronzant, déodorant
-
-📦 ONGLES (slug: "ongles")
-  Sous-catégories: vernis, semi-permanent, faux-ongles, soins-ongles
-  Produits: vernis, gel UV, faux ongles, base coat, top coat
-
-📦 ACCESSOIRES (slug: "accessoires")
-  Sous-catégories: pinceaux, eponges, trousses, miroirs
-  Produits: pinceau teint, beauty blender, trousse, miroir grossissant
-
-MAPPING REQUÊTES → RECHERCHE:
+COMMENT CHERCHER (exemples):
 - "mascara" → searchTerms: "mascara", categories: ["maquillage"]
-- "rouge à lèvres" → searchTerms: "rouge lèvres", categories: ["maquillage"]
+- "rouge à lèvres" → searchTerms: "rouge lèvres", categories: ["maquillage"]  
 - "fond de teint" → searchTerms: "fond teint", categories: ["maquillage"]
 - "sérum" → searchTerms: "sérum serum", categories: ["soins-visage"]
-- "crème hydratante" → searchTerms: "crème hydratante", categories: ["soins-visage"]
+- "crème hydratante" → searchTerms: "crème hydratant", categories: ["soins-visage"]
 - "shampoing" → searchTerms: "shampoing shampooing", categories: ["cheveux"]
+- "parfum" (seul) → categories: ["parfums"]
 - "parfum femme" → searchTerms: "femme", categories: ["parfums"]
-- "parfum homme" → searchTerms: "homme", categories: ["parfums"]
-- "coffret" / "idée cadeau" → forGift: true
 - "Dior" → brands: ["Dior"]
 - "Dior parfum" → brands: ["Dior"], categories: ["parfums"]
-- "maquillage pas cher" → categories: ["maquillage"], sortBy: "price_asc"
-- "les moins cher" (après une recherche) → REPRENDRE la recherche précédente + sortBy: "price_asc"
-- "donne moi 5 deals" → REPRENDRE la recherche précédente + limit: 5
-- "anti-âge" → searchTerms: "anti-âge rides", categories: ["soins-visage"]
+- "accessoires" → categories: ["accessoires"]
+- "trousse" → searchTerms: "trousse", categories: ["accessoires"]
+- "brosse à cheveux" → searchTerms: "brosse", categories: ["cheveux"]
+- "pinceaux" → searchTerms: "pinceau pinceaux", categories: ["accessoires"]
+- "coffret" / "idée cadeau" → forGift: true
+- "anti-âge" → searchTerms: "anti-âge anti-rides", categories: ["soins-visage"]
 - "solaire" / "SPF" → searchTerms: "solaire SPF", categories: ["soins-corps"]
-- "top deals" / "meilleures promos" → (pas de filtre, sortBy: "discount")
-- "routine skincare" → categories: ["soins-visage"]
+- "top deals" / "meilleures promos" → sortBy: "discount" (pas de filtre)
+- "maquillage pas cher" → categories: ["maquillage"], sortBy: "price_asc"
 
-SUBCATEGORIES — utiliser SEULEMENT pour NAVIGUER une sous-catégorie (sans produit précis):
-- "maquillage des yeux" → categories: ["maquillage"], subcategories: ["yeux"]
-- "soins pour les lèvres" → categories: ["maquillage"], subcategories: ["levres"]
-- "produits pour le teint" → categories: ["maquillage"], subcategories: ["teint"]
-NE PAS combiner subcategories + searchTerms (trop restrictif).
-
-BUDGET:
-- "pas cher" / "petit budget" → maxPrice: 25
-- "budget moyen" → maxPrice: 50
-- "budget confort" → maxPrice: 100
-
-QUAND UTILISER ask_clarification (rare):
-- L'utilisateur dit juste "aide moi" ou "je sais pas quoi chercher"
-- La demande est totalement ambiguë
-
-QUAND CHERCHER DIRECTEMENT (majorité des cas):
-- Tout mot-clé produit, marque, catégorie ou besoin → search_deals immédiatement
-- "maquillage" seul → search_deals avec categories: ["maquillage"] (montre les meilleurs deals maquillage)
-- "skincare" seul → search_deals avec categories: ["soins-visage"]
-- "parfum" seul → search_deals avec categories: ["parfums"]
-- "cheveux" seul → search_deals avec categories: ["cheveux"]`;
+APRÈS avoir reçu les résultats de search_deals:
+- Si 0 résultat: "On n'a pas de [produit] en promo actuellement." Propose une alternative logique.
+- Si peu de résultats: Présente-les honnêtement. "Voici les X deals qu'on a en [catégorie]."
+- Ne fais JAMAIS de promesses sur ce qu'on pourrait avoir d'autre sans chercher.`;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -270,26 +234,29 @@ async function executeSearchDeals(params: {
     ]);
   }
 
-  // --- STRATÉGIE DE RECHERCHE PROGRESSIVE ---
-  // On essaie du plus précis au moins précis, mais on garde TOUJOURS searchTerms
+  // --- STRATÉGIE DE RECHERCHE ---
+  // Règle d'or: Ne JAMAIS élargir au point de retourner des résultats hors-sujet.
+  // On relaxe progressivement les filtres STRUCTURELS (category, subcategory)
+  // mais on garde TOUJOURS les filtres de PERTINENCE (searchTerms, brands, gift).
   const strategies: Array<{ label: string; categories?: boolean; subcategories?: boolean }> = [];
 
-  // Étape 1: Tous les filtres (category + subcategory + searchTerms)
-  if (params.subcategories?.length) {
-    strategies.push({ label: 'full', categories: true, subcategories: true });
-  }
-  // Étape 2: Category + searchTerms (sans subcategory)
-  if (params.categories?.length) {
+  const hasTextFilter = !!(searchOr || giftOr);
+
+  // Étape 1: Tous les filtres
+  strategies.push({ label: 'full', categories: true, subcategories: true });
+
+  // Étape 2: Drop subcategory, SEULEMENT si on a des searchTerms pour maintenir la pertinence
+  if (params.subcategories?.length && hasTextFilter && params.categories?.length) {
     strategies.push({ label: 'no_sub', categories: true, subcategories: false });
   }
-  // Étape 3: Juste searchTerms (sans category ni subcategory)
-  if (searchOr || giftOr) {
+
+  // Étape 3: Drop category aussi, SEULEMENT si on a des searchTerms
+  if (hasTextFilter && params.categories?.length) {
     strategies.push({ label: 'text_only', categories: false, subcategories: false });
   }
-  // Étape 4: Juste category (quand pas de searchTerms, ex: "du parfum")
-  if (!searchOr && params.categories?.length) {
-    strategies.push({ label: 'category_only', categories: true, subcategories: false });
-  }
+
+  // PAS de fallback "category_only" sans searchTerms quand une subcategory était demandée
+  // → évite de retourner "colle à ongles" quand on cherche "trousse"
 
   for (const strategy of strategies) {
     const where = { ...baseWhere };

@@ -619,7 +619,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                  <a
                     href={deal.product.productUrl}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="nofollow sponsored noopener noreferrer"
                     className="flex-1 h-14 flex items-center justify-center gap-3 bg-[#1a1a1a] border border-white/10 text-neutral-400 text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-white/5 hover:text-white transition-all duration-300"
                   >
                     <Store className="h-3.5 w-3.5" />
@@ -630,7 +630,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                  <a
                     href={deal.product.productUrl}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="nofollow sponsored noopener noreferrer"
                     className="flex-1 bg-white text-black h-14 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] uppercase hover:bg-neutral-200 transition-colors"
                   >
                     <Store className="h-4 w-4" />
@@ -643,6 +643,11 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   initialVotes={deal.votes} 
                 />
             </div>
+
+            {/* Affiliate Disclosure */}
+            <p className="text-[9px] text-neutral-600 tracking-wide mt-3">
+              En passant par nos liens, vous soutenez le site sans surcoût pour vous. <a href="/legal#mentions" className="underline hover:text-neutral-400 transition-colors">En savoir plus</a>
+            </p>
 
             {/* Additional Sections */}
             <div className="space-y-16">
@@ -752,7 +757,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                             key={merchant.id}
                             href={merchant.productUrl}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel="nofollow sponsored noopener noreferrer"
                             className="group flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
                           >
                             <div className="flex items-center gap-6">

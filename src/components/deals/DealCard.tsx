@@ -322,7 +322,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             <a
               href={`/api/redirect?url=${encodeURIComponent(deal.product.productUrl)}`}
               target="_blank"
-              rel="noopener"
+              rel="nofollow sponsored noopener"
               className="flex items-center gap-2 bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"
             >
               Voir le Deal

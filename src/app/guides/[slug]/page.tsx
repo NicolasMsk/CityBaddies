@@ -362,7 +362,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                           <a 
                             href={product.productUrl ? `/api/redirect?url=${encodeURIComponent(product.productUrl)}` : `/deals/${item.deal.id}`}
                             target="_blank"
-                            rel="noopener noreferrer" 
+                            rel="nofollow sponsored noopener noreferrer" 
                             className={`group/btn relative px-8 py-4 rounded-full font-black text-[12px] uppercase tracking-[0.1em] transition-all duration-500 flex items-center gap-3 overflow-hidden ${rank === 1 ? 'bg-[#d4a855] text-black shadow-[0_10px_30px_-10px_rgba(212,168,85,0.3)]' : 'bg-white text-black hover:shadow-xl'}`}
                           >
                              <span className="relative z-10 transition-transform duration-500 group-hover/btn:translate-x-[-2px]">Voir l&apos;offre</span>
@@ -432,6 +432,13 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
       </section>
 
       {/* Related Guides */}
+      {/* Affiliate Disclosure */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <p className="text-[9px] text-neutral-600 tracking-wide text-center">
+          Les liens vers les produits sont des liens partenaires. En achetant via ces liens, vous soutenez notre travail éditorial sans surcoût pour vous. <a href="/legal#mentions" className="underline hover:text-neutral-400 transition-colors">En savoir plus</a>
+        </p>
+      </div>
+
       {relatedGuides.length > 0 && (
         <section className="border-t border-white/5 py-24 bg-[#0a0a0a]">
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

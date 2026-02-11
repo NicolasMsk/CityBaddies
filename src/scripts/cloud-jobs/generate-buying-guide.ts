@@ -295,7 +295,7 @@ async function runSEO(strategy: StrategistOutput, writerOutput: WriterOutput): P
   const systemPrompt = `Tu es l'expert SEO de City Baddies. Tu optimises les guides d'achat pour Google FR.
 
 Règles :
-- metaTitle : max 60 caractères, avec le mot-clé principal en début, inclure l'année (2025 ou 2026)
+- metaTitle : max 60 caractères, avec le mot-clé principal en début, inclure l'année 2026 (JAMAIS 2025, nous sommes en 2026)
 - metaDescription : max 155 caractères, incitative au clic, mentionner le nombre de produits testés
 - FAQ : 5-7 questions que les gens recherchent VRAIMENT sur Google (utilise la formulation naturelle type "People Also Ask")
 - Les réponses FAQ doivent être SUBSTANTIELLES : 4-6 phrases avec de vrais conseils, pas du remplissage. Chaque réponse doit pouvoir se suffire à elle-même.

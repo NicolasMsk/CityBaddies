@@ -269,15 +269,9 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                     <div className="p-8 md:p-12 flex flex-col justify-center">
                        <div className="mb-8">
                          <div className="flex items-center gap-3 mb-3">
-                           {product.brandRef?.slug ? (
-                             <Link href={`/brands/${product.brandRef.slug}`} className="text-xs font-black text-neutral-500 hover:text-white transition-colors uppercase tracking-[0.3em]">
-                               {product.brandRef.name}
-                             </Link>
-                           ) : (
-                             <span className="text-xs font-black text-neutral-500 uppercase tracking-[0.3em]">
-                               {product.brandRef?.name || 'Marque'}
-                             </span>
-                           )}
+                           <span className="text-xs font-black text-neutral-500 uppercase tracking-[0.3em]">
+                             {product.brandRef?.name || product.brand || 'Marque'}
+                           </span>
                            <div className="h-[1px] flex-1 bg-white/10" />
                          </div>
                          

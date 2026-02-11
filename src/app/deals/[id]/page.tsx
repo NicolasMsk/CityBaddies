@@ -644,11 +644,6 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                 />
             </div>
 
-            {/* Affiliate Disclosure */}
-            <p className="text-[9px] text-neutral-600 tracking-wide mt-3">
-              En passant par nos liens, vous soutenez le site sans surcoût pour vous. <a href="/legal#mentions" className="underline hover:text-neutral-400 transition-colors">En savoir plus</a>
-            </p>
-
             {/* Additional Sections */}
             <div className="space-y-16">
 
@@ -965,6 +960,10 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           </div>
         )}
 
+      {/* Affiliate Disclosure */}
+      <p className="text-[9px] text-neutral-700 tracking-wide text-center mt-16 mb-4">
+        Ce site peut percevoir une rémunération via les liens présentés. <a href="/legal#mentions" className="underline hover:text-neutral-500 transition-colors">Détails</a>
+      </p>
       </div>
     </div>
     </>

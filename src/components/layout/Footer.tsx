@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link';
 import Image from 'next/image';
 import { Mail } from 'lucide-react';
+import CookieResetButton from '@/components/analytics/CookieResetButton';
 
 // TikTok SVG icon
 const TikTokIcon = () => (
@@ -29,6 +30,7 @@ export default function Footer() {
       { label: 'Qui sommes-nous', href: '/about' },
       { label: 'Contact', href: '/contact' },
       { label: 'Mentions légales', href: '/legal' },
+      { label: '__cookie_reset__', href: '' },
     ],
   };
 
@@ -82,13 +84,17 @@ export default function Footer() {
               </h3>
               <ul className="space-y-4">
                 {links.map((link) => (
-                  <li key={link.href}>
+                  <li key={link.label}>
+                    {link.label === '__cookie_reset__' ? (
+                      <CookieResetButton />
+                    ) : (
                     <Link 
                       href={link.href} 
                       className="text-sm font-light text-neutral-400 hover:text-white hover:translate-x-1 transition-all duration-300 inline-block"
                     >
                       {link.label}
                     </Link>
+                    )}
                   </li>
                 ))}
               </ul>

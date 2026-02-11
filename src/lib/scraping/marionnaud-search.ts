@@ -372,45 +372,102 @@ async function extractVariants(page: Page, productUrl: string): Promise<{ varian
     return { variants: [variant], name, inStock: !outOfStock };
   }
 
-  // Multi-tailles : cliquer chaque variante pour récupérer le prix
+  // ── Multi-tailles : navigation par URL (les clics ne fonctionnent pas sur le carousel Angular) ──
   const variants: ProductVariant[] = [];
-  const volumeTexts = await page.$$eval(
-    '.product-carousel-variant__item .product-carousel-variant__size-name',
-    els => els.map(el => el.textContent?.trim() || '')
-  );
 
-  for (let i = 0; i < variantCount; i++) {
-    const items = await page.$$('.product-carousel-variant__item');
-    if (i >= items.length) break;
+  // Lire les données de la variante actuellement affichée
+  const currentArticle = await page.$eval('.product-add-to-cart__article-number', el => el.textContent?.trim() || '').catch(() => '');
+  const { currentPrice: firstPrice, originalPrice: firstOriginal } = await readCurrentPrice();
+  const firstVolume = await readCurrentVolume();
 
-    const isAlreadySelected = await items[i].evaluate(
-      el => el.classList.contains('product-carousel-variant__item--selected')
-    );
+  if (firstPrice > 0 && firstVolume) {
+    const vm = firstVolume.match(/(\d+(?:[.,]\d+)?)/);
+    variants.push({
+      volume: firstVolume,
+      volumeValue: vm ? parseFloat(vm[1].replace(',', '.')) : 0,
+      currentPrice: firstPrice,
+      originalPrice: firstOriginal,
+      isSelected: true,
+    });
+    const promo = firstOriginal > firstPrice ? ` (original: ${firstOriginal}€)` : '';
+    console.log(`     • ${firstVolume} → ${firstPrice}€${promo} ←`);
+  }
 
-    if (!isAlreadySelected) {
-      await items[i].scrollIntoViewIfNeeded();
-      await page.waitForTimeout(300);
-      await items[i].click();
-      await page.waitForTimeout(2000);
+  // Trouver les autres codes article (varSel) dans le HTML de la page
+  const pageContent = await page.content();
+  const varSelCodes: string[] = [];
+  const varSelRegex = /varSel=(\d+)/g;
+  let match;
+  while ((match = varSelRegex.exec(pageContent)) !== null) {
+    if (!varSelCodes.includes(match[1])) varSelCodes.push(match[1]);
+  }
+
+  // Filtrer : ne garder que les codes qu'on n'a pas encore visités
+  const visitedCodes = new Set<string>([currentArticle]);
+  // Aussi extraire le varSel de l'URL initiale
+  const initialVarSel = fullUrl.match(/varSel=(\d+)/)?.[1];
+  if (initialVarSel) visitedCodes.add(initialVarSel);
+
+  // L'URL de base sans varSel
+  const baseUrl = fullUrl.replace(/[?&]varSel=\d+/, '');
+
+  // Naviguer vers les varSel non visités
+  const unvisitedCodes = varSelCodes.filter(code => !visitedCodes.has(code));
+
+  // Si on a un varSel dans l'URL, essayer aussi sans varSel (variante par défaut)
+  if (initialVarSel && baseUrl !== fullUrl && unvisitedCodes.length === 0) {
+    // On n'a trouvé aucun autre varSel dans la page — naviguer sans varSel
+    console.log(`  🔄 Navigation vers URL par défaut (sans varSel)...`);
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(3000);
+    await dismissPopups(page);
+
+    const defaultArticle = await page.$eval('.product-add-to-cart__article-number', el => el.textContent?.trim() || '').catch(() => '');
+    if (defaultArticle && defaultArticle !== currentArticle) {
+      const { currentPrice, originalPrice } = await readCurrentPrice();
+      const volume = await readCurrentVolume();
+      if (currentPrice > 0) {
+        const vm = volume.match(/(\d+(?:[.,]\d+)?)/);
+        variants.push({
+          volume, volumeValue: vm ? parseFloat(vm[1].replace(',', '.')) : 0,
+          currentPrice, originalPrice, isSelected: false,
+        });
+        const promo = originalPrice > currentPrice ? ` (original: ${originalPrice}€)` : '';
+        console.log(`     • ${volume} → ${currentPrice}€${promo}`);
+      }
+      visitedCodes.add(defaultArticle);
     }
 
+    // Re-scanner le HTML pour d'éventuels nouveaux varSel
+    const newContent = await page.content();
+    const newRegex = /varSel=(\d+)/g;
+    while ((match = newRegex.exec(newContent)) !== null) {
+      if (!varSelCodes.includes(match[1])) varSelCodes.push(match[1]);
+    }
+  }
+
+  // Explorer les varSel restants par navigation
+  const remainingCodes = varSelCodes.filter(code => !visitedCodes.has(code));
+  for (const varSel of remainingCodes) {
+    const varUrl = `${baseUrl}?varSel=${varSel}`;
+    console.log(`  🔄 Navigation → varSel=${varSel}`);
+    await page.goto(varUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(3000);
+    await dismissPopups(page);
+
     const { currentPrice, originalPrice } = await readCurrentPrice();
-    const volume = volumeTexts[i] || await readCurrentVolume();
+    const volume = await readCurrentVolume();
 
     if (currentPrice > 0) {
       const vm = volume.match(/(\d+(?:[.,]\d+)?)/);
       variants.push({
-        volume,
-        volumeValue: vm ? parseFloat(vm[1].replace(',', '.')) : 0,
-        currentPrice,
-        originalPrice,
-        isSelected: isAlreadySelected,
+        volume, volumeValue: vm ? parseFloat(vm[1].replace(',', '.')) : 0,
+        currentPrice, originalPrice, isSelected: false,
       });
-
       const promo = originalPrice > currentPrice ? ` (original: ${originalPrice}€)` : '';
-      const tag = isAlreadySelected ? ' ←' : '';
-      console.log(`     • ${volume} → ${currentPrice}€${promo}${tag}`);
+      console.log(`     • ${volume} → ${currentPrice}€${promo}`);
     }
+    visitedCodes.add(varSel);
   }
 
   return { variants, name, inStock: !outOfStock };

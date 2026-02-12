@@ -191,8 +191,9 @@ async function importProducts() {
             pricePerUnit: priceInfo?.pricePerUnit || null,
             sourceUrl: (product as any).sourceUrl || existingDeal.sourceUrl || null,
             isTrending,
-            // Si EXPIRED re-détecté en promo → PENDING, sinon garder le status
+            // Si EXPIRED re-détecté en promo → PENDING + reset score pour re-évaluation LLM
             status: existingDeal.status === 'EXPIRED' ? 'PENDING' : existingDeal.status,
+            ...(existingDeal.status === 'EXPIRED' && { score: null, tags: null, whyGoodDeal: null }),
             isHot: existingDeal.votes >= 20,
             updatedAt: new Date(),
           }

@@ -20,7 +20,7 @@ interface ScoreGaugeProps {
 function getScoreConfig(score: number) {
   if (score >= 8) {
     return {
-      label: 'Exceptionnel',
+      label: 'Sélection City Baddies',
       color: '#d4a855',       // gold
       bgRing: 'rgba(212, 168, 85, 0.15)',
       glow: 'rgba(212, 168, 85, 0.3)',
@@ -28,38 +28,19 @@ function getScoreConfig(score: number) {
       borderColor: 'border-[#d4a855]',
     };
   }
-  if (score >= 6) {
-    return {
-      label: 'Bon deal',
-      color: '#ffffff',        // white
-      bgRing: 'rgba(255, 255, 255, 0.1)',
-      glow: 'rgba(255, 255, 255, 0.15)',
-      textColor: 'text-white',
-      borderColor: 'border-white/40',
-    };
-  }
-  if (score >= 4) {
-    return {
-      label: 'Moyen',
-      color: '#a3a3a3',        // neutral-400
-      bgRing: 'rgba(163, 163, 163, 0.1)',
-      glow: 'rgba(163, 163, 163, 0.1)',
-      textColor: 'text-neutral-400',
-      borderColor: 'border-neutral-600',
-    };
-  }
+  // Score 6-7 : bon plan validé
   return {
-    label: 'À éviter',
-    color: '#9b1515',          // red
-    bgRing: 'rgba(155, 21, 21, 0.15)',
-    glow: 'rgba(155, 21, 21, 0.1)',
-    textColor: 'text-[#9b1515]',
-    borderColor: 'border-[#9b1515]',
+    label: 'Bon plan validé',
+    color: '#ffffff',        // white
+    bgRing: 'rgba(255, 255, 255, 0.1)',
+    glow: 'rgba(255, 255, 255, 0.15)',
+    textColor: 'text-white',
+    borderColor: 'border-white/40',
   };
 }
 
 export default function ScoreGauge({ score, variant = 'compact' }: ScoreGaugeProps) {
-  if (!score || score < 1) return null;
+  if (!score || score < 6) return null;
 
   const config = getScoreConfig(score);
 

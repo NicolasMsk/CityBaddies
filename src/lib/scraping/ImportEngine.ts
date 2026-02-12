@@ -408,9 +408,10 @@ export class ImportEngine {
                 volumeUnit: priceInfo?.volumeUnit || null,
                 pricePerUnit: priceInfo?.pricePerUnit || null,
                 isTrending,
-                // Si EXPIRED re-détecté en promo → PENDING (doit passer par VALIDATE)
+                // Si EXPIRED re-détecté en promo → PENDING + reset score pour re-évaluation LLM
                 // Si ACTIVE ou PENDING → garder le status actuel
                 status: existingDeal.status === 'EXPIRED' ? 'PENDING' : existingDeal.status,
+                ...(existingDeal.status === 'EXPIRED' && { score: null, tags: null, whyGoodDeal: null }),
                 isHot: existingDeal.votes >= 20,
                 lastSeenAt: new Date(),
                 updatedAt: new Date(),

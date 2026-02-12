@@ -1,32 +1,24 @@
 /**
  * =============================================================================
- * SCORE-DEALS.TS - Scoring intelligent des deals par LLM
+ * CLOUD JOB: SCORE-DEALS — Scoring intelligent des deals par LLM
  * =============================================================================
  * 
- * Ce script analyse chaque deal avec GPT-4o pour :
- *   1. Donner une note sur 10 (remplace le score /100)
- *   2. Rédiger un paragraphe "whyGoodDeal" expliquant la note
+ * Version Cloud Run Job du script de scoring.
+ * Analyse chaque deal ACTIVE/PENDING avec GPT-4o pour :
+ *   1. Donner une note sur 10
+ *   2. Rédiger un paragraphe "whyGoodDeal" 
+ *   3. Attribuer des tags pertinents
+ *   4. Auto-expire les deals avec score < 6
  * 
- * Le LLM reçoit TOUTES les infos disponibles :
- *   - Produit : nom, marque, tier, catégorie, ingrédients, labels
- *   - Deal : prix, réduction, prix/ml, volume
- *   - Concurrence : prix chez Sephora, Nocibé, Marionnaud
- *   - Historique : évolution des prix sur les derniers mois
- * 
- * Usage:
- *   TEST (1 deal, pas de DB update) : npx tsx scripts/score-deals.ts
- *   PROD (tous les deals, update DB)  : npx tsx scripts/score-deals.ts --all
+ * Env vars requises : DATABASE_URL, OPENAI_API_KEY
  * =============================================================================
  */
 
-import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const DRY_RUN = !process.argv.includes('--all');
 
 // ============================================================================
 // TYPES
@@ -85,9 +77,9 @@ interface DealWithAllData {
 }
 
 interface LLMScoreResult {
-  score: number;        // Note sur 10
-  whyGoodDeal: string;  // Paragraphe explicatif
-  tags: string[];       // Tags pertinents
+  score: number;
+  whyGoodDeal: string;
+  tags: string[];
 }
 
 // ============================================================================
@@ -336,16 +328,14 @@ async function scoreDealWithLLM(deal: DealWithAllData): Promise<LLMScoreResult> 
 
 async function main() {
   console.log('═'.repeat(70));
-  console.log('🎯 CITY BADDIES — SCORING LLM DES DEALS');
-  console.log(`   Mode: ${DRY_RUN ? '🧪 TEST (1 deal, pas de DB update)' : '🚀 PRODUCTION (tous les deals)'}`);
+  console.log('🎯 CITY BADDIES — SCORING LLM DES DEALS (Cloud Job)');
   console.log('═'.repeat(70));
 
-  // Récupérer les deals avec TOUTES les données
+  // Récupérer les deals ACTIVE/PENDING (y compris ceux réactivés sans score)
   const deals = await prisma.deal.findMany({
     where: { 
       status: { in: ['ACTIVE', 'PENDING'] },
     },
-    take: DRY_RUN ? 1 : undefined,
     orderBy: { createdAt: 'desc' },
     include: {
       product: {
@@ -361,13 +351,17 @@ async function main() {
   });
 
   if (deals.length === 0) {
-    console.log('❌ Aucun deal trouvé.');
+    console.log('❌ Aucun deal à scorer.');
+    await prisma.$disconnect();
     return;
   }
 
   console.log(`\n📦 ${deals.length} deal(s) à scorer\n`);
 
-  // Pour chaque deal, récupérer aussi l'historique des prix du produit
+  let scored = 0;
+  let expired = 0;
+  let errors = 0;
+
   for (let i = 0; i < deals.length; i++) {
     const deal = deals[i] as any;
 
@@ -396,43 +390,44 @@ async function main() {
 
       console.log(`\n   ⭐ NOTE: ${result.score}/10`);
       console.log(`   🏷️  TAGS: ${result.tags.join(', ') || 'aucun'}`);
-      console.log(`   💬 ANALYSE:`);
-      console.log(`   ${result.whyGoodDeal}`);
+      console.log(`   💬 ANALYSE: ${result.whyGoodDeal}`);
 
-      if (!DRY_RUN) {
-        // Deals avec score < 6 → on les passe en EXPIRED (pas de valeur pour l'utilisateur)
-        const newStatus = result.score < 6 ? 'EXPIRED' : undefined;
-        
-        await prisma.deal.update({
-          where: { id: deal.id },
-          data: {
-            score: result.score,
-            tags: result.tags.join(','),
-            whyGoodDeal: result.whyGoodDeal,
-            ...(newStatus && { status: newStatus }),
-          },
-        });
-        
-        if (newStatus === 'EXPIRED') {
-          console.log(`   🚫 Score < 6 → Deal masqué (EXPIRED)`);
-        }
-        console.log(`   ✅ DB mise à jour`);
-      } else {
-        console.log(`\n   🧪 Mode test — DB non modifiée`);
-        console.log(`\n   📝 CONTEXTE ENVOYÉ AU LLM:`);
-        console.log('   ' + buildDealContext(dealWithHistory).split('\n').join('\n   '));
+      // Deals avec score < 6 → on les passe en EXPIRED (pas de valeur pour l'utilisateur)
+      const newStatus = result.score < 6 ? 'EXPIRED' : undefined;
+
+      await prisma.deal.update({
+        where: { id: deal.id },
+        data: {
+          score: result.score,
+          tags: result.tags.join(','),
+          whyGoodDeal: result.whyGoodDeal,
+          ...(newStatus && { status: newStatus }),
+        },
+      });
+
+      if (newStatus === 'EXPIRED') {
+        console.log(`   🚫 Score < 6 → Deal masqué (EXPIRED)`);
+        expired++;
       }
+      
+      console.log(`   ✅ DB mise à jour`);
+      scored++;
 
     } catch (err) {
       console.error(`   ❌ Erreur: ${err}`);
+      errors++;
     }
   }
 
   console.log(`\n${'═'.repeat(70)}`);
   console.log(`✅ Scoring terminé`);
+  console.log(`   📊 Scorés: ${scored} | 🚫 Expirés (score<6): ${expired} | ❌ Erreurs: ${errors}`);
   console.log(`${'═'.repeat(70)}`);
 
   await prisma.$disconnect();
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error('❌ Erreur fatale:', err);
+  process.exit(1);
+});

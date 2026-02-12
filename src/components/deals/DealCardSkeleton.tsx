@@ -4,7 +4,7 @@ export default function DealCardSkeleton() {
   return (
     <div className="flex flex-col bg-[#0a0a0a] border border-white/10 h-full">
       {/* Image Container */}
-      <div className="h-[220px] bg-[#050505] relative border-b border-white/5">
+      <div className="h-[260px] bg-[#050505] relative border-b border-white/5">
         <Skeleton className="w-full h-full bg-white/5 rounded-none" />
         
         {/* Fake Discount Badge */}

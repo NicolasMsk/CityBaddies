@@ -111,7 +111,7 @@ export default function DealCarousel({
               className="flex-shrink-0 px-2 md:px-3 h-full"
               style={{ width: `${100 / visibleCount}%` }}
             >
-              <div className="h-[480px]">
+              <div className="h-[560px]">
                 <DealCard deal={deal as any} />
               </div>
             </div>

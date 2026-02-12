@@ -202,7 +202,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
   return (
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
       {/* Image Container - Hauteur fixe pour uniformiser */}
-      <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[220px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
+      <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
         {deal.product.imageUrl ? (
           <Image
             src={deal.product.imageUrl}

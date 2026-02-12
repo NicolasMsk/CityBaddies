@@ -1,5 +1,5 @@
 /**
- * Script de validation des deals Marionnaud
+ * Cloud Job: Validation des deals Marionnaud
  * 
  * Ce script vérifie que les prix des deals correspondent à la réalité sur Marionnaud.
  * Pour chaque deal, il:
@@ -10,8 +10,6 @@
  *    - Si plus de promo → deal status = EXPIRED
  *    - Si prix différent → update le prix + recalcul description
  *    - Si prix identique → deal validé ✓ (status = ACTIVE)
- * 
- * Usage: npx tsx src/scripts/validate-deals-marionnaud.ts [--limit N] [--deal-id ID] [--headless]
  */
 
 import { chromium, Browser, Page } from 'playwright';

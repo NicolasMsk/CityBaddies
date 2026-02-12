@@ -12,7 +12,7 @@ const DealCarousel = dynamic(() => import('./DealCarousel'), {
           key={i}
           className="flex-shrink-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2"
         >
-          <div className="bg-white/5 border border-white/10 h-[380px] animate-pulse" />
+          <div className="bg-white/5 border border-white/10 h-[560px] animate-pulse" />
         </div>
       ))}
     </div>

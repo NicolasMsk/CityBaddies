@@ -16,25 +16,25 @@ export const dynamic = 'force-dynamic';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: "City Baddies | Bons Plans Beauté & Promos Maquillage jusqu'à -70%",
-  description: "Découvrez les meilleures promos beauté sur Sephora, Nocibé et Marionnaud. Deals maquillage, skincare et parfums vérifiés quotidiennement. Économisez jusqu'à 70% sur vos produits préférés.",
+  title: "City Baddies | Analyse Honnête des Prix Beauté — Vraies Promos vs Fausses Promos",
+  description: "City Baddies analyse chaque deal beauté et lui attribue une note /10. Fausses promos démasquées, prix comparés entre Sephora, Nocibé & Marionnaud. On vous dit la vérité sur chaque réduction.",
   keywords: [
     "bons plans beauté",
     "promo sephora",
     "code promo nocibé",
     "promo marionnaud",
-    "réduction maquillage",
-    "deals cosmétiques",
-    "soldes beauté",
+    "fausse promo beauté",
+    "comparateur prix beauté",
+    "avis promos cosmétiques",
     "parfum pas cher",
-    "skincare promotion",
+    "analyse prix skincare",
   ],
   alternates: {
     canonical: BASE_URL,
   },
   openGraph: {
-    title: "City Baddies | Bons Plans Beauté & Promos Maquillage",
-    description: "Les meilleures promos beauté jusqu'à -70% sur Sephora, Nocibé et Marionnaud.",
+    title: "City Baddies | La Vérité sur les Promos Beauté",
+    description: "On analyse chaque deal beauté et on note /10. Fausses promos, vrais bons plans : on vous dit tout.",
     url: BASE_URL,
     type: "website",
   },
@@ -293,7 +293,7 @@ export default async function HomePage() {
             <div className="flex items-center gap-3 mb-6">
               <span className="h-[1px] w-12 bg-[#d4a855]"></span>
               <span className="text-[#d4a855] text-xs font-bold tracking-[0.2em] uppercase">
-                Deals Beauté Premium
+                Analyse Beauté Indépendante
               </span>
             </div>
 
@@ -303,7 +303,7 @@ export default async function HomePage() {
             </h1>
             
             <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-xl border-l border-white/20 pl-6 mb-10">
-              Pas ton budget. <span className="text-white/60 text-base block mt-2">Nous traquons les baisses de prix Sephora, Nocibé & Marionnaud en temps réel.</span>
+              Pas ton budget. <span className="text-white/60 text-base block mt-2">On analyse chaque deal beauté et on le note /10. Fausses promos, vrais bons plans — on te dit la vérité.</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -528,7 +528,7 @@ export default async function HomePage() {
                   DERNIERS <span className="italic font-normal text-white">AJOUTS</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-sm border-l border-white/20 pl-6 leading-relaxed">
-                  Baisses de prix dénichées chaque jour par notre équipe.
+                  Nouveaux deals analysés et notés chaque jour. On te dit si ça vaut le coup — ou pas.
                 </p>
               </div>
               <Link
@@ -864,7 +864,7 @@ export default async function HomePage() {
             </h2>
             <div className="mt-4 md:mt-0 text-right">
               <p className="text-xs font-medium tracking-[0.3em] uppercase text-neutral-500">
-                 Tracking Beauté Exclusif
+                 Analyse de Prix Indépendante
               </p>
             </div>
           </div>
@@ -876,17 +876,17 @@ export default async function HomePage() {
               <div>
                 <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">01 — Le Problème</span>
                 <h3 className="text-2xl font-light text-white mb-6 leading-tight">
-                  La beauté de luxe ne devrait pas coûter un loyer.
+                  80% des « promos » beauté n&apos;en sont pas.
                 </h3>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  On connaît le problème. Vous voulez le meilleur pour votre routine — Dior, Chanel, YSL — mais les prix sont impitoyables. Le marché est inondé de fausses promos, de ventes flash éphémères et de bruit constant.
+                  Prix barrés gonflés, réductions sur des prix déjà augmentés, « offres exclusives » disponibles partout… Le marketing beauté vous ment constamment. Et personne ne vous le dit.
                 </p>
               </div>
 
               <div>
-                <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">02 — La Solution</span>
+                <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">02 — Notre Approche</span>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  Notre équipe surveille quotidiennement les revendeurs premium pour vous dénicher les vraies pépites. On élimine le bruit marketing pour ne garder que les baisses de prix qui valent le coup. <span className="text-white">Sélection exigeante, pour les passionnées.</span>
+                  City Baddies analyse chaque deal et lui attribue une <span className="text-white">note /10</span>. On compare les prix entre enseignes, on vérifie l&apos;historique, on détecte les fausses promos. Un deal à 3/10 ? On vous le dit. <span className="text-white">Pas de bullshit, que la vérité.</span>
                 </p>
               </div>
             </div>
@@ -900,9 +900,9 @@ export default async function HomePage() {
                   <div className="flex flex-col md:flex-row md:items-start gap-6">
                     <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">01</span>
                     <div>
-                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Sélection Exigeante</h4>
+                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Note City Baddies /10</h4>
                       <p className="text-neutral-500 font-light leading-relaxed">
-                        Notre équipe surveille des milliers de produits chez Sephora, Nocibé, Marionnaud et autres chaque jour. Seules les réductions de 20%+ sont retenues. Pas de remplissage.
+                        Chaque deal est analysé et noté de 1 à 10. On prend en compte le prix, la réduction réelle, les prix concurrents et l&apos;historique. Un 8/10 c&apos;est exceptionnel. Un 3/10 c&apos;est une fausse promo — et on vous le dit clairement.
                       </p>
                     </div>
                   </div>
@@ -913,9 +913,9 @@ export default async function HomePage() {
                   <div className="flex flex-col md:flex-row md:items-start gap-6">
                     <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">02</span>
                     <div>
-                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Vérification Historique</h4>
+                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Détection de Fausses Promos</h4>
                       <p className="text-neutral-500 font-light leading-relaxed">
-                        Nous suivons l&apos;historique pour exposer les fausses promotions. Quand on dit que c&apos;est un deal, c&apos;est mathématiquement vrai.
+                        Prix stable depuis 6 mois mais affiché « -30% » ? Concurrent moins cher sans promo ? On traque ces pratiques et on les expose. Les tags FAUSSE PROMO et MIEUX AILLEURS ne mentent pas.
                       </p>
                     </div>
                   </div>
@@ -952,7 +952,7 @@ export default async function HomePage() {
           {/* Footer Statement */}
           <div className="mt-24 pt-12 border-t border-white/5 text-center">
             <p className="max-w-xl mx-auto text-xl md:text-2xl font-light italic text-neutral-400">
-              "On a créé ça parce qu&apos;on en avait marre de payer trop cher pour l&apos;essentiel. <span className="text-white not-italic font-normal">Bienvenue dans le cercle.</span>"
+              "On a créé ça parce qu&apos;on en avait marre de se faire avoir par de fausses promos. <span className="text-white not-italic font-normal">Ici, on te dit la vérité.</span>"
             </p>
           </div>
         </div>
@@ -983,20 +983,24 @@ export default async function HomePage() {
           <div className="space-y-4">
             { [
               {
-                q: "Comment dénichez-vous ces prix ?",
-                a: "Notre équipe surveille chaque jour Sephora, Nocibé, Marionnaud et d'autres partenaires. On compare les prix catalogues avec les prix remisés pour isoler les vraies bonnes affaires des fausses promos."
+                q: "C'est quoi la Note City Baddies /10 ?",
+                a: "Chaque deal est analysé en profondeur : prix actuel, historique des prix, comparaison avec les concurrents, qualité de la marque. On attribue une note de 1 à 10. Un 8+/10, c'est un deal exceptionnel. Un 3/10, c'est une fausse promo qu'on démasque pour vous."
+              },
+              {
+                q: "Vous ne montrez pas que des bonnes promos ?",
+                a: "Non, et c'est notre force. On affiche TOUS les deals qu'on trouve, même les mauvais. Un produit affiché -30% mais dont le prix n'a jamais bougé ? On le dit. Un concurrent moins cher ? On le signale. Notre but c'est l'honnêteté, pas la vente à tout prix."
               },
               {
                 q: "Est-ce que je commande chez vous ?",
-                a: "Non, City Baddies est un comparateur intelligent. Nous vous redirigeons directement vers le site officiel du marchand (Sephora, etc.) pour finaliser votre achat en toute sécurité. Vous profitez de leurs garanties et service client."
+                a: "Non, City Baddies est un comparateur et analyste indépendant. On vous redirige vers le site officiel du marchand (Sephora, Nocibé, Marionnaud) pour acheter en toute sécurité. Vous profitez de leurs garanties et SAV."
               },
               {
                 q: "Pourquoi City Baddies est gratuit ?",
-                a: "L'accès au site est 100% gratuit. Nous nous rémunérons grâce à l'affiliation : les marques nous versent une petite commission quand vous passez par nos liens, sans que cela ne change le prix pour vous (c'est transparent)."
+                a: "L'accès est 100% gratuit. On se rémunère par l'affiliation : une petite commission quand vous achetez via nos liens, sans surcoût pour vous. Ça ne change rien à nos notes — un mauvais deal reste un mauvais deal, même s'il nous rapporterait une commission."
               },
               {
-                q: "À quelle fréquence les deals sont mis à jour ?",
-                a: "Tous les jours ! Dès qu'un prix change ou qu'un stock s'épuise, on met à jour. Cependant, sur les très grosses promos (erreurs de prix), ça peut partir en quelques minutes !"
+                q: "Comment détectez-vous les fausses promos ?",
+                a: "On suit l'historique des prix sur plusieurs mois. Si un produit est 'en promo' mais que son prix n'a jamais changé, c'est une fausse promo. On compare aussi avec les concurrents : si Nocibé vend le même produit moins cher sans promo, le deal Sephora n'en est pas un."
               }
             ].map((item, i) => (
               <div key={i} className="group border border-white/10 bg-white/5 rounded-none overflow-hidden transition-all hover:bg-white/10">

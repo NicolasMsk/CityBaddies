@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 import { categorizeProductsBatch } from '../lib/ai/categorize';
 import { findOrCreateBrand } from '../lib/brands';
 import { calculatePricePerUnit, findOrCreateVariant } from '../lib/utils/volume';
-import { calculateDealScore, tagsToString } from '../lib/utils/scoring';
 
 const prisma = new PrismaClient() as any;
 
@@ -171,24 +170,12 @@ async function importProducts() {
 
       // Créer/trouver la variante pour ce volume
       const variant = await findOrCreateVariant(prisma, dbProduct.id, product.volume);
+      const priceInfo = calculatePricePerUnit(product.currentPrice, product.volume);
 
       // Mettre à jour le deal si existe
       if (existingDeal && product.discountPercent >= 5) {
-        const priceInfo = calculatePricePerUnit(product.currentPrice, product.volume);
         const isTrending = (product as any).isTrending || false;
         
-        const scoreResult = calculateDealScore({
-          discountPercent: product.discountPercent,
-          brandTier: existingDeal.brandTier,
-          pricePerUnit: priceInfo?.pricePerUnit || null,
-          isHot: existingDeal.votes >= 20,
-          isTrending,
-          categorySlug: product.category,
-          subcategorySlug: existingDeal.product?.subcategory || undefined,
-          subsubcategorySlug: existingDeal.product?.subsubcategory || undefined,
-          productName: product.name,
-        });
-
         await prisma.deal.update({
           where: { id: existingDeal.id },
           data: {
@@ -202,8 +189,6 @@ async function importProducts() {
             volumeValue: priceInfo?.volumeValue || null,
             volumeUnit: priceInfo?.volumeUnit || null,
             pricePerUnit: priceInfo?.pricePerUnit || null,
-            score: scoreResult.score,
-            tags: tagsToString(scoreResult.tags),
             sourceUrl: (product as any).sourceUrl || existingDeal.sourceUrl || null,
             isTrending,
             // Si EXPIRED re-détecté en promo → PENDING, sinon garder le status
@@ -308,23 +293,11 @@ async function importProducts() {
 
         // Créer la variante pour ce volume
         const variant = await findOrCreateVariant(tx, dbProduct.id, product.volume);
+        const priceInfo = calculatePricePerUnit(product.currentPrice, product.volume);
 
         if (product.discountPercent >= 5) {
-          const priceInfo = calculatePricePerUnit(product.currentPrice, product.volume);
           const isTrending = (product as any).isTrending || false;
           
-          const scoreResult = calculateDealScore({
-            discountPercent: product.discountPercent,
-            brandTier: classification?.brandTier || null,
-            pricePerUnit: priceInfo?.pricePerUnit || null,
-            isHot: false,
-            isTrending,
-            categorySlug: categorySlug,
-            subcategorySlug: classification?.subcategorySlug || undefined,
-            subsubcategorySlug: classification?.subsubcategorySlug || undefined,
-            productName: product.name,
-          });
-
           await tx.deal.create({
             data: {
               productId: dbProduct.id,
@@ -339,8 +312,6 @@ async function importProducts() {
               volumeUnit: priceInfo?.volumeUnit || null,
               pricePerUnit: priceInfo?.pricePerUnit || null,
               brandTier: classification?.brandTier || 2,
-              score: scoreResult.score,
-              tags: tagsToString(scoreResult.tags),
               sourceUrl: (product as any).sourceUrl || null,
               isHot: false,
               isTrending,

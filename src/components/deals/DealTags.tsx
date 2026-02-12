@@ -125,29 +125,29 @@ function getTagLabel(tag: string): string {
  * Composant pour afficher le badge de score
  */
 export function ScoreBadge({ score }: { score: number }) {
-  if (score < 40) return null;
+  if (score < 1) return null;
   
   let styles = 'bg-[#1a1a1a] text-neutral-500 border-neutral-800';
   let icon = null;
   
-  if (score >= 90) {
+  if (score >= 8) {
     styles = 'bg-[#d4a855] text-black border-[#d4a855]';
     icon = <Flame className="w-3 h-3" />;
-  } else if (score >= 75) {
+  } else if (score >= 6) {
     styles = 'bg-[#1a1a1a] text-white border-white';
     icon = <Star className="w-3 h-3" fill="currentColor" />;
-  } else if (score >= 60) {
-    styles = 'bg-[#1a1a1a] text-[#d4a855] border-[#d4a855]';
+  } else if (score >= 4) {
+    styles = 'bg-[#1a1a1a] text-neutral-400 border-neutral-600';
     icon = <Check className="w-3 h-3" />;
-  } else if (score >= 40) {
-    styles = 'bg-[#1a1a1a] text-white border-white/20';
+  } else {
+    styles = 'bg-[#1a1a1a] text-[#9b1515] border-[#9b1515]/50';
     icon = <Tag className="w-3 h-3" />;
   }
   
   return (
     <div className={`${styles} px-2 py-1 text-[10px] font-bold uppercase tracking-[0.2em] inline-flex items-center gap-1.5 border`}>
       {icon}
-      <span>Note CB {score}</span>
+      <span>Note CB {score}/10</span>
     </div>
   );
 }

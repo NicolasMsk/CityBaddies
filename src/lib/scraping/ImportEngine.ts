@@ -14,7 +14,6 @@ import { Scraper, ScrapedProduct, ImportStats, ImportEngineOptions } from './typ
 import { categorizeProductsBatch } from '../ai/categorize';
 import { findOrCreateBrand } from '../brands';
 import { calculatePricePerUnit, findOrCreateVariant } from '../utils/volume';
-import { calculateDealScore, tagsToString } from '../utils/scoring';
 
 // Configuration du connection pool pour éviter les timeouts
 // Supabase a un pool limit de ~5 connexions
@@ -395,18 +394,6 @@ export class ImportEngine {
             const priceInfo = calculatePricePerUnit(currentPrice, product.volume);
             const isTrending = product.isTrending || false;
 
-            const scoreResult = calculateDealScore({
-              discountPercent,
-              brandTier: existingDeal.brandTier,
-              pricePerUnit: priceInfo?.pricePerUnit || null,
-              isHot: existingDeal.votes >= 20,
-              isTrending,
-              categorySlug: product.category,
-              subcategorySlug: existingDeal.product?.subcategory || undefined,
-              subsubcategorySlug: existingDeal.product?.subsubcategory || undefined,
-              productName: product.name,
-            });
-
             await prisma.deal.update({
               where: { id: existingDeal.id },
               data: {
@@ -420,8 +407,6 @@ export class ImportEngine {
                 volumeValue: priceInfo?.volumeValue || null,
                 volumeUnit: priceInfo?.volumeUnit || null,
                 pricePerUnit: priceInfo?.pricePerUnit || null,
-                score: scoreResult.score,
-                tags: tagsToString(scoreResult.tags),
                 isTrending,
                 // Si EXPIRED re-détecté en promo → PENDING (doit passer par VALIDATE)
                 // Si ACTIVE ou PENDING → garder le status actuel
@@ -550,18 +535,6 @@ export class ImportEngine {
             const priceInfo = calculatePricePerUnit(currentPrice, product.volume);
             const isTrending = product.isTrending || false;
 
-            const scoreResult = calculateDealScore({
-              discountPercent,
-              brandTier: classification?.brandTier || null,
-              pricePerUnit: priceInfo?.pricePerUnit || null,
-              isHot: false,
-              isTrending,
-              categorySlug,
-              subcategorySlug: classification?.subcategorySlug || undefined,
-              subsubcategorySlug: classification?.subsubcategorySlug || undefined,
-              productName: product.name,
-            });
-
             await tx.deal.create({
               data: {
                 productId: dbProduct.id,
@@ -578,8 +551,6 @@ export class ImportEngine {
                 volumeUnit: priceInfo?.volumeUnit || null,
                 pricePerUnit: priceInfo?.pricePerUnit || null,
                 brandTier: classification?.brandTier || 2,
-                score: scoreResult.score,
-                tags: tagsToString(scoreResult.tags),
                 isHot: false,
                 isTrending,
                 status: 'PENDING',  // Nouveau deal = en attente de validation

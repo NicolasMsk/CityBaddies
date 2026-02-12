@@ -18,7 +18,7 @@ interface ScoreGaugeProps {
 }
 
 function getScoreConfig(score: number) {
-  if (score >= 80) {
+  if (score >= 8) {
     return {
       label: 'Exceptionnel',
       color: '#d4a855',       // gold
@@ -28,9 +28,9 @@ function getScoreConfig(score: number) {
       borderColor: 'border-[#d4a855]',
     };
   }
-  if (score >= 65) {
+  if (score >= 6) {
     return {
-      label: 'Très Bon',
+      label: 'Bon deal',
       color: '#ffffff',        // white
       bgRing: 'rgba(255, 255, 255, 0.1)',
       glow: 'rgba(255, 255, 255, 0.15)',
@@ -38,9 +38,9 @@ function getScoreConfig(score: number) {
       borderColor: 'border-white/40',
     };
   }
-  if (score >= 50) {
+  if (score >= 4) {
     return {
-      label: 'Correct',
+      label: 'Moyen',
       color: '#a3a3a3',        // neutral-400
       bgRing: 'rgba(163, 163, 163, 0.1)',
       glow: 'rgba(163, 163, 163, 0.1)',
@@ -49,12 +49,12 @@ function getScoreConfig(score: number) {
     };
   }
   return {
-    label: 'Moyen',
-    color: '#525252',          // neutral-600
-    bgRing: 'rgba(82, 82, 82, 0.1)',
-    glow: 'rgba(82, 82, 82, 0.1)',
-    textColor: 'text-neutral-600',
-    borderColor: 'border-neutral-800',
+    label: 'À éviter',
+    color: '#9b1515',          // red
+    bgRing: 'rgba(155, 21, 21, 0.15)',
+    glow: 'rgba(155, 21, 21, 0.1)',
+    textColor: 'text-[#9b1515]',
+    borderColor: 'border-[#9b1515]',
   };
 }
 
@@ -67,10 +67,10 @@ export default function ScoreGauge({ score, variant = 'compact' }: ScoreGaugePro
   if (variant === 'compact') {
     const radius = 14;
     const circumference = 2 * Math.PI * radius;
-    const progress = (score / 100) * circumference;
+    const progress = (score / 10) * circumference;
 
     return (
-      <div className="flex items-center gap-2.5 py-2" title={`Score City Baddies: ${score}/100 — ${config.label}`}>
+      <div className="flex items-center gap-2.5 py-2" title={`Note City Baddies: ${score}/10 — ${config.label}`}>
         {/* Cercle score */}
         <div className="relative w-[36px] h-[36px] flex-shrink-0">
           <svg
@@ -122,7 +122,7 @@ export default function ScoreGauge({ score, variant = 'compact' }: ScoreGaugePro
   // ====== FULL: grande jauge pour la page deal detail ======
   const radius = 44;
   const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
+  const progress = (score / 10) * circumference;
 
   return (
     <div className="flex items-center gap-6">
@@ -165,7 +165,7 @@ export default function ScoreGauge({ score, variant = 'compact' }: ScoreGaugePro
           <span className={`text-2xl font-light tracking-tight ${config.textColor}`}>
             {score}
           </span>
-          <span className="text-[8px] text-neutral-600 uppercase tracking-[0.2em]">/100</span>
+          <span className="text-[8px] text-neutral-600 uppercase tracking-[0.2em]">/10</span>
         </div>
       </div>
 

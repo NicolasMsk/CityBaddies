@@ -15,6 +15,7 @@ import DealCard from '@/components/deals/DealCard';
 import DealFeedback from '@/components/deals/DealFeedback';
 import CommentSection from '@/components/comments/CommentSection';
 import DealImage from '@/components/deals/DealImage';
+import ScoreGauge from '@/components/deals/ScoreGauge';
 import { ArrowLeft, ArrowRight, ExternalLink, Store, Tag, Flame, Clock, BadgeCheck, Sparkles, Beaker, ScrollText, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -574,6 +575,13 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                       {tag.trim()}
                     </span>
                   ))}
+                </div>
+              )}
+
+              {/* City Baddies Score */}
+              {deal.score && deal.score >= 1 && (
+                <div className="mt-8 pt-6 border-t border-white/5">
+                  <ScoreGauge score={deal.score} variant="full" />
                 </div>
               )}
             </div>

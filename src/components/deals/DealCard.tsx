@@ -9,6 +9,7 @@ import { fr } from 'date-fns/locale';
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
+import ScoreGauge from './ScoreGauge';
 
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
@@ -307,8 +308,15 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
           </div>
         )}
 
+        {/* Score City Baddies */}
+        {deal.score && deal.score >= 40 && (
+          <div className="mt-auto">
+            <ScoreGauge score={deal.score} variant="compact" />
+          </div>
+        )}
+
         {/* Price Section */}
-        <div className="mt-auto pt-4 border-t border-dashed border-white/10">
+        <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-4 border-t border-dashed border-white/10`}>
           <div className="flex items-end justify-between mb-1">
             <div className="flex flex-col">
               <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">

@@ -147,7 +147,7 @@ export function ScoreBadge({ score }: { score: number }) {
   return (
     <div className={`${styles} px-2 py-1 text-[10px] font-bold uppercase tracking-[0.2em] inline-flex items-center gap-1.5 border`}>
       {icon}
-      <span>{score}</span>
+      <span>Note CB {score}</span>
     </div>
   );
 }

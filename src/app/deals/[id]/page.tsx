@@ -4,6 +4,7 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import CopyPromoButton from '@/components/deals/CopyPromoButton';
 
 // Force dynamic - pas de pré-rendu au build
 export const dynamic = 'force-dynamic';
@@ -611,12 +612,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   <div className="flex items-center gap-4 py-4 border-y border-white/10 my-6">
                      <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">Code Promo</span>
                      <code className="text-[#d4a855] font-mono text-lg">{deal.promoCode}</code>
-                     <button
-                        onClick={() => navigator.clipboard.writeText(deal.promoCode!)} 
-                        className="ml-auto text-xs underline text-neutral-400 hover:text-white"
-                      >
-                        COPIER
-                     </button>
+                     <CopyPromoButton promoCode={deal.promoCode!} />
                   </div>
                 )}
             </div>

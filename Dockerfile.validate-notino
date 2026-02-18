@@ -1,8 +1,5 @@
-# Dockerfile pour Cloud Run Job - Scoring LLM des deals (GPT-4o, pas de Playwright)
-FROM node:20-slim
-
-# Installer OpenSSL (requis par Prisma)
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Dockerfile pour Cloud Run Job - Validation Notino (avec Playwright)
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
 WORKDIR /app
 
@@ -19,10 +16,10 @@ RUN npm install -g tsx
 RUN npx prisma generate
 
 # Copier le code source nécessaire
-COPY src/scripts/cloud-jobs/score-deals.ts ./src/scripts/cloud-jobs/
+COPY src/scripts/cloud-jobs/validate-deals-notino.ts ./src/scripts/cloud-jobs/
 
 # Variables d'environnement (seront override par Cloud Run)
 ENV NODE_ENV=production
 
 # Commande d'exécution
-CMD ["npx", "tsx", "src/scripts/cloud-jobs/score-deals.ts"]
+CMD ["npx", "tsx", "src/scripts/cloud-jobs/validate-deals-notino.ts"]

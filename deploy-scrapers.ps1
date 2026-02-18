@@ -51,9 +51,21 @@ gcloud run jobs update scrape-marionnaud `
 Write-Host "  Marionnaud deploye!" -ForegroundColor Green
 Write-Host ""
 
+Write-Host "NOTINO" -ForegroundColor Yellow
+Write-Host "  Build & Push via Cloud Build..." -ForegroundColor Gray
+gcloud builds submit --config=cloudbuild-notino.yaml --substitutions=_IMAGE_TAG="$REGISTRY/scrape-notino:latest" --quiet
+Write-Host "  Update job..." -ForegroundColor Gray
+gcloud run jobs update scrape-notino `
+    --image="$REGISTRY/scrape-notino:latest" `
+    --region=$REGION `
+    --quiet
+Write-Host "  Notino deploye!" -ForegroundColor Green
+Write-Host ""
+
 Write-Host "Tous les scrapers sont deployes!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Pour tester:" -ForegroundColor Cyan
 Write-Host "  gcloud run jobs execute scrape-sephora --region=$REGION"
 Write-Host "  gcloud run jobs execute scrape-nocibe --region=$REGION"
 Write-Host "  gcloud run jobs execute scrape-marionnaud --region=$REGION"
+Write-Host "  gcloud run jobs execute scrape-notino --region=$REGION"

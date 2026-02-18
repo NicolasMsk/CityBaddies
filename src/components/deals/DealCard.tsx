@@ -209,8 +209,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             alt={`${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
-            quality={90}
-            unoptimized
+            quality={85}
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
           />
         ) : (

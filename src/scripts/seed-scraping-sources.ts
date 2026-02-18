@@ -75,6 +75,15 @@ const SEPHORA_SOURCES = generateSourcesFromJson('sephora', categoryLinks.sephora
 const NOCIBE_SOURCES = generateSourcesFromJson('nocibe', categoryLinks.nocibe || []);
 const MARIONNAUD_SOURCES = generateSourcesFromJson('marionnaud', categoryLinks.marionnaud || []);
 
+// Sources Notino (manuelles - pas de JSON, URLs fixes)
+const NOTINO_SOURCES = [
+  { url: 'https://www.notino.fr/parfums-promotions/', category: 'parfums', name: 'Parfums Promotions', type: 'promo', priority: 10 },
+  { url: 'https://www.notino.fr/cosmetiques/promotions/', category: 'maquillage', name: 'Cosmétiques Promotions', type: 'promo', priority: 10 },
+  { url: 'https://www.notino.fr/cosmetiques/produits-cosmetiques-decoratifs/', category: 'maquillage', name: 'Cosmétiques Décoratifs', type: 'promo', priority: 8 },
+  { url: 'https://www.notino.fr/cosmetiques/produits-capillaires/', category: 'cheveux', name: 'Produits Capillaires', type: 'promo', priority: 8 },
+  { url: 'https://www.notino.fr/cosmetiques/cosmetiques-visage/', category: 'soins-visage', name: 'Cosmétiques Visage', type: 'promo', priority: 8 },
+];
+
 async function seedScrapingSources() {
   console.log('🌱 Seeding des sources de scraping...\n');
 
@@ -116,6 +125,19 @@ async function seedScrapingSources() {
       },
     });
     console.log('✅ Marchand Marionnaud créé');
+  }
+
+  let notino = await prisma.merchant.findFirst({ where: { slug: 'notino' } });
+  if (!notino) {
+    notino = await prisma.merchant.create({
+      data: {
+        name: 'Notino',
+        slug: 'notino',
+        logoUrl: 'https://www.notino.fr/favicon.ico',
+        website: 'https://www.notino.fr',
+      },
+    });
+    console.log('✅ Marchand Notino créé');
   }
 
   // Ajouter les sources Sephora
@@ -196,18 +218,45 @@ async function seedScrapingSources() {
     console.log(`   ✓ ${source.name} (${source.type})`);
   }
 
+  // Ajouter les sources Notino
+  console.log('\n📦 Sources Notino:');
+  for (const source of NOTINO_SOURCES) {
+    await prisma.scrapingSource.upsert({
+      where: { url: source.url },
+      update: {
+        name: source.name,
+        category: source.category,
+        type: source.type,
+        priority: source.priority,
+        isActive: true,
+      },
+      create: {
+        merchantId: notino.id,
+        url: source.url,
+        name: source.name,
+        category: source.category,
+        type: source.type,
+        priority: source.priority,
+        maxProducts: 200,
+        isActive: true,
+      },
+    });
+    console.log(`   ✓ ${source.name} (${source.type})`);
+  }
+
   // Afficher le résumé
   const totalSources = await prisma.scrapingSource.count();
   const sephoraSources = await prisma.scrapingSource.count({ where: { merchantId: sephora.id } });
   const nocibeSources = await prisma.scrapingSource.count({ where: { merchantId: nocibe.id } });
   const marionnaudSources = await prisma.scrapingSource.count({ where: { merchantId: marionnaud.id } });
+  const notinoSources = await prisma.scrapingSource.count({ where: { merchantId: notino.id } });
 
   console.log('\n📊 Résumé:');
   console.log(`   Total: ${totalSources} sources`);
   console.log(`   Sephora: ${sephoraSources} sources`);
   console.log(`   Nocibé: ${nocibeSources} sources`);
   console.log(`   Marionnaud: ${marionnaudSources} sources`);
-  console.log(`   Nocibé: ${nocibeSources} sources`);
+  console.log(`   Notino: ${notinoSources} sources`);
   console.log('\n✅ Seeding terminé!');
 }
 

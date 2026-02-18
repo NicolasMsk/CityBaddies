@@ -19,6 +19,9 @@ export type { SephoraProduct, SephoraScrapingResult, SephoraConfig } from './sep
 export { MarionnaudScraper } from './marionnaud';
 export type { MarionnaudProduct, MarionnaudScrapingResult, MarionnaudConfig } from './marionnaud';
 
+export { NotinoScraper } from './notino';
+export type { NotinoProduct, NotinoScrapingResult, NotinoConfig } from './notino';
+
 // Recherche de prix concurrents (nouveau système modulaire)
 export { searchCompetitorPrice, searchAllCompetitors, closeBrowser } from './competitor-price-search';
 export type { CompetitorSite } from './competitor-price-search';

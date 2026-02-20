@@ -91,8 +91,8 @@ async function getHomeData() {
       },
     },
     orderBy: [
+      { discountPercent: 'desc' },
       { score: 'desc' },
-      { createdAt: 'desc' },
     ],
     take: 8,
   });
@@ -160,7 +160,10 @@ async function getHomeData() {
               },
             },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: [
+            { discountPercent: 'desc' },
+            { createdAt: 'desc' },
+          ],
           take: dealsPerMerchant,
         })
       )

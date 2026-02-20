@@ -10,6 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
 import ScoreGauge from './ScoreGauge';
+import { cleanImageUrl } from '@/lib/utils/image';
 
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
@@ -203,9 +204,9 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
       {/* Image Container - Hauteur fixe pour uniformiser */}
       <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
-        {deal.imageUrl ? (
+        {cleanImageUrl(deal.imageUrl) ? (
           <Image
-            src={deal.imageUrl}
+            src={cleanImageUrl(deal.imageUrl)!}
             alt={`${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"

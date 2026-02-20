@@ -8,6 +8,7 @@ import PriceChart from '@/components/deals/PriceChart';
 import { ArrowLeft } from 'lucide-react';
 import { generateBreadcrumbSchema } from '@/lib/seo-config';
 import ProductPricing from '@/components/deals/ProductPricing';
+import { cleanImageUrl } from '@/lib/utils/image';
 
 // Force dynamic
 export const dynamic = 'force-dynamic';
@@ -220,9 +221,9 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
           <div className="grid md:grid-cols-2 gap-12 md:gap-20 mb-24">
             {/* Image */}
             <div className="relative aspect-[4/5] bg-transparent flex items-center justify-center">
-              {bestDeal?.imageUrl ? (
+              {cleanImageUrl(bestDeal?.imageUrl) ? (
                 <Image
-                  src={bestDeal.imageUrl}
+                  src={cleanImageUrl(bestDeal.imageUrl)!}
                   alt={`${brandName} ${product.name}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"

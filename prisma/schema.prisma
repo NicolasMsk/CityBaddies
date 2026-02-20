@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // Statut d'un deal dans le workflow Import → Validate → Enrich
@@ -109,9 +110,8 @@ model Merchant {
   slug             String            @unique
   logoUrl          String?
   website          String
-  products         Product[]
+  deals            Deal[]
   scrapingSources  ScrapingSource[]
-  competitorPrices CompetitorPrice[]
   promoCodes       PromoCode[]       @relation("MerchantPromoCodes")
   promoPage        MerchantPromoPage?
   createdAt        DateTime          @default(now())
@@ -149,9 +149,6 @@ model Product {
   category             Category          @relation(fields: [categoryId], references: [id])
   subcategory          String?           // Sous-catégorie (ex: "levres", "shampoings", etc.)
   subsubcategory       String?           // Sous-sous-catégorie (ex: "rouge-a-levres", "shampoing-hydratant")
-  merchantId           String
-  merchant             Merchant          @relation(fields: [merchantId], references: [id])
-  productUrl           String
   isActive             Boolean           @default(true)
   
   // Données enrichies (scraping)
@@ -169,7 +166,6 @@ model Product {
 
   // Index simples
   @@index([categoryId])
-  @@index([merchantId])
   @@index([brandId])
   @@index([subcategory])
   @@index([subsubcategory])
@@ -234,6 +230,12 @@ model Deal {
   variantId       String?
   variant         ProductVariant? @relation(fields: [variantId], references: [id])
   
+  // Marchand et URLs
+  merchantId      String
+  merchant        Merchant   @relation(fields: [merchantId], references: [id])
+  imageUrl        String?    // Image du produit chez ce marchand
+  productUrl      String?    // URL du produit chez ce marchand
+  
   title           String
   refinedTitle    String?    // Titre optimisé par IA (ex: "L'Oréal Pro - Crème Hydratante Curl (200ml)")
   description     String?
@@ -274,7 +276,6 @@ model Deal {
   favorites           Favorite[]
   voteRecords         Vote[]
   comments            Comment[]
-  competitorPrices    CompetitorPrice[]      // Prix du même produit chez les concurrents
   buyingGuideProducts BuyingGuideProduct[]   // Apparitions dans les guides d'achat
   
   createdAt       DateTime   @default(now())
@@ -283,6 +284,7 @@ model Deal {
   // Index simples
   @@index([productId])
   @@index([variantId])
+  @@index([merchantId])
   @@index([status])
   @@index([isHot])
   @@index([brandTier])
@@ -335,32 +337,7 @@ model ScrapingSource {
   @@index([type])
 }
 
-// Prix des concurrents pour un même produit (ex: prix Sephora pour un deal Nocibé)
-model CompetitorPrice {
-  id              String   @id @default(cuid())
-  dealId          String
-  deal            Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  merchantId      String
-  merchant        Merchant @relation(fields: [merchantId], references: [id])
-  merchantName    String   // Nom du concurrent (ex: "Sephora", "Nocibé")
-  productName     String   // Nom du produit trouvé chez le concurrent
-  productUrl      String   // URL du produit chez le concurrent
-  currentPrice    Float    // Prix actuel
-  originalPrice   Float?   // Prix barré (si promo)
-  discountPercent Int?     // % de réduction (si promo)
-  volume          String?  // Contenance (ex: "50 ml")
-  inStock         Boolean  @default(true)
-  matchConfidence Int?     // Score de confiance du match (0-100)
-  matchMethod     String?  // Méthode: "internal_search", "serper_fallback"
-  lastChecked     DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 
-  @@unique([dealId, merchantId])
-  @@index([dealId])
-  @@index([merchantId])
-  @@index([lastChecked])
-}
 
 // ============================================================================
 // GUIDES D'ACHAT (générés automatiquement par IA)

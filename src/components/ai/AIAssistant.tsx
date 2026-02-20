@@ -246,7 +246,7 @@ export default function AIAssistant() {
                     {currentResponse.deals.map((deal) => (
                       <Link
                         key={deal.id}
-                        href={`/deals/${deal.id}`}
+                        href={`/produits?search=${encodeURIComponent(deal.title)}`}
                         className="group flex-shrink-0 w-[140px] snap-start"
                       >
                         <div className="bg-[#151515] rounded-lg overflow-hidden border border-white/5 hover:border-[#d4a855]/50 transition-all duration-300 shadow-lg group-hover:shadow-[#d4a855]/5">
@@ -311,7 +311,7 @@ export default function AIAssistant() {
                               const urlKey = paramMap[k] || k;
                               params.set(urlKey, Array.isArray(v) ? v.join(',') : String(v));
                             });
-                          return `/deals?${params.toString()}`;
+                          return `/produits?${params.toString()}`;
                         })()}
                         className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white hover:text-[#d4a855] transition-colors group/link"
                         >

@@ -56,25 +56,25 @@ async function clean() {
   console.log('✅ Base nettoyée (produits, deals, historique)');
 }
 
-// Trouver et supprimer les produits dupliqués (même URL)
+// Trouver et supprimer les produits dupliqués (même slug)
 async function dedupe() {
-  console.log('🔍 Recherche des produits dupliqués par URL...\n');
+  console.log('🔍 Recherche des produits dupliqués par slug...\n');
   
   const products = await prisma.product.findMany({
     include: { deals: true, priceHistory: true },
     orderBy: { createdAt: 'asc' }, // Garder le plus ancien
   });
   
-  const seen = new Map<string, string>(); // URL -> premier productId
+  const seen = new Map<string, string>(); // slug -> premier productId
   const toDelete: string[] = [];
   
   for (const product of products) {
-    if (seen.has(product.productUrl)) {
+    if (seen.has(product.slug)) {
       toDelete.push(product.id);
       console.log(`  ❌ Duplicata: ${product.name.substring(0, 50)}...`);
-      console.log(`     URL: ${product.productUrl.substring(0, 70)}...`);
+      console.log(`     Slug: ${product.slug}`);
     } else {
-      seen.set(product.productUrl, product.id);
+      seen.set(product.slug, product.id);
     }
   }
   

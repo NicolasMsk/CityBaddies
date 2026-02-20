@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${BASE_URL}/deals`,
+      url: `${BASE_URL}/produits`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
       priority: 0.9,
@@ -82,9 +82,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // --- SEO Landing Pages : /deals?category=slug (indexables) ---
+  // --- SEO Landing Pages : /produits?category=slug (indexables) ---
   const dealsCategoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${BASE_URL}/deals?category=${category.slug}`,
+    url: `${BASE_URL}/produits?category=${category.slug}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 0.8,
@@ -120,61 +120,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .map(([key]) => {
       const [categorySlug, brand] = key.split('|');
       return {
-        url: `${BASE_URL}/deals?category=${categorySlug}&brand=${encodeURIComponent(brand)}`,
+        url: `${BASE_URL}/produits?category=${categorySlug}&brand=${encodeURIComponent(brand)}`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
         priority: 0.7,
       };
     });
 
-  // Récupérer les deals actifs (haute priorité)
-  const activeDeals = await prisma.deal.findMany({
+  // Récupérer les produits avec des deals actifs (pages produit)
+  const activeProducts = await prisma.product.findMany({
     where: {
-      status: 'ACTIVE',
+      deals: { some: { status: 'ACTIVE' } },
     },
     select: {
-      id: true,
+      slug: true,
       updatedAt: true,
-      score: true,
+      deals: {
+        where: { status: 'ACTIVE' },
+        select: { score: true },
+        orderBy: { score: 'desc' },
+        take: 1,
+      },
     },
-    orderBy: [
-      { score: 'desc' },
-      { createdAt: 'desc' },
-    ],
     take: 500,
   });
 
-  // Récupérer les deals expirés (priorité basse, mais on les garde pour le SEO)
-  const expiredDeals = await prisma.deal.findMany({
-    where: {
-      status: 'EXPIRED',
-    },
-    select: {
-      id: true,
-      updatedAt: true,
-      score: true,
-    },
-    orderBy: [
-      { score: 'desc' },
-      { updatedAt: 'desc' },
-    ],
-    take: 1000,
-  });
-
-  const dealPages: MetadataRoute.Sitemap = [
-    ...activeDeals.map((deal) => ({
-      url: `${BASE_URL}/deals/${deal.id}`,
-      lastModified: deal.updatedAt || new Date(),
-      changeFrequency: 'daily' as const,
-      priority: deal.score && deal.score > 50 ? 0.8 : 0.6,
-    })),
-    ...expiredDeals.map((deal) => ({
-      url: `${BASE_URL}/deals/${deal.id}`,
-      lastModified: deal.updatedAt || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.3,
-    })),
-  ];
+  const productPages: MetadataRoute.Sitemap = activeProducts.map((product) => ({
+    url: `${BASE_URL}/produits/${product.slug}`,
+    lastModified: product.updatedAt || new Date(),
+    changeFrequency: 'daily' as const,
+    priority: product.deals[0]?.score && product.deals[0].score > 50 ? 0.8 : 0.6,
+  }));
 
   // Récupérer les guides d'achat publiés
   const guides = await prisma.buyingGuide.findMany({
@@ -216,9 +192,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticPages,
     ...categoryPages,
-    ...dealsCategoryPages,   // /deals?category=parfums (indexable landing pages)
-    ...dealsBrandPages,       // /deals?category=parfums&brand=Guerlain (premium)
-    ...dealPages,
+    ...dealsCategoryPages,   // /produits?category=parfums (indexable landing pages)
+    ...dealsBrandPages,       // /produits?category=parfums&brand=Guerlain (premium)
+    ...productPages,
     ...guidePages,
     ...promoCodePages,        // /codes-promo + /codes-promo/sephora, nocibe, etc.
   ];

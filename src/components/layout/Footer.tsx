@@ -15,9 +15,9 @@ export default function Footer() {
 
   const footerLinks = {
     'Explorer': [
-      { label: 'Tous les deals', href: '/deals' },
+      { label: 'Tous les produits', href: '/produits' },
       { label: 'Guides d\'achat', href: '/guides' },
-      { label: 'Tendances', href: '/deals?hotOnly=true' },
+      { label: 'Tendances', href: '/produits?hotOnly=true' },
       { label: 'Par catégorie', href: '/categories' },
     ],
     'Catégories': [

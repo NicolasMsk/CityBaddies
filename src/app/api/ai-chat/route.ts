@@ -195,7 +195,7 @@ async function executeSearchDeals(params: {
 }) {
   const take = Math.min(params.limit || 8, 15);
   const orderBy = getSortOrder(params.sortBy);
-  const includeRelations = { product: { include: { category: true, merchant: true } } };
+  const includeRelations = { merchant: true, product: { include: { category: true } } };
 
   // --- Construire le filtre de base (prix, luxe, marques) ---
   const baseWhere: any = { status: 'ACTIVE' };
@@ -341,16 +341,16 @@ export async function POST(request: NextRequest) {
           id: deal.id,
           title: deal.refinedTitle || deal.title,
           brand: deal.product.brand,
-          imageUrl: deal.product.imageUrl,
+          imageUrl: deal.imageUrl,
           dealPrice: deal.dealPrice,
           originalPrice: deal.originalPrice,
           discountPercent: deal.discountPercent,
           merchant: {
-            name: deal.product.merchant.name,
-            slug: deal.product.merchant.slug,
+            name: deal.merchant.name,
+            slug: deal.merchant.slug,
           },
           category: deal.product.category?.name,
-          productUrl: deal.product.productUrl,
+          productUrl: deal.productUrl,
         }));
 
         // Générer un message adapté au résultat — TOUJOURS honnête

@@ -167,14 +167,14 @@ export default function SearchBar({
         } else if (selectedIndex >= matchingCategories.length && selectedIndex < matchingCategories.length + brands.length) {
           // Sélectionner une marque
           const brandIndex = selectedIndex - matchingCategories.length;
-          window.location.href = `/deals?search=${encodeURIComponent(brands[brandIndex].name)}`;
+          window.location.href = `/produits?search=${encodeURIComponent(brands[brandIndex].name)}`;
         } else if (selectedIndex >= matchingCategories.length + brands.length && selectedIndex < totalItems) {
           // Sélectionner un deal
           const dealIndex = selectedIndex - matchingCategories.length - brands.length;
-          window.location.href = `/deals/${results[dealIndex].id}`;
+          window.location.href = `/produits?search=${encodeURIComponent(results[dealIndex].title)}`;
         } else if (query.trim()) {
           // Aller à la page de résultats
-          window.location.href = `/deals?search=${encodeURIComponent(query)}`;
+          window.location.href = `/produits?search=${encodeURIComponent(query)}`;
         }
         break;
       case 'Escape':
@@ -199,7 +199,7 @@ export default function SearchBar({
 
   const handleViewAll = () => {
     if (query.trim()) {
-      window.location.href = `/deals?search=${encodeURIComponent(query)}`;
+      window.location.href = `/produits?search=${encodeURIComponent(query)}`;
     }
   };
 
@@ -271,7 +271,7 @@ export default function SearchBar({
                 >
                   <Sparkles className="h-4 w-4 text-[#d4a855]" />
                   <span className="font-medium">{cat.label}</span>
-                  <span className="text-neutral-500 text-xs ml-auto">→ Voir les deals</span>
+                  <span className="text-neutral-500 text-xs ml-auto">→ Voir les produits</span>
                 </Link>
               ))}
             </div>
@@ -286,7 +286,7 @@ export default function SearchBar({
               {brands.map((brand, index) => (
                 <Link
                   key={brand.slug}
-                  href={`/deals?search=${encodeURIComponent(brand.name)}`}
+                  href={`/produits?search=${encodeURIComponent(brand.name)}`}
                   onClick={handleResultClick}
                   className={`
                     flex items-center gap-2 px-3 py-3 text-sm
@@ -298,7 +298,7 @@ export default function SearchBar({
                   `}
                 >
                   <span className="text-[#9b1515] font-medium">{brand.name}</span>
-                  <span className="text-neutral-500 text-xs ml-auto">→ Voir tous les deals</span>
+                  <span className="text-neutral-500 text-xs ml-auto">→ Voir les produits</span>
                 </Link>
               ))}
             </div>
@@ -313,7 +313,7 @@ export default function SearchBar({
               {results.map((result, index) => (
                 <Link
                   key={result.id}
-                  href={`/deals/${result.id}`}
+                  href={`/produits?search=${encodeURIComponent(result.title)}`}
                   onClick={handleResultClick}
                   className={`
                     flex items-center gap-3 p-2

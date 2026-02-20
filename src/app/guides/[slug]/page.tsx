@@ -87,8 +87,9 @@ async function getGuide(slug: string) {
         include: {
           deal: {
             include: {
+              merchant: true,
               product: {
-                include: { brandRef: true, category: true, merchant: true },
+                include: { brandRef: true, category: true },
               },
             },
           },
@@ -236,10 +237,10 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                        {/* Subtle Spotlight Gradient */}
                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,rgba(240,240,240,1)_100%)] opacity-30" />
                        
-                       {product.imageUrl && (
+                       {item.deal.imageUrl && (
                          <div className="relative w-[80%] h-[80%] transition-transform duration-700 group-hover/img:scale-105">
                            <Image 
-                             src={product.imageUrl} 
+                             src={item.deal.imageUrl} 
                              alt={product.name}
                              fill
                              className="object-contain"
@@ -354,7 +355,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                           </div>
                           
                           <a 
-                            href={product.productUrl ? `/api/redirect?url=${encodeURIComponent(product.productUrl)}` : `/deals/${item.deal.id}`}
+                            href={item.deal.productUrl ? `/api/redirect?url=${encodeURIComponent(item.deal.productUrl)}` : `/produits?search=${encodeURIComponent(item.deal.product?.name || item.deal.title || '')}`}
                             target="_blank"
                             rel="nofollow sponsored noopener noreferrer" 
                             className={`group/btn relative px-8 py-4 rounded-full font-black text-[12px] uppercase tracking-[0.1em] transition-all duration-500 flex items-center gap-3 overflow-hidden ${rank === 1 ? 'bg-[#d4a855] text-black shadow-[0_10px_30px_-10px_rgba(212,168,85,0.3)]' : 'bg-white text-black hover:shadow-xl'}`}

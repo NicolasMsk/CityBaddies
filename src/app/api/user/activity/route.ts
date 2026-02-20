@@ -18,11 +18,8 @@ export async function GET() {
       include: {
         deal: {
           include: {
-            product: {
-              include: {
-                merchant: true,
-              },
-            },
+            merchant: true,
+            product: true,
           },
         },
       },
@@ -36,11 +33,7 @@ export async function GET() {
       include: {
         deal: {
           include: {
-            product: {
-              include: {
-                merchant: true,
-              },
-            },
+            product: true,
           },
         },
       },

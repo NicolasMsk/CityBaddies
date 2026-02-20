@@ -21,11 +21,11 @@ export default function NotFound() {
             Retour à l&apos;accueil
           </Link>
           <Link
-            href="/deals"
+            href="/produits"
             className="flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-white font-semibold hover:border-bordeaux-600/40 transition-all"
           >
             <Search className="h-5 w-5" />
-            Voir les deals
+            Voir les produits
           </Link>
         </div>
       </div>

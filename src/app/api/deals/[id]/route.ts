@@ -11,13 +11,13 @@ export async function GET(
     const deal = await prisma.deal.findUnique({
       where: { id },
       include: {
+        merchant: true,
         product: {
           include: {
             category: true,
-            merchant: true,
             priceHistory: {
               orderBy: { date: 'asc' },
-              take: 90, // 3 mois d'historique
+              take: 90,
             },
           },
         },

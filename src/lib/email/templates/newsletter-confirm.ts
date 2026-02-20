@@ -74,8 +74,8 @@ export function getNewsletterConfirmEmailHtml({ email }: NewsletterConfirmEmailP
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                 <tr>
                   <td style="background-color: ${colors.gold}; padding: 18px 50px;">
-                    <a href="https://beautydeals.fr/deals" style="color: #000000; text-decoration: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; display: block;">
-                      Voir les deals
+                    <a href="https://beautydeals.fr/produits" style="color: #000000; text-decoration: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; display: block;">
+                      Voir les produits
                     </a>
                   </td>
                 </tr>
@@ -151,7 +151,7 @@ Tu es dans la liste !
 Merci de t'être inscrit(e) à notre newsletter.
 Tu recevras chaque semaine notre sélection des meilleurs deals beauté.
 
-→ VOIR LES DEALS : https://beautydeals.fr/deals
+→ VOIR LES PRODUITS : https://beautydeals.fr/produits
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 

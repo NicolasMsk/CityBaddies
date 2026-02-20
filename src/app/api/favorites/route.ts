@@ -17,10 +17,10 @@ export async function GET() {
       include: {
         deal: {
           include: {
+            merchant: true,
             product: {
               include: {
                 category: true,
-                merchant: true,
               },
             },
           },

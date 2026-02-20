@@ -27,12 +27,9 @@ export interface Product {
   name: string;
   slug: string;
   description?: string;
-  imageUrl?: string;
   brand?: string;
   category: Category;
   subcategory?: string;
-  merchant: Merchant;
-  productUrl: string;
   currentPrice: number;
   originalPrice?: number;
   discountPercent?: number;
@@ -62,6 +59,9 @@ export interface PriceStats {
 export interface Deal {
   id: string;
   product: Product;
+  merchant: Merchant;
+  imageUrl?: string;
+  productUrl?: string;
   title: string;
   refinedTitle?: string;
   description?: string;

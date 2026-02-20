@@ -24,12 +24,6 @@ export async function GET(request: Request) {
       };
     }
 
-    if (merchant) {
-      where.merchant = {
-        slug: merchant,
-      };
-    }
-
     if (search) {
       where.OR = [
         { name: { contains: search } },
@@ -50,7 +44,6 @@ export async function GET(request: Request) {
         where,
         include: {
           category: true,
-          merchant: true,
         },
         orderBy: {
           [sortBy]: sortOrder,

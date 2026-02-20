@@ -29,10 +29,10 @@ export async function PATCH(
       where: { id },
       data: body,
       include: {
+        merchant: true,
         product: {
           include: {
             category: true,
-            merchant: true,
           },
         },
         author: {

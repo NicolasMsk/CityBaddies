@@ -58,10 +58,11 @@ interface DashboardData {
     votes: number;
     isHot: boolean;
     createdAt: string;
+    imageUrl: string;
+    merchant: { name: string };
     product: {
       name: string;
-      imageUrl: string;
-      merchant: { name: string };
+      slug: string;
       category: { name: string };
     };
   }>;
@@ -72,10 +73,10 @@ interface DashboardData {
     originalPrice: number;
     votes: number;
     favoritesCount: number;
+    imageUrl: string;
+    merchant: { name: string };
     product: {
       name: string;
-      imageUrl: string;
-      merchant: { name: string };
     };
   }>;
   categoryStats: Array<{ name: string; slug: string; productsCount: number }>;
@@ -384,7 +385,7 @@ export default function DashboardPage() {
               {data.topDeals.map((deal, index) => (
                 <Link
                   key={deal.id}
-                  href={`/deals/${deal.id}`}
+                  href={`/produits/${deal.product.slug}`}
                   className="group flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-800"
                 >
                   <div className="flex-shrink-0 w-8 text-center font-bold text-zinc-600 font-mono">
@@ -392,9 +393,9 @@ export default function DashboardPage() {
                   </div>
                   
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 border border-zinc-700">
-                    {deal.product.imageUrl ? (
+                    {deal.imageUrl ? (
                       <Image
-                        src={deal.product.imageUrl}
+                        src={deal.imageUrl}
                         alt={deal.product.name}
                         fill
                         className="object-cover"
@@ -411,7 +412,7 @@ export default function DashboardPage() {
                       {deal.title}
                     </h4>
                     <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
-                      <span className="text-zinc-300">{deal.product.merchant.name}</span>
+                      <span className="text-zinc-300">{deal.merchant.name}</span>
                       <span>•</span>
                       <span>{deal.product.category.name}</span>
                     </div>

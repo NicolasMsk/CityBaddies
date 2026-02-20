@@ -121,7 +121,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
     e.preventDefault();
     e.stopPropagation();
     
-    const shareUrl = `${window.location.origin}/deals/${deal.id}`;
+    const shareUrl = `${window.location.origin}/produits/${deal.product.slug}`;
     
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -203,9 +203,9 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
       {/* Image Container - Hauteur fixe pour uniformiser */}
       <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
-        {deal.product.imageUrl ? (
+        {deal.imageUrl ? (
           <Image
-            src={deal.product.imageUrl}
+            src={deal.imageUrl}
             alt={`${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
@@ -251,10 +251,12 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
           </button>
         </div>
 
-        {/* Discount Badge - Sharp */}
-        <div className="absolute top-0 left-0 bg-[#9b1515] text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-widest">
-          -{deal.discountPercent}%
-        </div>
+        {/* Discount Badge - Sharp (only if discount exists) */}
+        {deal.discountPercent > 0 && (
+          <div className="absolute top-0 left-0 bg-[#9b1515] text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-widest">
+            -{deal.discountPercent}%
+          </div>
+        )}
 
         {/* Voting - Bottom Right Overlay */}
         <div className="absolute bottom-0 right-0 p-3">
@@ -283,7 +285,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         {/* Brand & Meta */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4a855]">
-            {deal.product.brand || deal.product.merchant.name}
+            {deal.product.brand || deal.merchant.name}
           </span>
           {deal.isHot && (
             <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#9b1515] font-bold animate-pulse">
@@ -294,7 +296,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         </div>
 
         {/* Title */}
-        <Link href={`/deals/${deal.id}`} className="group/title">
+        <Link href={`/produits/${deal.product.slug}`} className="group/title">
           <h3 className="font-light text-sm text-white mb-3 leading-relaxed group-hover/title:text-[#d4a855] transition-colors line-clamp-2 min-h-[2.5rem]">
             {capitalizeFirstWord(deal.refinedTitle || deal.product.name)}
           </h3>
@@ -318,28 +320,30 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-4 border-t border-dashed border-white/10`}>
           <div className="flex items-end justify-between mb-1">
             <div className="flex flex-col">
-              <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">
-                {deal.originalPrice.toFixed(2)} €
-              </span>
+              {deal.discountPercent > 0 && (
+                <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">
+                  {deal.originalPrice.toFixed(2)} €
+                </span>
+              )}
               <span className="text-xl font-light text-white tracking-tight leading-none">
                 {deal.dealPrice.toFixed(2)} <span className="text-sm align-top">€</span>
               </span>
             </div>
             
             <a
-              href={`/api/redirect?url=${encodeURIComponent(deal.product.productUrl)}`}
+              href={`/api/redirect?url=${encodeURIComponent(deal.productUrl || '')}`}
               target="_blank"
               rel="nofollow sponsored noopener"
               className="flex items-center gap-2 bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"
             >
-              Voir le Deal
+              Voir le prix
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>
           
           {/* Unit Price & Info */}
           <div className="flex items-center gap-2 text-[10px] text-neutral-600 uppercase tracking-wide mt-2">
-            <span>{deal.product.merchant.name}</span>
+            <span>{deal.merchant.name}</span>
             <span>•</span>
             {deal.volume && (
               <span>{deal.volume}</span>

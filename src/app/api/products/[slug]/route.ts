@@ -12,12 +12,14 @@ export async function GET(
       where: { slug },
       include: {
         category: true,
-        merchant: true,
         priceHistory: {
           orderBy: { date: 'asc' },
         },
         deals: {
           where: { status: 'ACTIVE' },
+          include: {
+            merchant: true,
+          },
           orderBy: { createdAt: 'desc' },
           take: 5,
         },

@@ -80,11 +80,12 @@ export async function GET() {
         votes: true,
         isHot: true,
         createdAt: true,
+        imageUrl: true,
+        merchant: { select: { name: true } },
         product: {
           select: {
             name: true,
-            imageUrl: true,
-            merchant: { select: { name: true } },
+            slug: true,
             category: { select: { name: true } },
           },
         },
@@ -102,11 +103,11 @@ export async function GET() {
         originalPrice: true,
         votes: true,
         _count: { select: { favorites: true } },
+        imageUrl: true,
+        merchant: { select: { name: true } },
         product: {
           select: {
             name: true,
-            imageUrl: true,
-            merchant: { select: { name: true } },
           },
         },
       },
@@ -135,11 +136,11 @@ export async function GET() {
         name: true,
         slug: true,
         _count: {
-          select: { products: true },
+          select: { deals: true },
         },
       },
       orderBy: {
-        products: { _count: 'desc' },
+        deals: { _count: 'desc' },
       },
     });
 
@@ -225,7 +226,7 @@ export async function GET() {
       merchantStats: merchantStats.map(m => ({
         name: m.name,
         slug: m.slug,
-        productsCount: m._count.products,
+        productsCount: m._count.deals,
       })),
       recentNewsletterSignups,
       recentUsers,

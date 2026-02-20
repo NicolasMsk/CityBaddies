@@ -172,9 +172,9 @@ export default async function GuidesPage() {
                         <div className="flex -space-x-2">
                           {guide.products.slice(0, 3).map((gp) => (
                              <div key={gp.id} className="relative h-8 w-8 rounded-full border border-[#111] bg-white overflow-hidden">
-                               {gp.deal.product.imageUrl && (
+                               {gp.deal.imageUrl && (
                                  <Image 
-                                   src={gp.deal.product.imageUrl} 
+                                   src={gp.deal.imageUrl} 
                                    alt="" 
                                    fill 
                                    className="object-cover"

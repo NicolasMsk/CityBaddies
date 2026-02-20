@@ -98,10 +98,10 @@ export async function GET(request: Request) {
       prisma.deal.findMany({
         where,
         include: {
+          merchant: true,
           product: {
             include: {
               category: true,
-              merchant: true,
             },
           },
         },
@@ -174,10 +174,7 @@ export async function POST(request: Request) {
         name: title,
         slug: `deal-${Date.now()}`,
         brand: 'Non spécifié',
-        productUrl: url,
-        imageUrl: imageUrl || null,
         categoryId: categoryId,
-        merchantId: merchant.id,
       },
     });
 
@@ -196,16 +193,19 @@ export async function POST(request: Request) {
         discountAmount,
         promoCode: promoCode || null,
         productId: product.id,
+        merchantId: merchant.id,
+        imageUrl: imageUrl || null,
+        productUrl: url,
         authorId: user.id,
         isHot: false,
         status: 'PENDING',
         endDate: expiresAt ? new Date(expiresAt) : null,
       },
       include: {
+        merchant: true,
         product: {
           include: {
             category: true,
-            merchant: true,
           },
         },
         author: {

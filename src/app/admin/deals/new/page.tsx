@@ -44,21 +44,17 @@ export default function NewDealPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [catRes, prodRes] = await Promise.all([
+      const [catRes, merchantRes] = await Promise.all([
         fetch('/api/categories'),
-        fetch('/api/products?limit=100'),
+        fetch('/api/merchants'),
       ]);
 
       if (catRes.ok) {
         setCategories(await catRes.json());
       }
 
-      if (prodRes.ok) {
-        const data = await prodRes.json();
-        const uniqueMerchants = Array.from(
-          new Map(data.products.map((p: any) => [p.merchant.id, p.merchant])).values()
-        ) as Merchant[];
-        setMerchants(uniqueMerchants);
+      if (merchantRes.ok) {
+        setMerchants(await merchantRes.json());
       }
     }
     loadData();
@@ -91,7 +87,7 @@ export default function NewDealPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/deals');
+        router.push('/produits');
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -123,11 +119,11 @@ export default function NewDealPage() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/deals"
+            href="/produits"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            Retour aux deals
+            Retour aux produits
           </Link>
           <h1 className="text-3xl font-bold text-white">Ajouter un deal</h1>
           <p className="text-slate-400 mt-2">Remplis les informations du nouveau deal</p>

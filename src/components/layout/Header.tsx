@@ -136,14 +136,14 @@ export default function Header() {
               onMouseLeave={closeMega}
             >
               <Link
-                href="/deals"
+                href="/produits"
                 className={`h-full flex items-center gap-1.5 px-5 text-[11px] font-bold tracking-[0.15em] uppercase transition-colors border-b-2 ${
                   megaOpen
                     ? 'text-white border-[#9b1515]'
                     : 'text-neutral-400 border-transparent hover:text-white hover:border-[#9b1515]'
                 }`}
               >
-                Deals
+                Produits
                 <svg className={`w-3 h-3 transition-transform duration-200 ${megaOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -208,11 +208,11 @@ export default function Header() {
               {/* Left column: category tabs */}
               <div className="w-52 shrink-0 border-r border-white/5 pr-4 space-y-0.5">
                 <Link
-                  href="/deals"
+                  href="/produits"
                   onClick={() => setMegaOpen(false)}
                   className="block px-3 py-2 text-[10px] font-bold tracking-[0.2em] uppercase text-[#d4a855] hover:bg-white/5 transition-colors rounded-sm mb-2"
                 >
-                  Tous les deals →
+                  Tous les produits →
                 </Link>
                 {dealCategories.map((cat) => (
                   <Link
@@ -250,7 +250,7 @@ export default function Header() {
                   {activeCat.subcategories.map((sub) => (
                     <Link
                       key={sub.slug}
-                      href={`/deals?category=${activeCat.slug}&subcategory=${sub.slug}`}
+                      href={`/produits?category=${activeCat.slug}&subcategory=${sub.slug}`}
                       onClick={() => setMegaOpen(false)}
                       className="group flex items-center gap-2 py-2.5 text-sm text-neutral-400 hover:text-white transition-colors"
                     >
@@ -286,7 +286,7 @@ export default function Header() {
                 onClick={() => setMobileDealOpen(!mobileDealOpen)}
                 className="w-full flex items-center justify-between px-3 py-3.5 text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-300 hover:text-white hover:bg-white/5 transition-all rounded-sm"
               >
-                Deals
+                Produits
                 <svg className={`w-4 h-4 transition-transform duration-200 ${mobileDealOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -295,11 +295,11 @@ export default function Header() {
               {mobileDealOpen && (
                 <div className="ml-3 border-l border-white/10 pl-3 py-1 space-y-0.5">
                   <Link
-                    href="/deals"
+                    href="/produits"
                     onClick={() => setMobileOpen(false)}
                     className="block px-3 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase text-[#d4a855] hover:bg-white/5 rounded-sm"
                   >
-                    Tous les deals →
+                    Tous les produits →
                   </Link>
                   {dealCategories.map((cat) => (
                     <Link

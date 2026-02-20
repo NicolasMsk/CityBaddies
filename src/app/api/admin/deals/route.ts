@@ -58,11 +58,8 @@ export async function POST(request: Request) {
         name: productName,
         slug,
         description: description || null,
-        imageUrl: imageUrl || null,
         brand: brand || null,
-        productUrl,
         categoryId,
-        merchantId,
       },
     });
 
@@ -93,6 +90,9 @@ export async function POST(request: Request) {
         discountAmount,
         promoCode: promoCode || null,
         productId: product.id,
+        merchantId,
+        imageUrl: imageUrl || null,
+        productUrl,
         variantId: variant?.id || null,
         volume: volume || null,
         volumeValue: priceInfo?.volumeValue || null,
@@ -103,10 +103,10 @@ export async function POST(request: Request) {
         views: 0,
       },
       include: {
+        merchant: true,
         product: {
           include: {
             category: true,
-            merchant: true,
           },
         },
       },

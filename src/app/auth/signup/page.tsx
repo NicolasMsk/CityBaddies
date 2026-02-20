@@ -138,10 +138,10 @@ export default function SignUpPage() {
               Un email de bienvenue t&apos;a été envoyé à <span className="text-white font-medium">{email}</span>.
             </p>
             <Link
-              href="/deals"
+              href="/produits"
               className="inline-block w-full py-4 bg-[#d4a855] hover:bg-white text-black font-bold rounded-lg transition-all duration-300 transform hover:scale-[1.02] text-xs tracking-[0.2em] uppercase"
             >
-              Découvrir les deals
+              Découvrir les produits
             </Link>
           </div>
         </div>

@@ -48,13 +48,13 @@ interface Deal {
     username: string;
     avatarUrl: string;
   };
+  imageUrl: string;
+  merchant: {
+    name: string;
+  };
   product: {
     name: string;
-    imageUrl: string;
     category: {
-      name: string;
-    };
-    merchant: {
       name: string;
     };
   };
@@ -298,9 +298,9 @@ export default function AdminPage() {
                        <td className="px-6 py-4">
                          <div className="flex items-center gap-4">
                            <div className="relative w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0">
-                             {deal.product?.imageUrl ? (
+                             {deal.imageUrl ? (
                                <Image
-                                 src={deal.product.imageUrl}
+                                 src={deal.imageUrl}
                                  alt={deal.title}
                                  fill
                                  className="object-cover"

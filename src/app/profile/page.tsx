@@ -27,9 +27,10 @@ interface VoteActivity {
   deal: {
     id: string;
     title: string;
+    imageUrl: string | null;
     product: {
       name: string;
-      imageUrl: string | null;
+      slug: string;
     };
     merchant: {
       name: string;
@@ -44,9 +45,10 @@ interface CommentActivity {
   deal: {
     id: string;
     title: string;
+    imageUrl: string | null;
     product: {
       name: string;
-      imageUrl: string | null;
+      slug: string;
     };
   };
 }
@@ -346,10 +348,10 @@ export default function ProfilePage() {
                   <Heart className="w-16 h-16 text-[#333] mx-auto mb-6" />
                   <p className="text-neutral-500 mb-6 font-mono text-sm uppercase tracking-wider">Tu n&apos;as pas encore de favoris</p>
                   <Link
-                    href="/deals"
+                    href="/produits"
                     className="inline-block px-8 py-3 bg-[#d4a855] hover:bg-white text-black font-bold uppercase tracking-widest transition-colors"
                   >
-                    Découvrir les deals
+                    Découvrir les produits
                   </Link>
                 </div>
               ) : (
@@ -369,10 +371,10 @@ export default function ProfilePage() {
                   <MessageSquare className="w-16 h-16 text-[#333] mx-auto mb-6" />
                   <p className="text-neutral-500 mb-6 font-mono text-sm uppercase tracking-wider">Pas encore d&apos;activité</p>
                   <Link
-                    href="/deals"
+                    href="/produits"
                     className="inline-block px-8 py-3 bg-[#d4a855] hover:bg-white text-black font-bold uppercase tracking-widest transition-colors"
                   >
-                    Découvrir les deals
+                    Découvrir les produits
                   </Link>
                 </div>
               ) : (
@@ -388,12 +390,12 @@ export default function ProfilePage() {
                         {votes.map((vote) => (
                           <Link
                             key={vote.id}
-                            href={`/deals/${vote.deal.id}`}
+                            href={`/produits?search=${encodeURIComponent(vote.deal.product.name)}`}
                             className="flex items-center gap-4 p-4 bg-[#0a0a0a] border border-[#333] hover:border-[#d4a855] transition-colors group"
                           >
-                            {vote.deal.product.imageUrl && (
+                            {vote.deal.imageUrl && (
                               <Image
-                                src={vote.deal.product.imageUrl}
+                                src={vote.deal.imageUrl}
                                 alt={vote.deal.product.name}
                                 width={48}
                                 height={48}
@@ -437,13 +439,13 @@ export default function ProfilePage() {
                         {comments.map((comment) => (
                           <Link
                             key={comment.id}
-                            href={`/deals/${comment.deal.id}`}
+                            href={`/produits?search=${encodeURIComponent(comment.deal.product.name)}`}
                             className="block p-4 bg-[#0a0a0a] border border-[#333] hover:border-[#d4a855] transition-colors group"
                           >
                             <div className="flex items-center gap-4 mb-3">
-                              {comment.deal.product.imageUrl && (
+                              {comment.deal.imageUrl && (
                                 <Image
-                                  src={comment.deal.product.imageUrl}
+                                  src={comment.deal.imageUrl}
                                   alt={comment.deal.product.name}
                                   width={40}
                                   height={40}

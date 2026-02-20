@@ -24,9 +24,10 @@ interface Comment {
 
 interface CommentSectionProps {
   dealId: string;
+  productSlug: string;
 }
 
-export default function CommentSection({ dealId }: CommentSectionProps) {
+export default function CommentSection({ dealId, productSlug }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -252,7 +253,7 @@ export default function CommentSection({ dealId }: CommentSectionProps) {
           <LogIn className="w-6 h-6 text-white/20 mx-auto mb-4" />
           <p className="text-neutral-400 mb-6 text-sm font-light">Connectez-vous pour rejoindre la conversation.</p>
           <Link
-            href={`/auth/login?redirect=${encodeURIComponent(`/deals/${dealId}`)}`}
+            href={`/auth/login?redirect=${encodeURIComponent(`/produits/${productSlug}`)}`}
             className="inline-flex items-center gap-2 px-6 py-3 border border-white text-white text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
           >
             <LogIn className="w-3 h-3" />

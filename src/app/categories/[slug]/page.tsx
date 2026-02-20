@@ -248,10 +248,10 @@ async function getCategoryDeals(slug: string) {
       },
     },
     include: {
+      merchant: true,
       product: {
         include: {
           brandRef: true,
-          merchant: true,
           category: true,
         },
       },
@@ -268,13 +268,13 @@ async function getCategoryDeals(slug: string) {
       id: d.product.id,
       name: d.product.name,
       slug: d.product.slug,
-      imageUrl: d.product.imageUrl,
       brand: d.product.brandRef?.name || d.product.brand,
       category: d.product.category,
-      merchant: d.product.merchant,
-      productUrl: d.product.productUrl,
       currentPrice: d.dealPrice,
     },
+    merchant: d.merchant,
+    imageUrl: d.imageUrl,
+    productUrl: d.productUrl,
     title: d.title || d.product.name,
     refinedTitle: d.refinedTitle,
     dealPrice: d.dealPrice,
@@ -370,7 +370,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 Top Deals
               </h2>
               <Link 
-                href={`/deals?category=${slug}&sort=discount`}
+                href={`/produits?category=${slug}&sortBy=discountPercent`}
                 className="text-white hover:text-bordeaux-400 transition-colors flex items-center gap-2 text-sm font-medium uppercase tracking-wider"
               >
                 Voir tout
@@ -412,7 +412,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             Nous comparons quotidiennement les offres de Sephora, Nocibé et Marionnaud pour vous garantir les meilleurs prix sur vos produits {category.name.toLowerCase()} favoris.
           </p>
           <Link
-            href={`/deals?category=${slug}&sort=discount`}
+            href={`/produits?category=${slug}&sortBy=discountPercent`}
             className="inline-flex items-center gap-3 px-8 py-3 bg-white text-black text-sm font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors"
           >
             Voir les {totalDeals} offres

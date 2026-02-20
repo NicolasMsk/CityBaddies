@@ -81,11 +81,12 @@ async function getHomeData() {
     where: { 
       status: 'ACTIVE',
     },
+    distinct: ['productId'],
     include: {
+      merchant: true,
       product: {
         include: {
           category: true,
-          merchant: true,
         },
       },
     },
@@ -105,11 +106,12 @@ async function getHomeData() {
       brandTier: 1,
       id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
     },
+    distinct: ['productId'],
     include: {
+      merchant: true,
       product: {
         include: {
           category: true,
-          merchant: true,
         },
       },
     },
@@ -128,14 +130,10 @@ async function getHomeData() {
     // Récupérer tous les marchands actifs
     const merchants = await prisma.merchant.findMany({
       where: {
-        products: {
+        deals: {
           some: {
-            deals: {
-              some: {
-                status: 'ACTIVE',
-                id: { notIn: excludedIds }, // Exclure les deals des autres sections
-              },
-            },
+            status: 'ACTIVE',
+            id: { notIn: excludedIds },
           },
         },
       },
@@ -150,14 +148,15 @@ async function getHomeData() {
         prisma.deal.findMany({
           where: {
             status: 'ACTIVE',
-            product: { merchantId: merchant.id },
-            id: { notIn: excludedIds }, // Exclure les deals des autres sections
+            merchantId: merchant.id,
+            id: { notIn: excludedIds },
           },
+          distinct: ['productId'],
           include: {
+            merchant: true,
             product: {
               include: {
                 category: true,
-                merchant: true,
               },
             },
           },
@@ -308,7 +307,7 @@ export default async function HomePage() {
 
             <div className="flex flex-wrap items-center gap-4">
                <Link
-                href="/deals"
+                href="/produits"
                 className="group relative px-8 py-4 bg-white text-black overflow-hidden"
               >
                 <div className="absolute inset-0 w-3 bg-[#d4a855] transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
@@ -379,7 +378,7 @@ export default async function HomePage() {
               {topBrands.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={`/deals?search=${encodeURIComponent(brand.name)}`}
+                  href={`/produits?search=${encodeURIComponent(brand.name)}`}
                   className="group"
                 >
                   {brand.logoUrl ? (
@@ -438,7 +437,7 @@ export default async function HomePage() {
               </h2>
             </div>
             <Link
-              href="/deals"
+              href="/produits"
               className="hidden md:flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white transition-colors group"
             >
               Voir la Collection
@@ -458,7 +457,7 @@ export default async function HomePage() {
           {/* Mobile CTA */}
           <div className="mt-8 text-center md:hidden">
             <Link
-              href="/deals"
+              href="/produits"
               className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400"
             >
               Voir tous les deals
@@ -488,7 +487,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <Link
-                href="/deals?tier=1"
+                href="/produits?tier=1"
                 className="hidden md:flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-[#d4a855] hover:text-white transition-colors group"
               >
                 Accéder aux Archives
@@ -501,7 +500,7 @@ export default async function HomePage() {
             {/* Mobile CTA */}
             <div className="mt-8 text-center md:hidden">
               <Link
-                href="/deals?tier=1"
+                href="/produits?tier=1"
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#d4a855]"
               >
                 Voir tous les deals luxe
@@ -532,7 +531,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <Link
-                href="/deals?sort=newest"
+                href="/produits?sortBy=createdAt"
                 className="hidden md:flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white transition-colors group"
               >
                 Voir les Nouveautés
@@ -545,7 +544,7 @@ export default async function HomePage() {
             {/* Mobile CTA */}
             <div className="mt-8 text-center md:hidden">
               <Link
-                href="/deals?sort=newest"
+                href="/produits?sortBy=createdAt"
                 className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400"
               >
                 Voir les nouveautés
@@ -789,9 +788,9 @@ export default async function HomePage() {
                                 key={gp.id || gp.dealId}
                                 className="w-7 h-7 rounded-full border-2 border-[#0a0a0a] bg-neutral-800 overflow-hidden"
                               >
-                                {gp.deal?.product?.imageUrl ? (
+                                {gp.deal?.imageUrl ? (
                                   <Image
-                                    src={gp.deal.product.imageUrl}
+                                    src={gp.deal.imageUrl}
                                     alt={gp.deal.product.name || ''}
                                     width={28}
                                     height={28}

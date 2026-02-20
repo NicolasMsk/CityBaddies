@@ -81,7 +81,7 @@ export const websiteSchema = {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: `${SEO_CONFIG.siteUrl}/deals?search={search_term_string}`,
+      urlTemplate: `${SEO_CONFIG.siteUrl}/produits?search={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },
@@ -129,7 +129,7 @@ export function generateProductSchema(deal: {
     sku: deal.id,
     offers: {
       "@type": "Offer",
-      url: `${SEO_CONFIG.siteUrl}/deals/${deal.id}`,
+      url: `${SEO_CONFIG.siteUrl}/produits/${deal.id}`,
       priceCurrency: "EUR",
       price: deal.dealPrice,
       priceValidUntil: deal.endDate ? new Date(deal.endDate).toISOString().split('T')[0] : undefined,
@@ -152,7 +152,7 @@ export function generateItemListSchema(deals: { id: string; title: string; dealP
     itemListElement: deals.map((deal, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `${SEO_CONFIG.siteUrl}/deals/${deal.id}`,
+      url: `${SEO_CONFIG.siteUrl}/produits/${deal.id}`,
       name: deal.title,
     })),
   };

@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
         ]
       },
       include: {
+        merchant: true,
         product: {
           include: {
             category: true,
-            merchant: true,
           }
         }
       },
@@ -59,13 +59,13 @@ export async function GET(request: NextRequest) {
       title: deal.refinedTitle || deal.product.name,
       brand: deal.product.brand,
       category: deal.product.category?.name,
-      imageUrl: deal.product.imageUrl,
+      imageUrl: deal.imageUrl,
       dealPrice: deal.dealPrice,
       originalPrice: deal.originalPrice,
       discountPercent: deal.discountPercent,
       merchant: {
-        name: deal.product.merchant.name,
-        slug: deal.product.merchant.slug,
+        name: deal.merchant.name,
+        slug: deal.merchant.slug,
       },
       volume: deal.volume,
       updatedAt: deal.updatedAt,

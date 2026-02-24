@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { ExternalLink, ChevronDown } from 'lucide-react';
+import { ExternalLink, ChevronDown, Tag, Info } from 'lucide-react';
+import PriceChart from './PriceChart';
+import type { PriceHistory } from '@/types';
 
 // ── Types ──────────────────────────────────────────────────────────
 interface VariantData {
@@ -17,6 +19,8 @@ interface DealData {
   discountPercent: number;
   volume: string | null;
   sourceUrl: string | null;
+  promoCode?: string | null;
+  priceConditions?: string | null;
   variant: VariantData | null;
   merchant: { name: string; slug: string };
   productUrl: string | null;
@@ -24,6 +28,7 @@ interface DealData {
 
 interface ProductPricingProps {
   deals: DealData[];
+  priceHistory?: PriceHistory[];
 }
 
 // ── Logos marchands (taille cible individuelle pour uniformité visuelle) ──
@@ -34,7 +39,7 @@ const MERCHANT_LOGOS: Record<string, { src: string; w: number; h: number }> = {
   'notino':     { src: '/images/notino_logo.png',      w: 110, h: 28 },
 };
 
-export default function ProductPricing({ deals }: ProductPricingProps) {
+export default function ProductPricing({ deals, priceHistory }: ProductPricingProps) {
   // ── Regrouper les deals par contenance ──
   const variantMap = useMemo(() => {
     const map = new Map<string, { label: string; deals: DealData[] }>();
@@ -58,6 +63,7 @@ export default function ProductPricing({ deals }: ProductPricingProps) {
 
   const [selectedVariant, setSelectedVariant] = useState(variantKeys[0] || 'standard');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [conditionsOpen, setConditionsOpen] = useState(false);
 
   // Deals pour la contenance sélectionnée
   const currentVariant = variantMap.get(selectedVariant);
@@ -72,6 +78,8 @@ export default function ProductPricing({ deals }: ProductPricingProps) {
       currentPrice: number;
       originalPrice: number;
       discountPercent: number;
+      promoCode: string | null;
+      priceConditions: string | null;
       url: string;
     }[] = [];
 
@@ -83,6 +91,8 @@ export default function ProductPricing({ deals }: ProductPricingProps) {
           currentPrice: deal.dealPrice,
           originalPrice: deal.originalPrice,
           discountPercent: deal.discountPercent,
+          promoCode: deal.promoCode || null,
+          priceConditions: deal.priceConditions || null,
           url: deal.productUrl || '',
         });
       }
@@ -225,6 +235,14 @@ export default function ProductPricing({ deals }: ProductPricingProps) {
                       +{diffFromBest.toFixed(2)} € vs meilleur prix
                     </span>
                   )}
+                  {mp.promoCode && (
+                    <div className={`flex items-center gap-2 mt-1 ${isFirst ? 'text-amber-700' : 'text-[#d4a855]'}`}>
+                      <Tag className="h-3 w-3 flex-shrink-0" />
+                      <span className="text-xs font-mono font-bold tracking-wider">
+                        Code : {mp.promoCode}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Pricing & CTA */}
@@ -258,6 +276,100 @@ export default function ProductPricing({ deals }: ProductPricingProps) {
           })}
         </div>
       </div>
+
+      {/* ── Conditions déroulantes ── */}
+      {(() => {
+        const conditions = merchantPrices
+          .filter(mp => mp.priceConditions)
+          .map(mp => ({ merchant: mp.merchantName, condition: mp.priceConditions! }));
+        if (conditions.length === 0) return null;
+        return (
+          <div className="border border-white/10">
+            <button
+              onClick={() => setConditionsOpen(!conditionsOpen)}
+              className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <Info className="h-3.5 w-3.5 text-[#d4a855]" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400">
+                  Conditions
+                </span>
+              </div>
+              <ChevronDown className={`h-3.5 w-3.5 text-neutral-500 transition-transform duration-300 ${conditionsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {conditionsOpen && (
+              <div className="px-5 pb-4 space-y-3 border-t border-white/5">
+                {conditions.map((c, idx) => (
+                  <div key={idx} className="flex items-start gap-3 pt-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 w-24 flex-shrink-0 pt-0.5">
+                      {c.merchant}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 font-light leading-relaxed">
+                      {c.condition}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* ── Historique de prix pour cette contenance ── */}
+      {priceHistory && priceHistory.length > 0 && (() => {
+        // Filtrer l'historique par la contenance sélectionnée
+        const currentVariantData = currentDeals[0];
+        const selectedVolumeValue = currentVariantData?.variant?.volumeValue;
+        const selectedVolumeUnit = currentVariantData?.variant?.volumeUnit;
+
+        const filteredHistory = priceHistory.filter(ph => {
+          // Si la contenance sélectionnée a une variante avec volume
+          if (selectedVolumeValue && selectedVolumeUnit) {
+            return (
+              ph.volumeValue === selectedVolumeValue &&
+              ph.volumeUnit?.toLowerCase() === selectedVolumeUnit.toLowerCase()
+            );
+          }
+          // Si pas de variante, prendre l'historique sans volume
+          return !ph.volumeValue && !ph.volumeUnit;
+        });
+
+        // Si le filtre strict ne donne rien, essayer avec le volumeRaw du deal
+        const historyToShow = filteredHistory.length > 0 ? filteredHistory : 
+          selectedVolumeValue ? priceHistory.filter(ph => {
+            // Fallback: chercher par volumeValue seul
+            return ph.volumeValue === selectedVolumeValue;
+          }) : [];
+
+        if (historyToShow.length <= 1) return null;
+
+        const variantLabel = selectedVolumeValue && selectedVolumeUnit
+          ? `${selectedVolumeValue} ${selectedVolumeUnit}`
+          : currentDeals[0]?.volume || '';
+
+        const prices = historyToShow.map(p => p.price);
+        const currentPrice = cheapest.currentPrice;
+
+        return (
+          <div className="mt-10">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4">
+              Historique des prix{variantLabel ? ` — ${variantLabel}` : ''}
+            </h3>
+            <div className="bg-transparent border border-white/10 p-6">
+              <PriceChart
+                priceHistory={historyToShow}
+                priceStats={{
+                  current: currentPrice,
+                  lowest: Math.min(...prices),
+                  highest: Math.max(...prices),
+                  average: prices.reduce((a, b) => a + b, 0) / prices.length,
+                }}
+                currentPrice={currentPrice}
+              />
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

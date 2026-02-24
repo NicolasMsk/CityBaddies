@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         product: {
           include: {
             category: true,
+            images: { orderBy: { position: 'asc' }, take: 5 },
           }
         }
       },

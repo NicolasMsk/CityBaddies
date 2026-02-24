@@ -13,9 +13,9 @@ datasource db {
 
 // Statut d'un deal dans le workflow Import → Validate → Enrich
 enum DealStatus {
-  PENDING   // Nouveau deal importé, en attente de validation
-  ACTIVE    // Validé et visible sur le site
-  EXPIRED   // Expiré (plus en promo ou lien mort)
+  PENDING
+  ACTIVE
+  EXPIRED
 }
 
 // Utilisateurs (synchronisés avec Supabase Auth)
@@ -158,7 +158,8 @@ model Product {
   classifications      Json?             // Classifications produit (Parfum, Texture, Type de cheveux, etc.)
   
   // Relations
-  variants             ProductVariant[]  // Un produit peut avoir plusieurs variantes (50ml, 100ml, etc.)
+  variants             ProductVariant[]
+  images               ProductImage[]
   priceHistory         PriceHistory[]
   deals                Deal[]
   createdAt            DateTime          @default(now())
@@ -173,6 +174,26 @@ model Product {
   // Index composites pour requêtes fréquentes
   @@index([brandId, categoryId])           // Produits d'une marque dans une catégorie
   @@index([isActive, categoryId])          // Produits actifs d'une catégorie
+}
+
+// Images produit (multiples images par produit: packshot, lifestyle, swatch, etc.)
+model ProductImage {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url         String
+  alt         String?
+  type        String   @default("unknown")  // packshot, lifestyle, detail, swatch, unknown
+  position    Int      @default(0)
+  width       Int?
+  height      Int?
+  merchantId  String?                       // D'où vient cette image
+  createdAt   DateTime @default(now())
+
+  @@unique([productId, url])
+  @@index([productId])
+  @@index([productId, position])
+  @@index([type])
 }
 
 // Variantes de produit (différentes contenances: 50ml, 100ml, etc.)
@@ -246,6 +267,7 @@ model Deal {
   discountPercent Int
   discountAmount  Float
   promoCode       String?
+  priceConditions  String?    @db.Text // Conditions du prix (ex: "Prix avec la carte fidélité", "Offre valable du 01/02 au 28/02")
   
   // Traçabilité du scraping
   sourceUrl       String?    // URL de la page source qui a permis de scraper ce deal (pour debug)
@@ -581,4 +603,47 @@ model NewsletterSubscription {
   
   @@index([email])
   @@index([confirmToken])
+}
+
+// ============================================================================
+// SCRAPING QUEUE (alimentée par Product_Scraper_Link, consommée par Product_Scraper)
+// ============================================================================
+
+model ScrapingQueue {
+  id           String    @id @default(cuid())
+  productName  String
+  merchantSlug String
+  productUrl   String
+  searchUrl    String
+  verified     Boolean   @default(false)
+  confidence   Float     @default(0)
+  method       String    @default("")
+  status       String    @default("pending") // "pending" | "scraping" | "done" | "failed" | "mismatch"
+
+  // ── Résultats du scraping ──────────────────────────────────────────────────
+  scrapedAt       DateTime?
+  productId       String?           // ID du produit créé/matché en DB
+  completeness    Int?              // % de complétude (0-100)
+  verdict         String?           // "ok" | "wrong_product" | "aberrant_price" | "empty_data"
+  verdictReason   String?           // Explication du verdict
+  verdictConfidence Int?            // Confiance du verdict (0-100)
+  missingFields   String?           // Champs manquants séparés par virgule (ex: "ingredients,usage")
+  variantsFound   Int?              // Nombre de variantes trouvées
+  variantsPushed  Int?              // Nombre de variantes effectivement pushées (après retrait aberrants)
+  dealsPushed     Int?              // Nombre de deals créés
+  priceFixes      String?           // Variantes retirées (ex: "10ml=299€,25g=0€")
+  matchMethod     String?           // "exact_slug" | "llm_match" | "new_product"
+  durationMs      Int?              // Durée totale du scraping en ms
+  errorMessage    String?           // Message d'erreur si failed
+  retryCount      Int     @default(0) // Nombre de tentatives
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([productName, merchantSlug])
+  @@index([status])
+  @@index([merchantSlug])
+  @@index([productId])
+  @@index([verdict])
+  @@index([completeness])
 }

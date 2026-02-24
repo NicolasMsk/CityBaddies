@@ -195,7 +195,7 @@ async function executeSearchDeals(params: {
 }) {
   const take = Math.min(params.limit || 8, 15);
   const orderBy = getSortOrder(params.sortBy);
-  const includeRelations = { merchant: true, product: { include: { category: true } } };
+  const includeRelations = { merchant: true, product: { include: { category: true, images: { orderBy: { position: 'asc' as const }, take: 5 } } } };
 
   // --- Construire le filtre de base (prix, luxe, marques) ---
   const baseWhere: any = { status: 'ACTIVE' };

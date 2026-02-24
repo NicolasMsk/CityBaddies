@@ -15,6 +15,7 @@ export async function GET(
         product: {
           include: {
             category: true,
+            images: { orderBy: { position: 'asc' }, take: 5 },
             priceHistory: {
               orderBy: { date: 'asc' },
               take: 90,

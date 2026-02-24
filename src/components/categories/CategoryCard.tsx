@@ -51,11 +51,11 @@ export default function CategoryCard({ category }: CategoryCardProps) {
           {category.name}
         </h3>
 
-        {/* Count - Affiche le nombre de deals, pas de produits */}
+        {/* Count - Affiche le nombre de produits */}
         <p className="text-sm text-white/60">
           {(() => {
-            const count = (category._count as any)?.deals || (category._count as any)?.products || 0;
-            return `${count} deal${count !== 1 ? 's' : ''}`;
+            const count = (category._count as any)?.products || 0;
+            return `${count} produit${count !== 1 ? 's' : ''}`;
           })()}
         </p>
       </div>

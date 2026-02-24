@@ -214,6 +214,7 @@ async function getProduitsData(page: number, filters: {
         product: {
           include: {
             category: true,
+            images: { orderBy: { position: 'asc' }, take: 5 },
           },
         },
       },

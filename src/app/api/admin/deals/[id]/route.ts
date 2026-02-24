@@ -33,6 +33,7 @@ export async function PATCH(
         product: {
           include: {
             category: true,
+            images: { orderBy: { position: 'asc' }, take: 5 },
           },
         },
         author: {

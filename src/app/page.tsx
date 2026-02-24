@@ -17,7 +17,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
   title: "City Baddies | Analyse Honnête des Prix Beauté — Vraies Promos vs Fausses Promos",
-  description: "City Baddies analyse chaque deal beauté et lui attribue une note /10. Fausses promos démasquées, prix comparés entre Sephora, Nocibé & Marionnaud. On vous dit la vérité sur chaque réduction.",
+  description: "City Baddies analyse chaque offre beauté et lui attribue une note /10. Fausses promos démasquées, prix comparés entre Sephora, Nocibé & Marionnaud. On vous dit la vérité sur chaque réduction.",
   keywords: [
     "bons plans beauté",
     "promo sephora",
@@ -34,42 +34,33 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "City Baddies | La Vérité sur les Promos Beauté",
-    description: "On analyse chaque deal beauté et on note /10. Fausses promos, vrais bons plans : on vous dit tout.",
+    description: "On analyse chaque offre beauté et on note /10. Fausses promos, vrais bons plans : on vous dit tout.",
     url: BASE_URL,
     type: "website",
   },
 };
 
 async function getHomeData() {
-  // D'abord récupérer les catégories avec le compte de deals actifs
-  const categoriesWithDeals = await prisma.category.findMany({
+  // Récupérer les catégories avec le compte de produits
+  const categoriesWithProducts = await prisma.category.findMany({
     include: {
-      products: {
-        include: {
-          deals: {
-            where: {
-              status: 'ACTIVE',
-            },
-          },
-        },
+      _count: {
+        select: { products: true },
       },
     },
   });
 
-  // Calculer le nombre de deals actifs par catégorie et filtrer celles sans deals
-  const categories = categoriesWithDeals
-    .map((cat: any) => {
-      const dealCount = cat.products.reduce((acc: number, prod: any) => acc + prod.deals.length, 0);
-      return {
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        imageUrl: cat.imageUrl,
-        _count: { deals: dealCount },
-      };
-    })
-    .filter((cat: any) => cat._count.deals > 0)
-    .sort((a: any, b: any) => b._count.deals - a._count.deals);
+  // Filtrer les catégories sans produits
+  const categories = categoriesWithProducts
+    .map((cat: any) => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      imageUrl: cat.imageUrl,
+      _count: { products: cat._count.products },
+    }))
+    .filter((cat: any) => cat._count.products > 0)
+    .sort((a: any, b: any) => b._count.products - a._count.products);
 
   // Date d'aujourd'hui (début de journée)
   const today = new Date();
@@ -87,6 +78,7 @@ async function getHomeData() {
       product: {
         include: {
           category: true,
+          images: { orderBy: { position: 'asc' }, take: 5 },
         },
       },
     },
@@ -104,7 +96,7 @@ async function getHomeData() {
     where: { 
       status: 'ACTIVE',
       brandTier: 1,
-      id: { notIn: hotDealIds }, // Exclure les deals déjà dans hotDeals
+      id: { notIn: hotDealIds },
     },
     distinct: ['productId'],
     include: {
@@ -112,6 +104,7 @@ async function getHomeData() {
       product: {
         include: {
           category: true,
+          images: { orderBy: { position: 'asc' }, take: 5 },
         },
       },
     },
@@ -157,6 +150,7 @@ async function getHomeData() {
             product: {
               include: {
                 category: true,
+                images: { orderBy: { position: 'asc' }, take: 5 },
               },
             },
           },
@@ -184,18 +178,17 @@ async function getHomeData() {
     return mixedDeals;
   })();
 
-  const [stats, dealsToday, topBrands] = await Promise.all([
+  const [stats, variantsToday, topBrands] = await Promise.all([
     // Stats globales
     Promise.all([
-      prisma.deal.count({ where: { status: 'ACTIVE' } }),
+      prisma.productVariant.count(),
       prisma.product.count(),
       prisma.merchant.count(),
     ]),
-    // Deals ajoutés aujourd'hui
-    prisma.deal.count({
+    // Variantes ajoutées aujourd'hui
+    prisma.productVariant.count({
       where: {
         createdAt: { gte: today },
-        status: { not: 'EXPIRED' },
       },
     }),
     // Top marques avec deals actifs (pour le bandeau)
@@ -249,10 +242,10 @@ async function getHomeData() {
     promoPages,
     guides,
     stats: {
-      deals: stats[0],
+      variants: stats[0],
       products: stats[1],
       merchants: stats[2],
-      dealsToday,
+      variantsToday,
     },
   };
 }
@@ -305,7 +298,7 @@ export default async function HomePage() {
             </h1>
             
             <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-xl border-l border-white/20 pl-6 mb-10">
-              Pas ton budget. <span className="text-white/60 text-base block mt-2">On analyse chaque deal beauté et on le note /10. Fausses promos, vrais bons plans — on te dit la vérité.</span>
+              Pas ton budget. <span className="text-white/60 text-base block mt-2">On analyse chaque offre beauté et on la note /10. Fausses promos, vrais bons plans — on te dit la vérité.</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -330,15 +323,15 @@ export default async function HomePage() {
           {/* Stats Column - Vertical on Desktop */}
           <div className="hidden md:block min-w-[200px] space-y-8 animate-in fade-in slide-in-from-right-10 duration-1000 delay-300 border-l border-white/10 pl-8">
              <div>
-                <div className="text-3xl font-serif text-white mb-1">{stats.deals.toLocaleString()}</div>
-                <div className="text-xs text-[#d4a855] uppercase tracking-widest">Deals Actifs</div>
+                <div className="text-3xl font-serif text-white mb-1">{stats.variants.toLocaleString()}</div>
+                <div className="text-xs text-[#d4a855] uppercase tracking-widest">Variantes Suivies</div>
              </div>
              <div>
                 <div className="text-3xl font-serif text-white mb-1">{stats.products.toLocaleString()}</div>
                 <div className="text-xs text-neutral-500 uppercase tracking-widest">Produits Suivis</div>
              </div>
              <div>
-                <div className="text-3xl font-serif text-white mb-1">+{stats.dealsToday}</div>
+                <div className="text-3xl font-serif text-white mb-1">+{stats.variantsToday}</div>
                 <div className="text-xs text-neutral-500 uppercase tracking-widest">Ajoutés Aujourd&apos;hui</div>
              </div>
           </div>
@@ -348,15 +341,15 @@ export default async function HomePage() {
         <div className="md:hidden w-full border-t border-white/10 bg-black/20 backdrop-blur-md">
            <div className="grid grid-cols-3 divide-x divide-white/10">
               <div className="p-4 text-center">
-                 <div className="text-white font-serif text-lg">{stats.deals}</div>
-                 <div className="text-[10px] text-neutral-400 uppercase">Deals</div>
+                 <div className="text-white font-serif text-lg">{stats.variants}</div>
+                 <div className="text-[10px] text-neutral-400 uppercase">Variantes</div>
               </div>
               <div className="p-4 text-center">
                  <div className="text-white font-serif text-lg">{stats.products}</div>
                  <div className="text-[10px] text-neutral-400 uppercase">Produits</div>
               </div>
               <div className="p-4 text-center">
-                 <div className="text-white font-serif text-lg">+{stats.dealsToday}</div>
+                 <div className="text-white font-serif text-lg">+{stats.variantsToday}</div>
                  <div className="text-[10px] text-neutral-400 uppercase">New</div>
               </div>
            </div>
@@ -453,7 +446,7 @@ export default async function HomePage() {
           ) : (
             <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
               <Sparkles className="h-8 w-8 text-neutral-600 mx-auto mb-4" />
-              <p className="text-neutral-500">Pas de deals pour l&apos;instant, reviens vite !</p>
+              <p className="text-neutral-500">Pas de produits pour l&apos;instant, reviens vite !</p>
             </div>
           )}
 
@@ -463,7 +456,7 @@ export default async function HomePage() {
               href="/produits"
               className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400"
             >
-              Voir tous les deals
+              Voir toutes les offres
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -506,7 +499,7 @@ export default async function HomePage() {
                 href="/produits?tier=1"
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#d4a855]"
               >
-                Voir tous les deals luxe
+                Voir les produits luxe
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -530,7 +523,7 @@ export default async function HomePage() {
                   DERNIERS <span className="italic font-normal text-white">AJOUTS</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-sm border-l border-white/20 pl-6 leading-relaxed">
-                  Nouveaux deals analysés et notés chaque jour. On te dit si ça vaut le coup — ou pas.
+                  Nouveaux produits analysés et notés chaque jour. On te dit si ça vaut le coup — ou pas.
                 </p>
               </div>
               <Link
@@ -888,7 +881,7 @@ export default async function HomePage() {
               <div>
                 <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">02 — Notre Approche</span>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  City Baddies analyse chaque deal et lui attribue une <span className="text-white">note /10</span>. On compare les prix entre enseignes, on vérifie l&apos;historique, on détecte les fausses promos. Un deal à 3/10 ? On vous le dit. <span className="text-white">Pas de bullshit, que la vérité.</span>
+                  City Baddies analyse chaque offre et lui attribue une <span className="text-white">note /10</span>. On compare les prix entre enseignes, on vérifie l&apos;historique, on détecte les fausses promos. Une offre à 3/10 ? On vous le dit. <span className="text-white">Pas de bullshit, que la vérité.</span>
                 </p>
               </div>
             </div>
@@ -904,7 +897,7 @@ export default async function HomePage() {
                     <div>
                       <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Note City Baddies /10</h4>
                       <p className="text-neutral-500 font-light leading-relaxed">
-                        Chaque deal est analysé et noté de 1 à 10. On prend en compte le prix, la réduction réelle, les prix concurrents et l&apos;historique. Un 8/10 c&apos;est exceptionnel. Un 3/10 c&apos;est une fausse promo — et on vous le dit clairement.
+                        Chaque offre est analysée et notée de 1 à 10. On prend en compte le prix, la réduction réelle, les prix concurrents et l&apos;historique. Un 8/10 c&apos;est exceptionnel. Un 3/10 c&apos;est une fausse promo — et on vous le dit clairement.
                       </p>
                     </div>
                   </div>
@@ -986,11 +979,11 @@ export default async function HomePage() {
             { [
               {
                 q: "C'est quoi la Note City Baddies /10 ?",
-                a: "Chaque deal est analysé en profondeur : prix actuel, historique des prix, comparaison avec les concurrents, qualité de la marque. On attribue une note de 1 à 10. Un 8+/10, c'est un deal exceptionnel. Un 3/10, c'est une fausse promo qu'on démasque pour vous."
+                a: "Chaque offre est analysée en profondeur : prix actuel, historique des prix, comparaison avec les concurrents, qualité de la marque. On attribue une note de 1 à 10. Un 8+/10, c'est exceptionnel. Un 3/10, c'est une fausse promo qu'on démasque pour vous."
               },
               {
                 q: "Vous ne montrez pas que des bonnes promos ?",
-                a: "Non, et c'est notre force. On affiche TOUS les deals qu'on trouve, même les mauvais. Un produit affiché -30% mais dont le prix n'a jamais bougé ? On le dit. Un concurrent moins cher ? On le signale. Notre but c'est l'honnêteté, pas la vente à tout prix."
+                a: "Non, et c'est notre force. On affiche TOUTES les offres qu'on trouve, même les mauvaises. Un produit affiché -30% mais dont le prix n'a jamais bougé ? On le dit. Un concurrent moins cher ? On le signale. Notre but c'est l'honnêteté, pas la vente à tout prix."
               },
               {
                 q: "Est-ce que je commande chez vous ?",
@@ -998,11 +991,11 @@ export default async function HomePage() {
               },
               {
                 q: "Pourquoi City Baddies est gratuit ?",
-                a: "L'accès est 100% gratuit. On se rémunère par l'affiliation : une petite commission quand vous achetez via nos liens, sans surcoût pour vous. Ça ne change rien à nos notes — un mauvais deal reste un mauvais deal, même s'il nous rapporterait une commission."
+                a: "L'accès est 100% gratuit. On se rémunère par l'affiliation : une petite commission quand vous achetez via nos liens, sans surcoût pour vous. Ça ne change rien à nos notes — une mauvaise offre reste une mauvaise offre, même si elle nous rapporterait une commission."
               },
               {
                 q: "Comment détectez-vous les fausses promos ?",
-                a: "On suit l'historique des prix sur plusieurs mois. Si un produit est 'en promo' mais que son prix n'a jamais changé, c'est une fausse promo. On compare aussi avec les concurrents : si Nocibé vend le même produit moins cher sans promo, le deal Sephora n'en est pas un."
+                a: "On suit l'historique des prix sur plusieurs mois. Si un produit est 'en promo' mais que son prix n'a jamais changé, c'est une fausse promo. On compare aussi avec les concurrents : si Nocibé vend le même produit moins cher sans promo, l'offre Sephora n'en est pas une."
               }
             ].map((item, i) => (
               <div key={i} className="group border border-white/10 bg-white/5 rounded-none overflow-hidden transition-all hover:bg-white/10">

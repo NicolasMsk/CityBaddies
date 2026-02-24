@@ -1,14 +1,13 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import PriceChart from '@/components/deals/PriceChart';
 import { ArrowLeft } from 'lucide-react';
 import { generateBreadcrumbSchema } from '@/lib/seo-config';
 import ProductPricing from '@/components/deals/ProductPricing';
-import { cleanImageUrl } from '@/lib/utils/image';
+import ProductImageCarousel from '@/components/deals/ProductImageCarousel';
+import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 
 // Force dynamic
 export const dynamic = 'force-dynamic';
@@ -93,6 +92,9 @@ async function getProductData(slug: string) {
     include: {
       category: true,
       brandRef: true,
+      images: {
+        orderBy: { position: 'asc' },
+      },
       variants: {
         orderBy: { volumeValue: 'asc' },
       },
@@ -171,12 +173,27 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     volume: deal.volume,
     sourceUrl: deal.sourceUrl,
     productUrl: deal.productUrl,
+    promoCode: deal.promoCode,
+    priceConditions: deal.priceConditions,
     merchant: { name: deal.merchant.name, slug: deal.merchant.slug },
     variant: deal.variant ? {
       volumeValue: deal.variant.volumeValue,
       volumeUnit: deal.variant.volumeUnit,
     } : null,
   }));
+
+  // Serialize product images for the carousel (HD quality)
+  const productImages = product.images
+    .map(img => ({ url: getHighQualityImageUrl(img.url), alt: img.alt, type: img.type }))
+    .filter(img => isValidImageUrl(img.url)) as { url: string; alt: string | null; type: string }[];
+
+  // Fallback: ajouter l'image du deal si pas d'images produit
+  if (productImages.length === 0) {
+    const dealImg = getHighQualityImageUrl(bestDeal?.imageUrl);
+    if (isValidImageUrl(dealImg)) {
+      productImages.push({ url: dealImg, alt: `${brandName} ${product.name}`, type: 'packshot' });
+    }
+  }
 
   // Serialized price history for chart
   const serializedPriceHistory = product.priceHistory.map(ph => ({
@@ -219,22 +236,12 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
 
           {/* ── Hero Section ── */}
           <div className="grid md:grid-cols-2 gap-12 md:gap-20 mb-24">
-            {/* Image */}
-            <div className="relative aspect-[4/5] bg-transparent flex items-center justify-center">
-              {cleanImageUrl(bestDeal?.imageUrl) ? (
-                <Image
-                  src={cleanImageUrl(bestDeal.imageUrl)!}
-                  alt={`${brandName} ${product.name}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  quality={100}
-                  className="object-contain"
-                  priority
-                />
-              ) : (
-                <span className="text-xs uppercase tracking-[0.3em] text-neutral-600">Image Indisponible</span>
-              )}
-            </div>
+            {/* Image Carousel */}
+            <ProductImageCarousel
+              images={productImages}
+              productName={product.name}
+              brandName={brandName}
+            />
 
             {/* Info + Pricing */}
             <div className="flex flex-col justify-center">
@@ -248,9 +255,10 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                 {product.name}
               </h1>
 
-              {/* Interactive Pricing with Volume Selector */}
+              {/* Interactive Pricing with Volume Selector + Price History */}
               <ProductPricing
                 deals={serializedDeals}
+                priceHistory={serializedPriceHistory}
               />
 
               {/* Category tag */}
@@ -298,7 +306,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
 
-            {/* Right Column: Ingredients & History */}
+            {/* Right Column: Ingredients */}
             <div className="space-y-16">
               {/* ── Ingredients ── */}
               {product.ingredients && (
@@ -308,27 +316,6 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                   </h2>
                   <div className="text-neutral-500 font-light text-xs leading-loose">
                     {product.ingredients}
-                  </div>
-                </section>
-              )}
-
-              {/* ── Price History ── */}
-              {serializedPriceHistory.length > 1 && (
-                <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-6">
-                    Historique des prix
-                  </h2>
-                  <div className="bg-transparent border border-white/10 p-6">
-                    <PriceChart
-                      priceHistory={serializedPriceHistory}
-                      priceStats={{
-                        current: bestDeal?.dealPrice ?? 0,
-                        lowest: Math.min(...serializedPriceHistory.map(p => p.price)),
-                        highest: Math.max(...serializedPriceHistory.map(p => p.price)),
-                        average: serializedPriceHistory.reduce((a, p) => a + p.price, 0) / serializedPriceHistory.length,
-                      }}
-                      currentPrice={bestDeal?.dealPrice ?? 0}
-                    />
                   </div>
                 </section>
               )}

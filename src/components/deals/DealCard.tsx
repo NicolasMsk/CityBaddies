@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, ExternalLink, Star, Share2, Check, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import { Heart, ExternalLink, Star, Share2, Check, ThumbsUp, ThumbsDown, Loader2, Tag, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { Deal } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -10,7 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
 import ScoreGauge from './ScoreGauge';
-import { cleanImageUrl } from '@/lib/utils/image';
+import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
@@ -84,6 +84,26 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
   const [isVoting, setIsVoting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [timeAgo, setTimeAgo] = useState<string>('');
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imgError, setImgError] = useState(false);
+
+  // Construire la liste des images HD (images du produit + fallback deal.imageUrl)
+  const productImages = deal.product.images && deal.product.images.length > 0
+    ? deal.product.images
+        .sort((a, b) => a.position - b.position)
+        .map(img => ({ url: getHighQualityImageUrl(img.url), alt: img.alt }))
+        .filter(img => isValidImageUrl(img.url))
+    : [];
+  
+  // Fallback: si pas d'images produit, utiliser l'image du deal
+  const dealImgUrl = getHighQualityImageUrl(deal.imageUrl);
+  const allImages = (productImages.length > 0
+    ? productImages
+    : isValidImageUrl(dealImgUrl)
+      ? [{ url: dealImgUrl, alt: deal.product.name }]
+      : []
+  ).slice(0, 5);
+  const hasMultipleImages = allImages.length > 1;
 
   // Calculer timeAgo côté client uniquement pour éviter l'erreur d'hydratation
   useEffect(() => {
@@ -202,16 +222,17 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
   return (
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
-      {/* Image Container - Hauteur fixe pour uniformiser */}
+      {/* Image Container - Carousel multi-images */}
       <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
-        {cleanImageUrl(deal.imageUrl) ? (
+        {allImages.length > 0 && !imgError ? (
           <Image
-            src={cleanImageUrl(deal.imageUrl)!}
-            alt={`${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
+            src={allImages[activeImageIndex].url!}
+            alt={allImages[activeImageIndex].alt || `${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
             quality={85}
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full bg-[#0a0a0a] flex items-center justify-center border-b border-white/5">
@@ -221,6 +242,37 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         
         {/* Overlay gradient - Subtle */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+
+        {/* Image Navigation Arrows */}
+        {hasMultipleImages && (
+          <>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIndex(i => i === 0 ? allImages.length - 1 : i - 1); }}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 p-1 bg-black/70 border border-white/10 text-white/70 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 z-10"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIndex(i => i === allImages.length - 1 ? 0 : i + 1); }}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 bg-black/70 border border-white/10 text-white/70 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 z-10"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+
+        {/* Image Dots Indicator */}
+        {hasMultipleImages && (
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+            {allImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIndex(idx); }}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === activeImageIndex ? 'bg-[#d4a855] w-3' : 'bg-white/30 hover:bg-white/60'}`}
+              />
+            ))}
+          </div>
+        )}
         
         {/* Top Actions - Minimal */}
         <div className="absolute top-0 right-0 p-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -319,6 +371,15 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
         {/* Price Section */}
         <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-4 border-t border-dashed border-white/10`}>
+          {/* Promo Code */}
+          {deal.promoCode && (
+            <div className="flex items-center gap-2 mb-3 bg-[#d4a855]/10 border border-[#d4a855]/20 px-3 py-1.5">
+              <Tag className="h-3 w-3 text-[#d4a855] flex-shrink-0" />
+              <span className="text-[10px] text-neutral-400 uppercase tracking-wide">Code :</span>
+              <span className="text-xs font-bold text-[#d4a855] tracking-wider font-mono">{deal.promoCode}</span>
+            </div>
+          )}
+
           <div className="flex items-end justify-between mb-1">
             <div className="flex flex-col">
               {deal.discountPercent > 0 && (
@@ -356,6 +417,14 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
               </>
             )}
           </div>
+
+          {/* Price Conditions */}
+          {deal.priceConditions && (
+            <div className="flex items-start gap-1.5 mt-2 text-[10px] text-amber-500/80 leading-snug">
+              <Info className="h-3 w-3 flex-shrink-0 mt-0.5" />
+              <span>{deal.priceConditions}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

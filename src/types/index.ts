@@ -22,6 +22,17 @@ export interface Merchant {
   website: string;
 }
 
+export interface ProductImage {
+  id: string;
+  url: string;
+  alt?: string;
+  type: string; // packshot, lifestyle, detail, swatch, unknown
+  position: number;
+  width?: number;
+  height?: number;
+  merchantId?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -36,6 +47,7 @@ export interface Product {
   priceHistory?: PriceHistory[];
   deals?: Deal[];
   priceStats?: PriceStats;
+  images?: ProductImage[];
 }
 
 export interface PriceHistory {
@@ -77,6 +89,7 @@ export interface Deal {
   score?: number;
   tags?: string;
   promoCode?: string;
+  priceConditions?: string;
   startDate: string;
   endDate?: string;
   isHot: boolean;

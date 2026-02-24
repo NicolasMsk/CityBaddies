@@ -107,6 +107,7 @@ export async function POST(request: Request) {
         product: {
           include: {
             category: true,
+            images: { orderBy: { position: 'asc' }, take: 5 },
           },
         },
       },

@@ -371,17 +371,13 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
         {/* Price Section */}
         <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-4 border-t border-dashed border-white/10`}>
-          {/* Promo Code */}
-          {deal.promoCode && (
-            <div className="flex items-center gap-2 mb-3 bg-[#d4a855]/10 border border-[#d4a855]/20 px-3 py-1.5">
-              <Tag className="h-3 w-3 text-[#d4a855] flex-shrink-0" />
-              <span className="text-[10px] text-neutral-400 uppercase tracking-wide">Code :</span>
-              <span className="text-xs font-bold text-[#d4a855] tracking-wider font-mono">{deal.promoCode}</span>
-            </div>
-          )}
 
-          <div className="flex items-end justify-between mb-1">
+          <div className="flex items-end justify-between mb-2">
             <div className="flex flex-col">
+              {/* Marchand */}
+              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">
+                {deal.merchant.name}
+              </span>
               {deal.discountPercent > 0 && (
                 <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">
                   {deal.originalPrice.toFixed(2)} €
@@ -402,21 +398,28 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>
-          
-          {/* Unit Price & Info */}
-          <div className="flex items-center gap-2 text-[10px] text-neutral-600 uppercase tracking-wide mt-2">
-            <span>{deal.merchant.name}</span>
-            <span>•</span>
-            {deal.volume && (
-              <span>{deal.volume}</span>
-            )}
-            {deal.pricePerUnit && deal.volumeUnit && (
-              <>
-                <span className="bg-neutral-800 w-px h-3" />
-                <span>{formatPricePerUnit(deal.pricePerUnit, deal.volumeUnit, deal.volumeValue)}</span>
-              </>
-            )}
-          </div>
+
+          {/* Volume & Prix unitaire */}
+          {(deal.volume || (deal.pricePerUnit && deal.volumeUnit)) && (
+            <div className="flex items-center gap-2 text-[10px] text-neutral-600 uppercase tracking-wide mb-2">
+              {deal.volume && <span>{deal.volume}</span>}
+              {deal.pricePerUnit && deal.volumeUnit && (
+                <>
+                  {deal.volume && <span className="bg-neutral-800 w-px h-3" />}
+                  <span>{formatPricePerUnit(deal.pricePerUnit, deal.volumeUnit, deal.volumeValue)}</span>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Promo Code */}
+          {deal.promoCode && (
+            <div className="flex items-center gap-2 bg-[#d4a855]/10 border border-[#d4a855]/20 px-3 py-1.5">
+              <Tag className="h-3 w-3 text-[#d4a855] flex-shrink-0" />
+              <span className="text-[10px] text-neutral-400 uppercase tracking-wide">Code :</span>
+              <span className="text-xs font-bold text-[#d4a855] tracking-wider font-mono">{deal.promoCode}</span>
+            </div>
+          )}
 
           {/* Price Conditions */}
           {deal.priceConditions && (

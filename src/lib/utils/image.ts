@@ -87,12 +87,23 @@ export function isValidImageUrl(url: string | null | undefined): url is string {
   if (!url) return false;
   try {
     const parsed = new URL(url);
-    return (
-      parsed.protocol === 'https:' &&
-      parsed.hostname.includes('.') &&
-      parsed.hostname.split('.').length >= 2 &&
-      parsed.hostname.split('.')[0].length > 1
-    );
+    if (parsed.protocol !== 'https:') return false;
+    if (!parsed.hostname.includes('.')) return false;
+    if (parsed.hostname.split('.').length < 2) return false;
+    if (parsed.hostname.split('.')[0].length <= 1) return false;
+
+    // Exclure les placeholders connus
+    const PLACEHOLDER_PATTERNS = [
+      'cq5dam.web',          // Placeholder Nocibé / AEM générique
+      'no-image',
+      'placeholder',
+      'noimage',
+      'default-image',
+    ];
+    const pathname = parsed.pathname.toLowerCase();
+    if (PLACEHOLDER_PATTERNS.some(p => pathname.includes(p))) return false;
+
+    return true;
   } catch {
     return false;
   }

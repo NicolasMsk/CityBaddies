@@ -82,7 +82,7 @@ export default function SafeImage({
   className,
   ...props
 }: SafeImageProps) {
-  // Construire la chaîne de fallback
+  // Construire la chaîne de fallback (uniquement les vraies URLs du produit)
   const buildFallbackChain = useCallback(() => {
     const chain: Array<{ url: string; unoptimized: boolean }> = [];
 
@@ -99,17 +99,10 @@ export default function SafeImage({
       chain.push({ url: fallbackSrc, unoptimized: true });
     }
 
-    // Fallback 4 : Image catégorie locale
-    const categoryImg = getCategoryFallbackImage(categorySlug);
-    chain.push({ url: categoryImg, unoptimized: false });
-
-    // Fallback 5 : Logo par défaut
-    if (categoryImg !== DEFAULT_FALLBACK) {
-      chain.push({ url: DEFAULT_FALLBACK, unoptimized: false });
-    }
+    // Pas de fallback catégorie/logo — le parent gère l'état "aucune image"
 
     return chain;
-  }, [src, fallbackSrc, categorySlug]);
+  }, [src, fallbackSrc]);
 
   const [fallbackChain] = useState(buildFallbackChain);
   const [fallbackIndex, setFallbackIndex] = useState(-1); // -1 = using primary src

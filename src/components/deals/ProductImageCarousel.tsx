@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import SafeImage, { getCategoryFallbackImage } from '@/components/ui/SafeImage';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ProductImageItem {
   url: string;
@@ -45,18 +45,9 @@ export default function ProductImageCarousel({
   const originalIndices = images.map((_, i) => i).filter(i => !failedImages.has(i));
 
   // Si aucune image valide, afficher le fallback catégorie
+  // Aucune image valide → ne rien afficher du tout
   if (validImages.length === 0) {
-    return (
-      <div className="relative aspect-[4/5] bg-[#050505] border border-white/5 flex items-center justify-center">
-        <SafeImage
-          src={getCategoryFallbackImage(categorySlug)}
-          alt={`${brandName} ${productName}`}
-          fill
-          sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-contain opacity-40"
-        />
-      </div>
-    );
+    return null;
   }
 
   const hasMultiple = validImages.length > 1;

@@ -10,7 +10,7 @@ import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
 import ScoreGauge from './ScoreGauge';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
-import SafeImage, { getCategoryFallbackImage } from '@/components/ui/SafeImage';
+import SafeImage from '@/components/ui/SafeImage';
 
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
@@ -244,9 +244,9 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
   return (
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
-      {/* Image Container - Carousel multi-images */}
+      {/* Image Container - Carousel multi-images (masqué si aucune image) */}
+      {allImages.length > 0 && (
       <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
-        {allImages.length > 0 ? (
           <SafeImage
             src={allImages[safeActiveIndex]?.url || allImages[safeActiveIndex]?.originalUrl || ''}
             fallbackSrc={allImages[safeActiveIndex]?.originalUrl}
@@ -258,15 +258,6 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
             onAllFailed={() => handleImageFailed(rawImages.indexOf(allImages[safeActiveIndex]))}
           />
-        ) : (
-          <SafeImage
-            src={getCategoryFallbackImage(categorySlug)}
-            alt={`${deal.product.category?.name || 'Beauté'}`}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
-            className="object-contain opacity-30"
-          />
-        )}
         
         {/* Overlay gradient - Subtle */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
@@ -359,6 +350,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Content */}
       <div className={`p-5 flex flex-col flex-1 border-t border-white/5 ${featured ? 'lg:justify-center' : ''}`}>

@@ -182,16 +182,27 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     } : null,
   }));
 
-  // Serialize product images for the carousel (HD quality)
-  const productImages = product.images
-    .map(img => ({ url: getHighQualityImageUrl(img.url), alt: img.alt, type: img.type }))
-    .filter(img => isValidImageUrl(img.url)) as { url: string; alt: string | null; type: string }[];
+  // Serialize product images for the carousel (HD quality + original pour fallback)
+  const productImages: { url: string; originalUrl: string; alt: string | null; type: string }[] = product.images
+    .map(img => ({
+      url: getHighQualityImageUrl(img.url) || img.url,
+      originalUrl: img.url,
+      alt: img.alt,
+      type: img.type,
+    }))
+    .filter(img => isValidImageUrl(img.url) || isValidImageUrl(img.originalUrl));
 
   // Fallback: ajouter l'image du deal si pas d'images produit
   if (productImages.length === 0) {
     const dealImg = getHighQualityImageUrl(bestDeal?.imageUrl);
-    if (isValidImageUrl(dealImg)) {
-      productImages.push({ url: dealImg, alt: `${brandName} ${product.name}`, type: 'packshot' });
+    const originalDealImg = bestDeal?.imageUrl || '';
+    if (isValidImageUrl(dealImg) || isValidImageUrl(originalDealImg)) {
+      productImages.push({
+        url: dealImg || originalDealImg,
+        originalUrl: originalDealImg,
+        alt: `${brandName} ${product.name}`,
+        type: 'packshot',
+      });
     }
   }
 
@@ -241,6 +252,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               images={productImages}
               productName={product.name}
               brandName={brandName}
+              categorySlug={product.category?.slug}
             />
 
             {/* Info + Pricing */}

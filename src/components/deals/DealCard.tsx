@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, ExternalLink, Star, Share2, Check, ThumbsUp, ThumbsDown, Loader2, Tag, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { Deal } from '@/types';
@@ -11,6 +10,7 @@ import { useAuth } from '@/components/auth';
 import DealTags, { ScoreBadge } from './DealTags';
 import ScoreGauge from './ScoreGauge';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
+import SafeImage, { getCategoryFallbackImage } from '@/components/ui/SafeImage';
 
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
@@ -85,25 +85,47 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [timeAgo, setTimeAgo] = useState<string>('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [imgError, setImgError] = useState(false);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
-  // Construire la liste des images HD (images du produit + fallback deal.imageUrl)
-  const productImages = deal.product.images && deal.product.images.length > 0
+  // Type commun pour les images avec fallback
+  type ImageEntry = { url: string | null; originalUrl: string; alt: string | undefined };
+
+  // Construire la liste des images (HD + originale pour fallback)
+  const productImages: ImageEntry[] = deal.product.images && deal.product.images.length > 0
     ? deal.product.images
         .sort((a, b) => a.position - b.position)
-        .map(img => ({ url: getHighQualityImageUrl(img.url), alt: img.alt }))
-        .filter(img => isValidImageUrl(img.url))
+        .map(img => ({
+          url: getHighQualityImageUrl(img.url),
+          originalUrl: img.url,
+          alt: img.alt,
+        }))
+        .filter(img => isValidImageUrl(img.url) || isValidImageUrl(img.originalUrl))
     : [];
-  
+
   // Fallback: si pas d'images produit, utiliser l'image du deal
   const dealImgUrl = getHighQualityImageUrl(deal.imageUrl);
-  const allImages = (productImages.length > 0
+  const rawImages: ImageEntry[] = (productImages.length > 0
     ? productImages
-    : isValidImageUrl(dealImgUrl)
-      ? [{ url: dealImgUrl, alt: deal.product.name }]
+    : isValidImageUrl(dealImgUrl) || isValidImageUrl(deal.imageUrl)
+      ? [{ url: dealImgUrl || deal.imageUrl || null, originalUrl: deal.imageUrl || '', alt: deal.product.name } as ImageEntry]
       : []
   ).slice(0, 5);
+
+  // Filtrer les images totalement cassées (toutes tentatives épuisées)
+  const allImages = rawImages.filter((_, idx) => !failedImages.has(idx));
   const hasMultipleImages = allImages.length > 1;
+  const safeActiveIndex = Math.min(activeImageIndex, Math.max(0, allImages.length - 1));
+
+  // Slug de catégorie pour fallback image locale
+  const categorySlug = deal.product.category?.slug || null;
+
+  const handleImageFailed = useCallback((originalIndex: number) => {
+    setFailedImages(prev => {
+      const next = new Set(prev);
+      next.add(originalIndex);
+      return next;
+    });
+  }, []);
 
   // Calculer timeAgo côté client uniquement pour éviter l'erreur d'hydratation
   useEffect(() => {
@@ -224,20 +246,26 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
       {/* Image Container - Carousel multi-images */}
       <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
-        {allImages.length > 0 && !imgError ? (
-          <Image
-            src={allImages[activeImageIndex].url!}
-            alt={allImages[activeImageIndex].alt || `${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
+        {allImages.length > 0 ? (
+          <SafeImage
+            src={allImages[safeActiveIndex]?.url || allImages[safeActiveIndex]?.originalUrl || ''}
+            fallbackSrc={allImages[safeActiveIndex]?.originalUrl}
+            categorySlug={categorySlug}
+            alt={allImages[safeActiveIndex]?.alt || `${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
             quality={85}
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
-            onError={() => setImgError(true)}
+            onAllFailed={() => handleImageFailed(rawImages.indexOf(allImages[safeActiveIndex]))}
           />
         ) : (
-          <div className="w-full h-full bg-[#0a0a0a] flex items-center justify-center border-b border-white/5">
-            <span className="text-xl uppercase tracking-widest text-white/20">Image Indisp.</span>
-          </div>
+          <SafeImage
+            src={getCategoryFallbackImage(categorySlug)}
+            alt={`${deal.product.category?.name || 'Beauté'}`}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
+            className="object-contain opacity-30"
+          />
         )}
         
         {/* Overlay gradient - Subtle */}
@@ -268,7 +296,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
               <button
                 key={idx}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImageIndex(idx); }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === activeImageIndex ? 'bg-[#d4a855] w-3' : 'bg-white/30 hover:bg-white/60'}`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === safeActiveIndex ? 'bg-[#d4a855] w-3' : 'bg-white/30 hover:bg-white/60'}`}
               />
             ))}
           </div>

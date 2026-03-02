@@ -1,11 +1,12 @@
 'use client';
 
-import Image from 'next/image';
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import SafeImage, { getCategoryFallbackImage } from '@/components/ui/SafeImage';
 
 interface ProductImageItem {
   url: string;
+  originalUrl?: string; // URL avant transformation HD — pour fallback
   alt?: string | null;
   type?: string;
 }
@@ -14,58 +15,69 @@ interface ProductImageCarouselProps {
   images: ProductImageItem[];
   productName: string;
   brandName: string;
+  categorySlug?: string | null;
 }
 
-export default function ProductImageCarousel({ images: rawImages, productName, brandName }: ProductImageCarouselProps) {
+export default function ProductImageCarousel({
+  images: rawImages,
+  productName,
+  brandName,
+  categorySlug,
+}: ProductImageCarouselProps) {
   const images = rawImages.slice(0, 5);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
-  // Filtrer les images qui ont échoué
+  // Filtrer les images totalement cassées (SafeImage a épuisé tous ses fallbacks)
   const validImages = images.filter((_, idx) => !failedImages.has(idx));
-  // Mapper l'index actif vers l'index réel
-  const safeIndex = Math.min(activeIndex, validImages.length - 1);
+  const safeIndex = Math.min(activeIndex, Math.max(0, validImages.length - 1));
 
-  const handleImageError = (originalIndex: number) => {
+  const handleImageFullyFailed = useCallback((originalIndex: number) => {
     setFailedImages(prev => {
       const next = new Set(prev);
       next.add(originalIndex);
       return next;
     });
-    // Reculer l'index si nécessaire
-    if (activeIndex >= validImages.length - 1) {
-      setActiveIndex(Math.max(0, activeIndex - 1));
-    }
-  };
+    setActiveIndex(prev => Math.max(0, prev - 1));
+  }, []);
 
+  // Trouver les indices originaux des images encore valides
+  const originalIndices = images.map((_, i) => i).filter(i => !failedImages.has(i));
+
+  // Si aucune image valide, afficher le fallback catégorie
   if (validImages.length === 0) {
     return (
-      <div className="relative aspect-[4/5] bg-[#050505] border border-white/5 flex flex-col items-center justify-center gap-3">
-        <ImageOff className="h-8 w-8 text-neutral-700" />
-        <span className="text-xs uppercase tracking-[0.3em] text-neutral-600">Image Indisponible</span>
+      <div className="relative aspect-[4/5] bg-[#050505] border border-white/5 flex items-center justify-center">
+        <SafeImage
+          src={getCategoryFallbackImage(categorySlug)}
+          alt={`${brandName} ${productName}`}
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-contain opacity-40"
+        />
       </div>
     );
   }
 
   const hasMultiple = validImages.length > 1;
   const currentImage = validImages[safeIndex];
-  // Trouver l'index original pour le tracking d'erreurs
-  const originalIndices = images.map((_, i) => i).filter(i => !failedImages.has(i));
 
   return (
     <div className="flex flex-col gap-4">
       {/* Image principale */}
       <div className="group relative aspect-[4/5] bg-transparent flex items-center justify-center">
-        <Image
-          key={currentImage.url}
+        <SafeImage
+          key={`main-${currentImage.url}-${safeIndex}`}
           src={currentImage.url}
+          fallbackSrc={currentImage.originalUrl}
+          categorySlug={categorySlug}
           alt={currentImage.alt || `${brandName} ${productName}`}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           quality={90}
           className="object-contain"
           priority={safeIndex === 0}
-          onError={() => handleImageError(originalIndices[safeIndex])}
+          onAllFailed={() => handleImageFullyFailed(originalIndices[safeIndex])}
         />
 
         {/* Flèches de navigation */}
@@ -110,8 +122,10 @@ export default function ProductImageCarousel({ images: rawImages, productName, b
               }`}
               aria-label={`Voir image ${idx + 1}`}
             >
-              <Image
+              <SafeImage
                 src={img.url}
+                fallbackSrc={img.originalUrl}
+                categorySlug={categorySlug}
                 alt={img.alt || `${brandName} ${productName} - ${idx + 1}`}
                 fill
                 sizes="64px"

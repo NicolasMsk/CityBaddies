@@ -99,9 +99,26 @@ export function isValidImageUrl(url: string | null | undefined): url is string {
       'placeholder',
       'noimage',
       'default-image',
+      'image-not-found',
+      'missing',
+      'unavailable',
+      'coming-soon',
+      'no_photo',
+      'nophoto',
+      'blank.',
+      'empty.',
+      'default.',
+      '1x1.',               // Pixels de tracking 1x1
+      'spacer.',
+      'pixel.',
     ];
     const pathname = parsed.pathname.toLowerCase();
-    if (PLACEHOLDER_PATTERNS.some(p => pathname.includes(p))) return false;
+    const fullUrl = parsed.toString().toLowerCase();
+    if (PLACEHOLDER_PATTERNS.some(p => pathname.includes(p) || fullUrl.includes(p))) return false;
+
+    // Exclure les images trop petites (ex: pixel de tracking)
+    const widthParam = parsed.searchParams.get('w') || parsed.searchParams.get('width') || parsed.searchParams.get('scaleWidth');
+    if (widthParam && parseInt(widthParam) < 10) return false;
 
     return true;
   } catch {

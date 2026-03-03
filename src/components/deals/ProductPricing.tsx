@@ -58,7 +58,16 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
     return map;
   }, [deals]);
 
-  const variantKeys = useMemo(() => Array.from(variantMap.keys()), [variantMap]);
+  // Trier les contenances par volume croissant (pas par prix)
+  const variantKeys = useMemo(() => {
+    return Array.from(variantMap.keys()).sort((a, b) => {
+      const dealsA = variantMap.get(a)!.deals;
+      const dealsB = variantMap.get(b)!.deals;
+      const volA = dealsA[0]?.variant?.volumeValue ?? parseFloat(a) ?? 0;
+      const volB = dealsB[0]?.variant?.volumeValue ?? parseFloat(b) ?? 0;
+      return volA - volB;
+    });
+  }, [variantMap]);
   const hasMultipleVariants = variantKeys.length > 1;
 
   const [selectedVariant, setSelectedVariant] = useState(variantKeys[0] || 'standard');
@@ -111,21 +120,21 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
   if (!cheapest) return null;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 md:space-y-10">
       {/* ── Sélecteur de contenance ── */}
       {hasMultipleVariants && (
         <div className="relative">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-4 block">
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-3 sm:mb-4 block">
             Format
           </label>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-full flex items-center justify-between bg-transparent border-b border-white/20 pb-4 text-white hover:border-white/60 transition-colors"
+            className="w-full flex items-center justify-between bg-transparent border-b border-white/20 pb-3 sm:pb-4 text-white hover:border-white/60 transition-colors"
           >
-            <span className="text-lg font-light tracking-wide">{currentLabel}</span>
-            <div className="flex items-center gap-6">
-              <span className="text-sm text-neutral-400 font-light">
-                à partir de <span className="text-white font-medium">{cheapest.currentPrice.toFixed(2)} €</span>
+            <span className="text-base sm:text-lg font-light tracking-wide">{currentLabel}</span>
+            <div className="flex items-center gap-3 sm:gap-6">
+              <span className="text-xs sm:text-sm text-neutral-400 font-light">
+                <span className="hidden sm:inline">à partir de </span><span className="text-white font-medium">{cheapest.currentPrice.toFixed(2)} €</span>
               </span>
               <ChevronDown className={`h-4 w-4 text-neutral-500 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -145,19 +154,19 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                       setSelectedVariant(key);
                       setIsDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-6 py-5 text-left transition-colors border-b border-white/5 last:border-0 ${
+                    className={`w-full flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-5 text-left transition-colors border-b border-white/5 last:border-0 ${
                       isSelected ? 'bg-white/5 text-white' : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <span className="text-base font-light tracking-wide">{variant.label}</span>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <span className="text-sm sm:text-base font-light tracking-wide">{variant.label}</span>
                       {merchantCount > 1 && (
                         <span className="text-[10px] uppercase tracking-widest text-neutral-500">
                           {merchantCount} offres
                         </span>
                       )}
                     </div>
-                    <span className={`text-base font-medium ${isSelected ? 'text-white' : ''}`}>
+                    <span className={`text-sm sm:text-base font-medium ${isSelected ? 'text-white' : ''}`}>
                       {variantBest.dealPrice.toFixed(2)} €
                     </span>
                   </button>
@@ -169,8 +178,8 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
       )}
 
       {/* ── Comparateur de prix ── */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-2">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between mb-1 sm:mb-2">
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">
             {hasMultipleMerchants ? 'Offres disponibles' : 'Offre disponible'}
           </span>
@@ -181,7 +190,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
           )}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {merchantPrices.map((mp, index) => {
             const isFirst = index === 0;
             const diffFromBest = isFirst ? 0 : (mp.currentPrice - cheapest.currentPrice);
@@ -193,7 +202,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                 target="_blank"
                 rel="nofollow sponsored noopener"
                 className={`
-                  group flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-6 transition-all duration-500
+                  group flex items-center justify-between gap-3 sm:gap-6 p-3 sm:p-4 md:p-6 transition-all duration-500
                   ${isFirst
                     ? 'bg-white text-black hover:bg-neutral-100'
                     : 'bg-transparent border border-white/10 hover:border-white/30 text-white'
@@ -201,13 +210,13 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                 `}
               >
                 {/* Merchant Logo & Price Diff */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-1 sm:gap-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                     {(() => {
                       const logoData = MERCHANT_LOGOS[mp.merchantSlug];
                       if (logoData) {
                         return (
-                          <div className="bg-white rounded flex items-center justify-center h-12 w-36 px-3">
+                          <div className="bg-white rounded flex items-center justify-center h-8 w-24 sm:h-10 sm:w-28 md:h-12 md:w-36 px-2 sm:px-3">
                             <Image
                               src={logoData.src}
                               alt={mp.merchantName}
@@ -219,26 +228,26 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                         );
                       }
                       return (
-                        <span className={`text-lg tracking-widest uppercase ${isFirst ? 'font-bold' : 'font-light'}`}>
+                        <span className={`text-sm sm:text-lg tracking-widest uppercase ${isFirst ? 'font-bold' : 'font-light'}`}>
                           {mp.merchantName}
                         </span>
                       );
                     })()}
                     {isFirst && hasMultipleMerchants && (
-                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-1 bg-black text-white">
+                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black text-white">
                         Meilleur Prix
                       </span>
                     )}
                   </div>
                   {diffFromBest > 0 && (
-                    <span className="text-xs text-neutral-500 font-light">
+                    <span className="text-[10px] sm:text-xs text-neutral-500 font-light">
                       +{diffFromBest.toFixed(2)} € vs meilleur prix
                     </span>
                   )}
                   {mp.promoCode && (
-                    <div className={`flex items-center gap-2 mt-1 ${isFirst ? 'text-amber-700' : 'text-[#d4a855]'}`}>
-                      <Tag className="h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs font-mono font-bold tracking-wider">
+                    <div className={`flex items-center gap-1.5 sm:gap-2 ${isFirst ? 'text-amber-700' : 'text-[#d4a855]'}`}>
+                      <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider truncate">
                         Code : {mp.promoCode}
                       </span>
                     </div>
@@ -246,29 +255,29 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                 </div>
 
                 {/* Pricing & CTA */}
-                <div className="flex items-center justify-between sm:justify-end gap-8">
+                <div className="flex items-center gap-3 sm:gap-6 md:gap-8 flex-shrink-0">
                   <div className="flex flex-col items-end">
-                    <div className="flex items-baseline gap-3">
+                    <div className="flex items-baseline gap-1.5 sm:gap-3">
                       {mp.originalPrice > mp.currentPrice && (
-                        <span className={`text-sm line-through ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
+                        <span className={`text-[10px] sm:text-sm line-through ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
                           {mp.originalPrice.toFixed(2)} €
                         </span>
                       )}
-                      <span className={`text-2xl tracking-tight ${isFirst ? 'font-bold' : 'font-light'}`}>
+                      <span className={`text-lg sm:text-xl md:text-2xl tracking-tight ${isFirst ? 'font-bold' : 'font-light'}`}>
                         {mp.currentPrice.toFixed(2)} €
                       </span>
                     </div>
                     {mp.discountPercent > 0 && (
-                      <span className={`text-[10px] font-medium tracking-widest uppercase mt-1 ${isFirst ? 'text-black' : 'text-neutral-400'}`}>
+                      <span className={`text-[9px] sm:text-[10px] font-medium tracking-widest uppercase mt-0.5 sm:mt-1 ${isFirst ? 'text-black' : 'text-neutral-400'}`}>
                         -{mp.discountPercent}%
                       </span>
                     )}
                   </div>
 
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-transform duration-300 group-hover:translate-x-1 ${
+                  <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-transform duration-300 group-hover:translate-x-1 ${
                     isFirst ? 'bg-black text-white' : 'bg-white text-black'
                   }`}>
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 </div>
               </a>
@@ -351,11 +360,11 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
         const currentPrice = cheapest.currentPrice;
 
         return (
-          <div className="mt-10">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4">
+          <div className="mt-6 sm:mt-8 md:mt-10">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-3 sm:mb-4">
               Historique des prix{variantLabel ? ` — ${variantLabel}` : ''}
             </h3>
-            <div className="bg-transparent border border-white/10 p-6">
+            <div className="bg-transparent border border-white/10 p-3 sm:p-4 md:p-6">
               <PriceChart
                 priceHistory={historyToShow}
                 priceStats={{

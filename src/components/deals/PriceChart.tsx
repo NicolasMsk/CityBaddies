@@ -100,39 +100,39 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
 
       {/* Stats Cards - Sharp - Afficher seulement si données suffisantes */}
       {!hasInsufficientData && !hasSingleObservation && (
-        <div className="grid grid-cols-3 gap-px bg-white/10 border border-white/10 mb-8">
-          <div className="bg-[#0a0a0a] p-6 text-center">
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mb-2">Plus bas</p>
-            <p className="text-xl font-light text-emerald-400">{priceStats.lowest.toFixed(2)}€</p>
+        <div className="grid grid-cols-3 gap-px bg-white/10 border border-white/10 mb-4 sm:mb-6 md:mb-8">
+          <div className="bg-[#0a0a0a] p-3 sm:p-4 md:p-6 text-center">
+            <p className="text-[9px] sm:text-[10px] text-neutral-500 uppercase tracking-wider sm:tracking-widest mb-1 sm:mb-2">Plus bas</p>
+            <p className="text-sm sm:text-base md:text-xl font-light text-emerald-400">{priceStats.lowest.toFixed(2)}€</p>
           </div>
-          <div className="bg-[#0a0a0a] p-6 text-center">
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mb-2">Moyen</p>
-            <p className="text-xl font-light text-white">{priceStats.average.toFixed(2)}€</p>
+          <div className="bg-[#0a0a0a] p-3 sm:p-4 md:p-6 text-center">
+            <p className="text-[9px] sm:text-[10px] text-neutral-500 uppercase tracking-wider sm:tracking-widest mb-1 sm:mb-2">Moyen</p>
+            <p className="text-sm sm:text-base md:text-xl font-light text-white">{priceStats.average.toFixed(2)}€</p>
           </div>
-          <div className="bg-[#0a0a0a] p-6 text-center">
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mb-2">Plus haut</p>
-            <p className="text-xl font-light text-[#9b1515]">{priceStats.highest.toFixed(2)}€</p>
+          <div className="bg-[#0a0a0a] p-3 sm:p-4 md:p-6 text-center">
+            <p className="text-[9px] sm:text-[10px] text-neutral-500 uppercase tracking-wider sm:tracking-widest mb-1 sm:mb-2">Plus haut</p>
+            <p className="text-sm sm:text-base md:text-xl font-light text-[#9b1515]">{priceStats.highest.toFixed(2)}€</p>
           </div>
         </div>
       )}
 
       {/* Analysis Banner */}
       {!hasInsufficientData && !hasSingleObservation && isLowestPrice && (
-        <div className="mb-8 p-4 bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center gap-2">
-          <TrendingDown className="h-4 w-4 text-emerald-500" />
-          <p className="text-emerald-500 text-xs font-bold tracking-widest uppercase">
-            Prix le plus bas jamais vu • C'est le moment !
+        <div className="mb-4 sm:mb-6 md:mb-8 p-3 sm:p-4 bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center gap-2">
+          <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
+          <p className="text-emerald-500 text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase">
+            Prix le plus bas jamais vu
           </p>
         </div>
       )}
 
       {/* Graphique - Afficher seulement si données suffisantes */}
       {!hasInsufficientData && (
-        <div className="h-[300px] w-full min-w-[200px]">
-          <ResponsiveContainer width="100%" height={300} minWidth={200}>
+        <div className="h-[220px] sm:h-[260px] md:h-[300px] w-full min-w-[200px]">
+          <ResponsiveContainer width="100%" height="100%" minWidth={200}>
             {hasSingleObservation ? (
               // Scatter chart pour un point unique
-              <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+              <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                 <XAxis 
                   dataKey="date" 
@@ -154,7 +154,7 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
               </ScatterChart>
             ) : (
               // Line chart classique avec points bien visibles
-              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                 <XAxis 
                   dataKey="date" 

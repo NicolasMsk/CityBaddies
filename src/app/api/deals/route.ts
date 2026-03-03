@@ -97,6 +97,7 @@ export async function GET(request: Request) {
     const [deals, total] = await Promise.all([
       prisma.deal.findMany({
         where,
+        distinct: ['productId'],
         include: {
           merchant: true,
           product: {

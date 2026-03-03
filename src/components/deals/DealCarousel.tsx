@@ -51,7 +51,7 @@ export default function DealCarousel({
   // Nombre de cards visibles selon la taille d'écran
   const getVisibleCount = () => {
     if (typeof window === 'undefined') return 4;
-    if (window.innerWidth < 640) return 1;
+    if (window.innerWidth < 640) return 2;
     if (window.innerWidth < 768) return 2;
     if (window.innerWidth < 1024) return 3;
     return 4;
@@ -108,10 +108,10 @@ export default function DealCarousel({
           {deals.map((deal) => (
             <div
               key={deal.id}
-              className="flex-shrink-0 px-2 md:px-3 h-full"
+              className="flex-shrink-0 px-1 sm:px-2 md:px-3 h-full"
               style={{ width: `${100 / visibleCount}%` }}
             >
-              <div className="h-[560px]">
+              <div className="h-[420px] sm:h-[480px] md:h-[560px]">
                 <DealCard deal={deal as any} />
               </div>
             </div>

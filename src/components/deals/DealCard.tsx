@@ -246,7 +246,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
     <div className={`group relative bg-[#0a0a0a] border border-white/10 hover:border-[#d4a855] transition-colors duration-300 h-full ${featured ? 'lg:flex' : 'flex flex-col'}`}>
       {/* Image Container - Carousel multi-images (masqué si aucune image) */}
       {allImages.length > 0 && (
-      <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
+      <div className={`relative ${featured ? 'lg:w-[40%] flex-shrink-0 h-full' : 'h-[160px] sm:h-[200px] md:h-[260px] flex-shrink-0'} overflow-hidden bg-[#050505]`}>
           <SafeImage
             src={allImages[safeActiveIndex]?.url || allImages[safeActiveIndex]?.originalUrl || ''}
             fallbackSrc={allImages[safeActiveIndex]?.originalUrl}
@@ -353,15 +353,15 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
       )}
 
       {/* Content */}
-      <div className={`p-5 flex flex-col flex-1 border-t border-white/5 ${featured ? 'lg:justify-center' : ''}`}>
+      <div className={`p-3 sm:p-4 md:p-5 flex flex-col flex-1 border-t border-white/5 ${featured ? 'lg:justify-center' : ''}`}>
         
         {/* Brand & Meta */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4a855]">
+        <div className="flex items-center justify-between mb-1.5 sm:mb-2 md:mb-3">
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[#d4a855] truncate">
             {deal.product.brand || deal.merchant.name}
           </span>
           {deal.isHot && (
-            <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#9b1515] font-bold animate-pulse">
+            <span className="hidden sm:flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#9b1515] font-bold animate-pulse">
               <Star className="h-3 w-3 fill-current" />
               Tendance
             </span>
@@ -370,14 +370,14 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
         {/* Title */}
         <Link href={`/produits/${deal.product.slug}`} className="group/title">
-          <h3 className="font-light text-sm text-white mb-3 leading-relaxed group-hover/title:text-[#d4a855] transition-colors line-clamp-2 min-h-[2.5rem]">
+          <h3 className="font-light text-xs sm:text-sm text-white mb-1.5 sm:mb-2 md:mb-3 leading-snug sm:leading-relaxed group-hover/title:text-[#d4a855] transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">
             {capitalizeFirstWord(deal.refinedTitle || deal.product.name)}
           </h3>
         </Link>
 
         {/* Tags */}
         {deal.tags && (
-          <div className="mb-4 fade-in">
+          <div className="mb-2 sm:mb-3 md:mb-4 fade-in">
             <DealTags tags={deal.tags} score={deal.score} compact />
           </div>
         )}
@@ -390,12 +390,12 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         )}
 
         {/* Price Section */}
-        <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-4 border-t border-dashed border-white/10`}>
+        <div className={`${!deal.score || deal.score < 40 ? 'mt-auto ' : ''}pt-2 sm:pt-3 md:pt-4 border-t border-dashed border-white/10`}>
 
-          <div className="flex items-end justify-between mb-2">
+          <div className="flex items-end justify-between mb-1.5 sm:mb-2">
             <div className="flex flex-col">
               {/* Marchand */}
-              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest text-neutral-500 mb-0.5 sm:mb-1 truncate">
                 {deal.merchant.name}
               </span>
               {deal.discountPercent > 0 && (
@@ -403,8 +403,8 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
                   {deal.originalPrice.toFixed(2)} €
                 </span>
               )}
-              <span className="text-xl font-light text-white tracking-tight leading-none">
-                {deal.dealPrice.toFixed(2)} <span className="text-sm align-top">€</span>
+              <span className="text-base sm:text-lg md:text-xl font-light text-white tracking-tight leading-none">
+                {deal.dealPrice.toFixed(2)} <span className="text-[10px] sm:text-xs md:text-sm align-top">€</span>
               </span>
             </div>
             
@@ -412,7 +412,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
               href={`/api/redirect?url=${encodeURIComponent(deal.productUrl || '')}`}
               target="_blank"
               rel="nofollow sponsored noopener"
-              className="flex items-center gap-2 bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"
+              className="flex items-center gap-1 sm:gap-2 bg-white text-black px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"
             >
               Voir le prix
               <ExternalLink className="h-3 w-3" />
@@ -434,10 +434,10 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
 
           {/* Promo Code */}
           {deal.promoCode && (
-            <div className="flex items-center gap-2 bg-[#d4a855]/10 border border-[#d4a855]/20 px-3 py-1.5">
-              <Tag className="h-3 w-3 text-[#d4a855] flex-shrink-0" />
-              <span className="text-[10px] text-neutral-400 uppercase tracking-wide">Code :</span>
-              <span className="text-xs font-bold text-[#d4a855] tracking-wider font-mono">{deal.promoCode}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a855]/10 border border-[#d4a855]/20 px-2 py-1 sm:px-3 sm:py-1.5">
+              <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#d4a855] flex-shrink-0" />
+              <span className="hidden sm:inline text-[10px] text-neutral-400 uppercase tracking-wide">Code :</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#d4a855] tracking-wider font-mono truncate">{deal.promoCode}</span>
             </div>
           )}
 

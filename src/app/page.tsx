@@ -163,14 +163,17 @@ async function getHomeData() {
       )
     );
     
-    // Mélanger en alternance (round-robin)
+    // Mélanger en alternance (round-robin) + dédupliquer par productId
     const mixedDeals: any[] = [];
+    const seenProductIds = new Set<string>();
     const maxLength = Math.max(...dealsByMerchant.map(d => d.length));
     
     for (let i = 0; i < maxLength; i++) {
       for (const merchantDeals of dealsByMerchant) {
-        if (merchantDeals[i] && mixedDeals.length < totalDeals) {
-          mixedDeals.push(merchantDeals[i]);
+        const deal = merchantDeals[i];
+        if (deal && mixedDeals.length < totalDeals && !seenProductIds.has(deal.productId)) {
+          seenProductIds.add(deal.productId);
+          mixedDeals.push(deal);
         }
       }
     }

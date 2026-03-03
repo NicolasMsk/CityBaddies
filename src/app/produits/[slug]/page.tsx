@@ -182,8 +182,22 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     } : null,
   }));
 
+  // Priorité des marchands pour les images : Sephora → Marionnaud → Nocibé
+  const MERCHANT_IMAGE_PRIORITY: Record<string, number> = {
+    'cmluymd990000trhkr60e37nd': 0, // Sephora
+    'cmluya9ag0000trz04a2fx00m': 1, // Marionnaud
+    'cmluyeypq0000trwstrwoiqaz': 2, // Nocibé
+  };
+
   // Serialize product images for the carousel (HD quality + original pour fallback)
-  const productImages: { url: string; originalUrl: string; alt: string | null; type: string }[] = product.images
+  // Tri : d'abord par priorité marchand, puis par position au sein du même marchand
+  const productImages: { url: string; originalUrl: string; alt: string | null; type: string }[] = [...product.images]
+    .sort((a, b) => {
+      const prioA = a.merchantId ? (MERCHANT_IMAGE_PRIORITY[a.merchantId] ?? 99) : 99;
+      const prioB = b.merchantId ? (MERCHANT_IMAGE_PRIORITY[b.merchantId] ?? 99) : 99;
+      if (prioA !== prioB) return prioA - prioB;
+      return a.position - b.position;
+    })
     .map(img => ({
       url: getHighQualityImageUrl(img.url) || img.url,
       originalUrl: img.url,
@@ -225,28 +239,28 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      <div className="min-h-screen bg-[#0a0a0a] py-12 md:py-20">
-        <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-12">
+      <div className="min-h-screen bg-[#0a0a0a] py-6 sm:py-10 md:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-12">
 
           {/* ── Breadcrumb ── */}
-          <nav className="flex items-center gap-3 text-[9px] uppercase tracking-[0.3em] text-neutral-500 mb-12">
-            <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
-            <span className="text-neutral-700">/</span>
-            <Link href="/produits" className="hover:text-white transition-colors">Produits</Link>
+          <nav className="flex items-center gap-2 sm:gap-3 text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-neutral-500 mb-6 sm:mb-8 md:mb-12 overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <Link href="/" className="hover:text-white transition-colors flex-shrink-0">Accueil</Link>
+            <span className="text-neutral-700 flex-shrink-0">/</span>
+            <Link href="/produits" className="hover:text-white transition-colors flex-shrink-0">Produits</Link>
             {product.category && (
               <>
-                <span className="text-neutral-700">/</span>
-                <Link href={`/produits?category=${product.category.slug}`} className="hover:text-white transition-colors">
+                <span className="text-neutral-700 flex-shrink-0">/</span>
+                <Link href={`/produits?category=${product.category.slug}`} className="hover:text-white transition-colors flex-shrink-0">
                   {product.category.name}
                 </Link>
               </>
             )}
-            <span className="text-neutral-700">/</span>
-            <span className="text-neutral-400">{brandName} {product.name}</span>
+            <span className="text-neutral-700 flex-shrink-0 hidden sm:inline">/</span>
+            <span className="text-neutral-400 truncate hidden sm:inline">{brandName} {product.name}</span>
           </nav>
 
           {/* ── Hero Section ── */}
-          <div className="grid md:grid-cols-2 gap-12 md:gap-20 mb-24">
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-20 mb-12 sm:mb-16 md:mb-24">
             {/* Image Carousel */}
             <ProductImageCarousel
               images={productImages}
@@ -258,12 +272,12 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
             {/* Info + Pricing */}
             <div className="flex flex-col justify-center">
               {/* Brand */}
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-400 mb-4">
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-neutral-400 mb-2 sm:mb-4">
                 {brandName}
               </span>
 
               {/* Product name */}
-              <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white mb-12 leading-[1.1]">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-light tracking-tight text-white mb-6 sm:mb-8 md:mb-12 leading-[1.1]">
                 {product.name}
               </h1>
 
@@ -274,7 +288,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               />
 
               {/* Category tag */}
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-12 pt-8 border-t border-white/10">
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-white/10">
                 <Link href={`/produits?category=${product.category?.slug}`} className="hover:text-white transition-colors">
                   {categoryName}
                 </Link>
@@ -289,13 +303,13 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* ── Details Grid ── */}
-          <div className="grid md:grid-cols-2 gap-16 md:gap-24 mb-24">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-24 mb-12 sm:mb-16 md:mb-24">
             {/* Left Column: Analysis & Description */}
-            <div className="space-y-16">
+            <div className="space-y-8 sm:space-y-12 md:space-y-16">
               {/* ── Why Good Deal (AI analysis) ── */}
               {bestDeal.whyGoodDeal && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-6">
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
                     Notre analyse
                   </h2>
                   <div
@@ -308,7 +322,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               {/* ── Product Description ── */}
               {(product.seoDescription || product.description) && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-6">
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
                     Description
                   </h2>
                   <div className="text-neutral-400 font-light text-sm leading-loose">
@@ -319,11 +333,11 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Right Column: Ingredients */}
-            <div className="space-y-16">
+            <div className="space-y-8 sm:space-y-12 md:space-y-16">
               {/* ── Ingredients ── */}
               {product.ingredients && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-6">
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
                     Ingrédients (INCI)
                   </h2>
                   <div className="text-neutral-500 font-light text-xs leading-loose">
@@ -335,7 +349,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* ── Back link ── */}
-          <div className="pt-12 border-t border-white/10 flex justify-center">
+          <div className="pt-8 sm:pt-12 border-t border-white/10 flex justify-center">
             <Link
               href="/produits"
               className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 hover:text-white transition-colors"

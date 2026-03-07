@@ -6,15 +6,15 @@ export const SEO_CONFIG = {
   siteUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com',
   
   // Description par défaut
-  defaultDescription: 'Découvrez les meilleures promos beauté jusqu\'à -70% sur Sephora et Nocibé. Maquillage, skincare, parfums - offres vérifiées quotidiennement.',
-  
+  defaultDescription: 'Comparez les prix de vos parfums entre Sephora, Nocibé et Marionnaud. Eau de parfum, eau de toilette, coffrets — historique des prix et vraies promos.',
+
   // Mots-clés principaux
   primaryKeywords: [
-    'bons plans beauté',
-    'promo maquillage',
-    'reduction sephora',
-    'code promo nocibé',
-    'deals cosmétiques',
+    'comparateur prix parfum',
+    'parfum pas cher',
+    'eau de parfum promo',
+    'parfum sephora nocibé marionnaud',
+    'fragrance luxe promotion',
   ],
   
   // Réseaux sociaux (à compléter)
@@ -30,7 +30,7 @@ export const SEO_CONFIG = {
   },
   
   // Enseignes partenaires
-  partners: ['Sephora', 'Nocibé'],
+  partners: ['Sephora', 'Nocibé', 'Marionnaud'],
   
   // Couleurs de la marque (pour OG images, etc.)
   brandColors: {
@@ -42,14 +42,14 @@ export const SEO_CONFIG = {
 
 // Générateur de titre SEO
 export function generateTitle(pageTitle?: string): string {
-  if (!pageTitle) return `${SEO_CONFIG.siteName} | Bons Plans Beauté & Promos Maquillage`;
-  return `${pageTitle} | ${SEO_CONFIG.siteName}`;
+  if (!pageTitle) return `${SEO_CONFIG.siteName} Parfums | Comparateur Prix Parfums`;
+  return `${pageTitle} | ${SEO_CONFIG.siteName} Parfums`;
 }
 
 // Générateur de description avec mots-clés
 export function generateDescription(customDesc: string, includeKeywords = true): string {
   if (!includeKeywords) return customDesc;
-  return `${customDesc} Sephora, Nocibé - City Baddies.`;
+  return `${customDesc} Sephora, Nocibé, Marionnaud — City Baddies Parfums.`;
 }
 
 // Schema Organization réutilisable
@@ -59,7 +59,7 @@ export const organizationSchema = {
   name: SEO_CONFIG.siteName,
   url: SEO_CONFIG.siteUrl,
   logo: `${SEO_CONFIG.siteUrl}/images/logo.png`,
-  description: "Plateforme communautaire de bons plans beauté. Découvrez les meilleures promotions sur le maquillage, skincare et parfums.",
+  description: "Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud. Historique des prix, analyse des promos et alertes prix sur vos fragrances préférées.",
   email: SEO_CONFIG.contact.email,
   sameAs: Object.values(SEO_CONFIG.social).filter(Boolean),
   contactPoint: {

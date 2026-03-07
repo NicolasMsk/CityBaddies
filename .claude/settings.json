@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"metadata\\\\|generateMetadata\\\\|Metadata\")",
+      "Bash(xargs grep -l \"export const metadata\")"
+    ]
+  }
+}

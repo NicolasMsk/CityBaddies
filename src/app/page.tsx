@@ -16,25 +16,25 @@ export const dynamic = 'force-dynamic';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: "City Baddies | Analyse Honnête des Prix Beauté — Vraies Promos vs Fausses Promos",
-  description: "City Baddies analyse chaque offre beauté et lui attribue une note /10. Fausses promos démasquées, prix comparés entre Sephora, Nocibé & Marionnaud. On vous dit la vérité sur chaque réduction.",
+  title: "City Baddies Parfums | Comparateur Prix Parfums — Sephora, Nocibé, Marionnaud",
+  description: "Comparez les prix de vos parfums préférés entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
   keywords: [
-    "bons plans beauté",
-    "promo sephora",
-    "code promo nocibé",
-    "promo marionnaud",
-    "fausse promo beauté",
-    "comparateur prix beauté",
-    "avis promos cosmétiques",
+    "comparateur prix parfum",
     "parfum pas cher",
-    "analyse prix skincare",
+    "promo parfum sephora",
+    "parfum nocibé promo",
+    "parfum marionnaud soldes",
+    "eau de parfum prix",
+    "eau de toilette promo",
+    "fragrance luxe pas cher",
+    "historique prix parfum",
   ],
   alternates: {
     canonical: BASE_URL,
   },
   openGraph: {
-    title: "City Baddies | La Vérité sur les Promos Beauté",
-    description: "On analyse chaque offre beauté et on note /10. Fausses promos, vrais bons plans : on vous dit tout.",
+    title: "City Baddies Parfums | Comparateur Prix Parfums en France",
+    description: "Comparez les prix de vos parfums entre Sephora, Nocibé et Marionnaud. Vraies promos vs fausses réductions.",
     url: BASE_URL,
     type: "website",
   },
@@ -291,17 +291,17 @@ export default async function HomePage() {
             <div className="flex items-center gap-3 mb-6">
               <span className="h-[1px] w-12 bg-[#d4a855]"></span>
               <span className="text-[#d4a855] text-xs font-bold tracking-[0.2em] uppercase">
-                Analyse Beauté Indépendante
+                Comparateur Prix Parfums
               </span>
             </div>
 
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-white leading-[0.85] tracking-tight mb-8">
-              <span className="block italic font-light opacity-90">Slay ta</span>
-              <span className="block font-medium">Routine.</span>
+              <span className="block italic font-light opacity-90">Ton Parfum.</span>
+              <span className="block font-medium">Meilleur Prix.</span>
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-xl border-l border-white/20 pl-6 mb-10">
-              Pas ton budget. <span className="text-white/60 text-base block mt-2">On analyse chaque offre beauté et on la note /10. Fausses promos, vrais bons plans — on te dit la vérité.</span>
+              Pas les fausses promos. <span className="text-white/60 text-base block mt-2">On compare chaque parfum entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies réductions — on te dit la vérité.</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-4">

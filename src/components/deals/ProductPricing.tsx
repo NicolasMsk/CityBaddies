@@ -360,11 +360,18 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
         const currentPrice = cheapest.currentPrice;
 
         return (
-          <div className="mt-6 sm:mt-8 md:mt-10">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-3 sm:mb-4">
-              Historique des prix{variantLabel ? ` — ${variantLabel}` : ''}
-            </h3>
-            <div className="bg-transparent border border-white/10 p-3 sm:p-4 md:p-6">
+          <div className="mt-8 sm:mt-10 md:mt-12">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6">
+              <h3 className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/80">
+                Historique & Tendances
+              </h3>
+              {variantLabel && (
+                <span className="text-[10px] text-white/40 uppercase tracking-widest px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                  {variantLabel}
+                </span>
+              )}
+            </div>
+            <div className="bg-[#121212] rounded-3xl border border-white/5 p-4 sm:p-6 md:p-8">
               <PriceChart
                 priceHistory={historyToShow}
                 priceStats={{

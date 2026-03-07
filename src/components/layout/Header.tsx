@@ -12,50 +12,6 @@ import { SearchBar } from '@/components/search';
 
 const dealCategories = [
   {
-    slug: 'maquillage',
-    label: 'Maquillage',
-    subcategories: [
-      { slug: 'teint', label: 'Teint' },
-      { slug: 'yeux', label: 'Yeux' },
-      { slug: 'levres', label: 'Lèvres' },
-      { slug: 'sourcils', label: 'Sourcils' },
-      { slug: 'palettes', label: 'Palettes' },
-    ],
-  },
-  {
-    slug: 'soins-visage',
-    label: 'Soins Visage',
-    subcategories: [
-      { slug: 'nettoyants', label: 'Nettoyants' },
-      { slug: 'serums', label: 'Sérums' },
-      { slug: 'cremes', label: 'Crèmes' },
-      { slug: 'masques', label: 'Masques' },
-      { slug: 'contour-yeux', label: 'Contour des yeux' },
-    ],
-  },
-  {
-    slug: 'soins-corps',
-    label: 'Soins Corps',
-    subcategories: [
-      { slug: 'hydratants', label: 'Hydratants' },
-      { slug: 'gommages', label: 'Gommages' },
-      { slug: 'huiles', label: 'Huiles' },
-      { slug: 'solaires', label: 'Solaires' },
-      { slug: 'douche', label: 'Douche & Bain' },
-    ],
-  },
-  {
-    slug: 'cheveux',
-    label: 'Cheveux',
-    subcategories: [
-      { slug: 'shampoings', label: 'Shampoings' },
-      { slug: 'apres-shampoings', label: 'Après-shampoings' },
-      { slug: 'masques-capillaires', label: 'Masques' },
-      { slug: 'huiles', label: 'Huiles' },
-      { slug: 'coiffants', label: 'Coiffants' },
-    ],
-  },
-  {
     slug: 'parfums',
     label: 'Parfums',
     subcategories: [
@@ -63,27 +19,6 @@ const dealCategories = [
       { slug: 'eau-de-toilette', label: 'Eau de toilette' },
       { slug: 'brumes', label: 'Brumes' },
       { slug: 'coffrets-parfums', label: 'Coffrets' },
-    ],
-  },
-  {
-    slug: 'ongles',
-    label: 'Ongles',
-    subcategories: [
-      { slug: 'vernis', label: 'Vernis' },
-      { slug: 'semi-permanent', label: 'Semi-permanent' },
-      { slug: 'faux-ongles', label: 'Faux ongles' },
-      { slug: 'soins-ongles', label: 'Soins' },
-      { slug: 'nail-art', label: 'Nail art' },
-    ],
-  },
-  {
-    slug: 'accessoires',
-    label: 'Accessoires',
-    subcategories: [
-      { slug: 'pinceaux', label: 'Pinceaux' },
-      { slug: 'eponges', label: 'Éponges' },
-      { slug: 'trousses', label: 'Trousses' },
-      { slug: 'miroirs', label: 'Miroirs' },
     ],
   },
 ];

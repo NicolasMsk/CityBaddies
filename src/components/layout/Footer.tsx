@@ -20,11 +20,11 @@ export default function Footer() {
       { label: 'Tendances', href: '/produits?hotOnly=true' },
       { label: 'Par catégorie', href: '/categories' },
     ],
-    'Catégories': [
-      { label: 'Maquillage', href: '/categories/maquillage' },
-      { label: 'Soin Visage', href: '/categories/soins-visage' },
-      { label: 'Parfums', href: '/categories/parfums' },
-      { label: 'Cheveux', href: '/categories/cheveux' },
+    'Parfums': [
+      { label: 'Tous les parfums', href: '/categories/parfums' },
+      { label: 'Eau de parfum', href: '/produits?category=parfums&subcategory=eau-de-parfum' },
+      { label: 'Eau de toilette', href: '/produits?category=parfums&subcategory=eau-de-toilette' },
+      { label: 'Coffrets', href: '/produits?category=parfums&subcategory=coffrets-parfums' },
     ],
     'City Baddies': [
       { label: 'Qui sommes-nous', href: '/about' },
@@ -53,7 +53,7 @@ export default function Footer() {
             <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">
               LE VRAI PRIX, PAS LE FAKE. <br/>
               <span className="text-neutral-600 block mt-2">
-                Nous traquons l&apos;historique des prix pour vous garantir la meilleure affaire. Transparence totale.
+                Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud. Historique des prix et transparence totale.
               </span>
             </p>
             

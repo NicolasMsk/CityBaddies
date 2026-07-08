@@ -1,0 +1,23 @@
+{
+  "nocibe": [
+    { "url": "https://www.nocibe.fr/fr/c/parfum/01", "category": "parfums" },
+    { "url": "https://www.nocibe.fr/fr/c/maquillage/03", "category": "maquillage" },
+    { "url": "https://www.nocibe.fr/fr/c/soin-visage/12", "category": "soins-visage" },
+    { "url": "https://www.nocibe.fr/fr/c/soin-corps/13", "category": "soins-corps" },
+    { "url": "https://www.nocibe.fr/fr/c/cheveux/14", "category": "cheveux" }
+  ],
+  "sephora": [
+    { "url": "https://www.sephora.fr/shop/parfum-c301/", "category": "parfums" },
+    { "url": "https://www.sephora.fr/shop/maquillage-c302/", "category": "maquillage" },
+    { "url": "https://www.sephora.fr/shop/soin-visage-c303/", "category": "soins-visage" },
+    { "url": "https://www.sephora.fr/shop/corps-et-bain-c304/", "category": "soins-corps" },
+    { "url": "https://www.sephora.fr/shop/cheveux-c307/", "category": "cheveux" }
+  ],
+  "marionnaud": [
+    { "url": "https://www.marionnaud.fr/parfum/c/P0000", "category": "parfums" },
+    { "url": "https://www.marionnaud.fr/maquillage/c/M0000", "category": "maquillage" },
+    { "url": "https://www.marionnaud.fr/soin-visage/c/V0000", "category": "soins-visage" },
+    { "url": "https://www.marionnaud.fr/soin-corps/c/S0000", "category": "soins-corps" },
+    { "url": "https://www.marionnaud.fr/cheveux/c/C0000", "category": "cheveux" }
+  ]
+}

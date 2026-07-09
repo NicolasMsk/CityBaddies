@@ -1,0 +1,50 @@
+name: Track prices
+
+# Relevé de prix quotidien du comparateur PARFUMS.
+# Lit ScrapingQueue (URLs marchands vérifiées) et enregistre le prix actuel de
+# chaque parfum chez chaque marchand -> la fiche produit affiche la comparaison.
+# Tout est fetch + cheerio (aucun navigateur). UA mobile + throttle pour Akamai
+# (Nocibé/Sephora) ; Marionnaud en direct.
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # 05:00 UTC ≈ 07:00 Paris
+  workflow_dispatch:
+    inputs:
+      merchant:
+        description: "Marchand (vide = les 3)"
+        required: false
+        default: ""
+        type: choice
+        options: ["", "nocibe", "marionnaud", "sephora"]
+
+concurrency:
+  group: track-prices
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        merchant: [nocibe, marionnaud, sephora]
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Track ${{ matrix.merchant }}
+        if: >-
+          github.event_name != 'workflow_dispatch' ||
+          github.event.inputs.merchant == '' ||
+          github.event.inputs.merchant == matrix.merchant
+        run: npx tsx src/scripts/track-prices.ts --merchant ${{ matrix.merchant }}

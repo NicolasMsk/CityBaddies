@@ -14,11 +14,13 @@ import { findOrCreateVariant, calculatePricePerUnit } from '../utils/volume';
 
 const BATCH_SIZE = 3; // limite pool Supabase (~5 connexions)
 
-// Garde-fou expiration: on n'expire les deals non revus que si le run
-// a ramené un volume normal — sinon (site bloqué / HTML changé) on ne touche à rien.
-const EXPIRE_MIN_IMPORTED = 50;
-// Garde-fou relatif: le run doit couvrir au moins 50% des deals ACTIVE existants
-// du marchand — sinon (blocage partiel du site) on n'expire rien.
+// Plancher anti-blocage: en dessous, on considère que le run a échoué (site bloqué /
+// HTML cassé) et on n'expire rien. Volontairement bas pour laisser les marchands à
+// faible volume (ex: Marionnaud ~15 deals) bénéficier de l'expiration quotidienne via
+// le garde-fou relatif ci-dessous, qui est la vraie protection.
+const EXPIRE_MIN_IMPORTED = 10;
+// Garde-fou relatif (protection principale): le run doit couvrir au moins 50% des deals
+// ACTIVE existants du marchand — sinon (blocage partiel du site) on n'expire rien.
 const EXPIRE_MIN_RATIO = 0.5;
 // Échappatoire: un deal non revu depuis 7 runs quotidiens est mort, quelles que
 // soient les gardes — borne le blocage du garde-fou relatif après une baisse

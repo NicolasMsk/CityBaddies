@@ -34,6 +34,8 @@ export interface ScrapedProduct {
   rating?: number;
   reviewCount?: number;
   description?: string;
+  promoCode?: string;       // Code promo affiché sur la tuile/fiche (ex: "SOLDES20")
+  priceConditions?: string; // Conditions du prix (ex: "avec la carte fidélité")
 
   // Traçabilité: URL de la page catégorie qui a produit ce résultat
   sourceUrl?: string;

@@ -103,6 +103,7 @@ export class NocibeScraper implements Scraper {
       category: p.category,
       rating: p.rating,
       reviewCount: p.reviewCount,
+      promoCode: p.promoCode,
       sourceUrl: url, // URL de la page de catégorie source (pour debug)
     }));
 

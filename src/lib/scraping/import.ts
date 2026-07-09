@@ -166,6 +166,8 @@ export async function importProducts(
             imageUrl: p.imageUrl || null,
             productUrl: p.productUrl,
             sourceUrl: p.sourceUrl || null,
+            promoCode: p.promoCode || null,
+            priceConditions: p.priceConditions || null,
             volume: p.volume || null,
             volumeValue: priceInfo?.volumeValue ?? null,
             volumeUnit: priceInfo?.volumeUnit ?? null,

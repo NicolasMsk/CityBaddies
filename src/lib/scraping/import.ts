@@ -1,0 +1,324 @@
+/**
+ * Moteur d'import V2 — minimal.
+ * ScrapedProduct[] -> Brand / Product / ProductVariant / Deal(ACTIVE) / PriceHistory
+ * puis expiration des deals non revus (avec garde-fou).
+ *
+ * Schéma actuel: Product est partagé entre enseignes (matché par slug marque-nom),
+ * le Deal porte le marchand (unique [variantId, merchantId]).
+ */
+import prisma from '../prisma';
+import { ScrapedProduct } from './types';
+import { normalizePrices, isValidDeal, productSlug } from './validate';
+import { findOrCreateBrand } from '../brands';
+import { findOrCreateVariant, calculatePricePerUnit } from '../utils/volume';
+import { categorizeProductsBatch, CategorizeResult } from '../ai/categorize';
+import { calculateDealScore, tagsToString } from '../utils/scoring';
+
+const BATCH_SIZE = 3; // limite pool Supabase (~5 connexions)
+
+// Plancher anti-blocage: en dessous, on considère que le run a échoué (site bloqué /
+// HTML cassé) et on n'expire rien. Volontairement bas pour laisser les marchands à
+// faible volume (ex: Marionnaud ~15 deals) bénéficier de l'expiration quotidienne via
+// le garde-fou relatif ci-dessous, qui est la vraie protection.
+const EXPIRE_MIN_IMPORTED = 10;
+// Garde-fou relatif (protection principale): le run doit couvrir au moins 50% des deals
+// ACTIVE existants du marchand — sinon (blocage partiel du site) on n'expire rien.
+const EXPIRE_MIN_RATIO = 0.5;
+// Échappatoire: un deal non revu depuis 7 runs quotidiens est mort, quelles que
+// soient les gardes — borne le blocage du garde-fou relatif après une baisse
+// légitime du catalogue (ex: fin de soldes).
+const STALE_EXPIRE_DAYS = 7;
+
+const DB_CATEGORIES = [
+  { slug: 'maquillage', name: 'Maquillage', icon: 'Sparkles', description: 'Fonds de teint, rouges à lèvres...' },
+  { slug: 'soins-visage', name: 'Soins visage', icon: 'Droplets', description: 'Crèmes, sérums...' },
+  { slug: 'soins-corps', name: 'Soins corps', icon: 'Heart', description: 'Lotions, gommages...' },
+  { slug: 'cheveux', name: 'Cheveux', icon: 'Scissors', description: 'Shampoings, soins...' },
+  { slug: 'parfums', name: 'Parfums', icon: 'Gem', description: 'Parfums femme, homme...' },
+  { slug: 'ongles', name: 'Ongles', icon: 'Palette', description: 'Vernis, nail art...' },
+  { slug: 'accessoires', name: 'Accessoires', icon: 'Crown', description: 'Trousses, miroirs...' },
+];
+
+const MERCHANT_INFO: Record<string, { name: string; website: string }> = {
+  sephora: { name: 'Sephora', website: 'https://www.sephora.fr' },
+  nocibe: { name: 'Nocibé', website: 'https://www.nocibe.fr' },
+  marionnaud: { name: 'Marionnaud', website: 'https://www.marionnaud.fr' },
+};
+
+export interface ImportResult {
+  scraped: number;
+  valid: number;
+  imported: number;
+  expired: number;
+  priceChanges: number;
+  errors: Array<{ product: string; error: string }>;
+}
+
+/**
+ * Importe le résultat d'un run de scraping pour un marchand.
+ *
+ * @param rawProducts DOIT être le scrape COMPLET du marchand pour ce run — un
+ * sous-ensemble (une seule catégorie) ferait expirer tous les autres deals du marchand.
+ */
+export async function importProducts(
+  merchantSlug: string,
+  rawProducts: ScrapedProduct[],
+): Promise<ImportResult> {
+  const runStart = new Date();
+  const result: ImportResult = {
+    scraped: rawProducts.length,
+    valid: 0,
+    imported: 0,
+    expired: 0,
+    priceChanges: 0,
+    errors: [],
+  };
+
+  // 1. Merchant + catégories
+  const info = MERCHANT_INFO[merchantSlug];
+  if (!info) throw new Error(`Marchand inconnu: ${merchantSlug}`);
+  const merchant = await prisma.merchant.upsert({
+    where: { slug: merchantSlug },
+    update: {},
+    create: {
+      name: info.name,
+      slug: merchantSlug,
+      website: info.website,
+      logoUrl: `${info.website}/favicon.ico`,
+    },
+  });
+  for (const cat of DB_CATEGORIES) {
+    await prisma.category.upsert({ where: { slug: cat.slug }, update: {}, create: cat });
+  }
+  const categories = await prisma.category.findMany();
+  const categoryBySlug = new Map(categories.map((c) => [c.slug, c]));
+  const defaultCategory = categoryBySlug.get('maquillage')!;
+
+  // 2. Normaliser, filtrer, dédupliquer.
+  // Clé = URL + volume : deux contenances d'un même produit peuvent partager la
+  // même URL de fiche (ex: Marionnaud après retrait de ?varSel) — ce sont bien
+  // deux variantes/deals distincts, il ne faut pas en perdre une.
+  const seen = new Set<string>();
+  const products = rawProducts
+    .map(normalizePrices)
+    .filter((p) => isValidDeal(p))
+    .filter((p) => {
+      const key = `${p.productUrl}|${p.volume ?? ''}`;
+      return seen.has(key) ? false : (seen.add(key), true);
+    });
+  result.valid = products.length;
+  console.log(`[import] ${result.scraped} scrapés -> ${result.valid} deals valides`);
+
+  // 2b. Catégorisation IA — uniquement pour les produits NOUVEAUX (absents en base).
+  // Échec OpenAI toléré: Map vide -> les fallbacks (catégorie scrapée, tier 2) s'appliquent.
+  const allSlugs = [...new Set(products.map((p) => productSlug(p.brand, p.name)))];
+  const existingSlugs = new Set(
+    (
+      await prisma.product.findMany({
+        where: { slug: { in: allSlugs } },
+        select: { slug: true },
+      })
+    ).map((prod) => prod.slug),
+  );
+  const newProductsByName = new Map<string, ScrapedProduct>();
+  for (const p of products) {
+    if (!existingSlugs.has(productSlug(p.brand, p.name))) newProductsByName.set(p.name, p);
+  }
+  // Map clé = nom du produit (même clé que categorizeProductsBatch)
+  let classifications = new Map<string, CategorizeResult>();
+  if (newProductsByName.size > 0) {
+    try {
+      // categorizeProductsBatch découpe lui-même en batches de 50
+      classifications = await categorizeProductsBatch(
+        [...newProductsByName.values()].map((p) => ({
+          name: p.name,
+          brand: p.brand,
+          volume: p.volume,
+        })),
+      );
+      console.log(
+        `[import] Catégorisation IA: ${classifications.size}/${newProductsByName.size} nouveaux produits classifiés`,
+      );
+    } catch (err) {
+      classifications = new Map();
+      console.warn(
+        `[import] Catégorisation IA indisponible: ${err instanceof Error ? err.message : String(err)} — import sans sous-catégories/refinedTitle`,
+      );
+    }
+  }
+
+  // Cache de PROMESSES pour éviter la course find-then-create de findOrCreateBrand
+  // quand plusieurs produits d'une même marque arrivent dans le même batch.
+  const brandCache = new Map<string, Promise<string | null>>();
+  const warnedCategories = new Set<string>();
+
+  // 3. Import par batch de 3
+  for (let i = 0; i < products.length; i += BATCH_SIZE) {
+    const batch = products.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (p) => {
+        try {
+          // Brand
+          let brandPromise = brandCache.get(p.brand);
+          if (!brandPromise) {
+            brandPromise = findOrCreateBrand(p.brand);
+            // Éviction en cas d'échec: une erreur DB transitoire sur une marque
+            // ne doit pas empoisonner le cache pour tout le reste du run.
+            brandPromise.catch(() => brandCache.delete(p.brand));
+            brandCache.set(p.brand, brandPromise);
+          }
+          const brandId = await brandPromise;
+
+          // Product (partagé entre enseignes, matché par slug marque-nom)
+          const category = categoryBySlug.get(p.category);
+          if (!category && !warnedCategories.has(p.category)) {
+            warnedCategories.add(p.category);
+            console.warn(`[import] Catégorie inconnue "${p.category}" -> fallback maquillage (${p.name})`);
+          }
+          const slug = productSlug(p.brand, p.name);
+          // Classification IA (uniquement présente pour les produits nouveaux)
+          const classification = classifications.get(p.name);
+          const aiCategory = classification
+            ? categoryBySlug.get(classification.categorySlug)
+            : undefined;
+          const product = await prisma.product.upsert({
+            where: { slug },
+            update: {},
+            create: {
+              name: p.name.substring(0, 200),
+              slug,
+              description: `${p.brand} - ${p.name}`.substring(0, 500),
+              imageUrl: p.imageUrl || null,
+              brand: p.brand,
+              brandId,
+              categoryId: (aiCategory ?? category ?? defaultCategory).id,
+              subcategory: classification?.subcategorySlug ?? null,
+              subsubcategory: classification?.subsubcategorySlug ?? null,
+            },
+          });
+
+          // Variant (volume garanti par isValidDeal)
+          const variant = await findOrCreateVariant(prisma, product.id, p.volume);
+          if (!variant) return;
+
+          // Deal — upsert sur la contrainte unique [variantId, merchantId]
+          const priceInfo = calculatePricePerUnit(p.currentPrice, p.volume);
+
+          // Score + tags — calcul LOCAL, toujours effectué (aucune dépendance IA)
+          const { score, tags } = calculateDealScore({
+            discountPercent: p.discountPercent,
+            brandTier: classification?.brandTier ?? null, // null = score marque neutre
+            pricePerUnit: priceInfo?.pricePerUnit ?? null,
+            isHot: false,
+            isTrending: false,
+            categorySlug: p.category,
+            subcategorySlug: classification?.subcategorySlug,
+            productName: p.name,
+          });
+
+          const dealData = {
+            title: `${p.brand} -${p.discountPercent}% : ${p.name.substring(0, 100)}`,
+            description: `${p.discountPercent}% de réduction !`,
+            dealPrice: p.currentPrice,
+            originalPrice: p.originalPrice,
+            discountPercent: p.discountPercent,
+            discountAmount: Math.round((p.originalPrice - p.currentPrice) * 100) / 100,
+            imageUrl: p.imageUrl || null,
+            productUrl: p.productUrl,
+            sourceUrl: p.sourceUrl || null,
+            promoCode: p.promoCode || null,
+            priceConditions: p.priceConditions || null,
+            volume: p.volume || null,
+            volumeValue: priceInfo?.volumeValue ?? null,
+            volumeUnit: priceInfo?.volumeUnit ?? null,
+            pricePerUnit: priceInfo?.pricePerUnit ?? null,
+            status: 'ACTIVE' as const,
+            lastSeenAt: new Date(),
+            score,
+            tags: tagsToString(tags),
+          };
+          await prisma.deal.upsert({
+            where: { variantId_merchantId: { variantId: variant.id, merchantId: merchant.id } },
+            update: {
+              ...dealData,
+              // Ne pas écraser brandTier/refinedTitle existants sans nouvelle classification
+              ...(classification ? { brandTier: classification.brandTier } : {}),
+              ...(classification?.refinedTitle ? { refinedTitle: classification.refinedTitle } : {}),
+            },
+            create: {
+              ...dealData,
+              productId: product.id,
+              variantId: variant.id,
+              merchantId: merchant.id,
+              type: 'scraped',
+              brandTier: classification?.brandTier ?? 2,
+              refinedTitle: classification?.refinedTitle ?? null,
+            },
+          });
+
+          // PriceHistory — seulement si le prix a changé pour cette variante
+          const lastPrice = await prisma.priceHistory.findFirst({
+            where: { productId: product.id, variantId: variant.id },
+            orderBy: { date: 'desc' },
+            select: { price: true },
+          });
+          if (!lastPrice || lastPrice.price !== p.currentPrice) {
+            await prisma.priceHistory.create({
+              data: {
+                productId: product.id,
+                variantId: variant.id,
+                price: p.currentPrice,
+                volumeValue: priceInfo?.volumeValue ?? null,
+                volumeUnit: priceInfo?.volumeUnit ?? null,
+                volumeRaw: p.volume || null,
+              },
+            });
+            result.priceChanges++;
+          }
+
+          result.imported++;
+        } catch (err) {
+          result.errors.push({
+            product: p.name,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }),
+    );
+
+    if ((i / BATCH_SIZE) % 20 === 0 && i > 0) {
+      console.log(`[import] ${Math.min(i + BATCH_SIZE, products.length)}/${products.length}...`);
+    }
+  }
+
+  // 4. Expiration des deals non revus — avec garde-fous absolu ET relatif
+  const activeCount = await prisma.deal.count({
+    where: { merchantId: merchant.id, status: 'ACTIVE' },
+  });
+  if (result.imported >= EXPIRE_MIN_IMPORTED && result.imported >= activeCount * EXPIRE_MIN_RATIO) {
+    const expired = await prisma.deal.updateMany({
+      where: {
+        merchantId: merchant.id,
+        status: 'ACTIVE',
+        lastSeenAt: { lt: runStart },
+      },
+      data: { status: 'EXPIRED' },
+    });
+    result.expired = expired.count;
+  } else {
+    console.warn(
+      `[import] ⚠️ Seulement ${result.imported} deals importés (min: ${EXPIRE_MIN_IMPORTED}, actifs existants: ${activeCount}, ratio min: ${EXPIRE_MIN_RATIO}) — expiration SKIPPÉE par sécurité`,
+    );
+  }
+
+  // Échappatoire inconditionnelle: expirer les deals non revus depuis STALE_EXPIRE_DAYS,
+  // que les garde-fous aient laissé passer l'expiration normale ou non.
+  const staleCutoff = new Date(Date.now() - STALE_EXPIRE_DAYS * 86_400_000);
+  const staleExpired = await prisma.deal.updateMany({
+    where: { merchantId: merchant.id, status: 'ACTIVE', lastSeenAt: { lt: staleCutoff } },
+    data: { status: 'EXPIRED' },
+  });
+  result.expired += staleExpired.count;
+
+  return result;
+}

@@ -1,0 +1,65 @@
+name: Daily scrape
+
+# Scraping quotidien des 3 enseignes vers Supabase.
+# Tous les scrapers sont en fetch + cheerio (aucun navigateur) -> job léger.
+#
+# ⚠️ Nocibé et Sephora sont derrière Akamai (blocage des UA desktop + rate-limit /
+# réputation IP). Les scrapers utilisent un User-Agent mobile. Les IP datacenter
+# de GitHub Actions PEUVENT être bloquées par Akamai même en UA mobile ; si un job
+# ressort systématiquement à 0 produit importé (donc rouge), c'est le signal qu'il
+# faut exécuter ce marchand depuis une IP résidentielle (voir documentation/SCRAPERS.md).
+
+on:
+  schedule:
+    - cron: "30 4 * * *" # 04:30 UTC ≈ 06:30 Paris (été) / 05:30 (hiver)
+  workflow_dispatch:
+    inputs:
+      merchant:
+        description: "Marchand à scraper (vide = les 3)"
+        required: false
+        default: ""
+        type: choice
+        options: ["", "nocibe", "marionnaud", "sephora"]
+
+concurrency:
+  group: daily-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Ne lance que le marchand choisi en dispatch ; sinon (schedule ou dispatch vide) les 3.
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event.inputs.merchant == '' ||
+      github.event.inputs.merchant == matrix.merchant
+    strategy:
+      fail-fast: false
+      matrix:
+        merchant: [nocibe, marionnaud, sephora]
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      - name: Scrape ${{ matrix.merchant }}
+        run: npx tsx src/scripts/scrape.ts ${{ matrix.merchant }}
+
+      # Enrichissement fiches produit (multi-images, description, INCI, conditions)
+      # + IA (seoDescription, whyGoodDeal). Tourne même si de nouveaux deals sont
+      # rares : ne traite que les deals ACTIVE encore non enrichis.
+      - name: Enrich ${{ matrix.merchant }}
+        if: success()
+        run: npx tsx src/scripts/enrich.ts ${{ matrix.merchant }} --limit 40

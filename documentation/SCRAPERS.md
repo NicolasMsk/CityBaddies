@@ -1,358 +1,160 @@
-# 🛒 Documentation des Scrapers
+# 🛒 Documentation des Scrapers (V2 — minimal)
 
-> **Dernière mise à jour** : 4 février 2026
+> **Dernière mise à jour** : 9 juillet 2026
 
-Cette documentation décrit le fonctionnement des 3 scrapers utilisés pour récupérer les promotions beauté.
-
----
-
-## 📋 Table des matières
-
-1. [Vue d'ensemble](#vue-densemble)
-2. [Nocibé](#-nocibé)
-3. [Sephora](#-sephora)
-4. [Marionnaud](#-marionnaud)
-5. [Comparatif](#-comparatif)
-6. [Flux de données](#-flux-de-données)
-7. [Jobs GCP associés](#-jobs-gcp-associés)
+Pipeline de scraping quotidien des promotions beauté sur **Nocibé**, **Marionnaud** et **Sephora**, réécrit en version minimale (juillet 2026) après la suppression de la V1.
 
 ---
 
 ## Vue d'ensemble
 
-Tous les scrapers parcourent les **pages promotions/catégories** de chaque enseigne et récupèrent uniquement les **produits en promotion** (avec un prix barré).
+Chaque matin, un job par enseigne :
+1. **scrape** les pages catégories (uniquement les produits en promotion nous intéressent),
+2. **normalise + filtre** les produits (réduction ≥ 15 %, prix > 1 €, volume parsable, réduction < 90 %),
+3. **upsert** en base : `Brand` → `Product` (partagé entre enseignes) → `ProductVariant` → `Deal` (statut `ACTIVE`) → `PriceHistory` (uniquement si le prix a changé),
+4. **expire** les deals de l'enseigne qui n'ont pas été revus (avec garde-fous anti-blocage).
 
-### Architecture
+Un seul point d'entrée pour les 3 enseignes : `src/scripts/scrape.ts`.
 
-- **Pattern utilisé** : Strategy Pattern
-- **Moteur commun** : `ImportEngine.ts`
-- **Interface commune** : `Scraper` (définie dans `types.ts`)
+### Différences avec la V1 (supprimée)
 
-### Fichiers sources
+La V1 (pipeline import → validation → enrichissement GPT + ~20 jobs GCP Cloud Run, `ImportEngine`, table `ScrapingSource`) a été supprimée au « V2 reset » (commit `7f7367c`, récupérable à `d164158`). La V2 supprime : Docker/GCP, validation, enrichissement GPT, catégorisation IA, table `ScrapingSource`. Tout est en **fetch + Cheerio** (plus aucun navigateur / Playwright).
+
+---
+
+## Architecture
+
+```
+GitHub Actions (cron 04:30 UTC)  ou  exécution locale/résidentielle
+        │  matrix: nocibe / marionnaud / sephora
+        ▼
+src/scripts/scrape.ts <merchant> [--limit N] [--dry-run]
+        │
+        ├── src/lib/scraping/nocibe.ts        fetch + cheerio (UA mobile)
+        ├── src/lib/scraping/marionnaud.ts    fetch + cheerio
+        ├── src/lib/scraping/sephora.ts       fetch + cheerio (UA mobile + anti-Akamai)
+        │        ▼  ScrapedProduct[]
+        ├── src/lib/scraping/validate.ts      normalizePrices + isValidDeal + productSlug (pur, testé)
+        └── src/lib/scraping/import.ts        upsert Brand/Product/Variant/Deal/PriceHistory + expiration
+        ▼
+   Supabase (Prisma) : Brand · Product · ProductVariant · Deal(ACTIVE) · PriceHistory
+```
+
+### Fichiers
 
 | Fichier | Rôle |
-|---------|------|
-| `src/lib/scraping/nocibe.ts` | Scraper Nocibé |
-| `src/lib/scraping/sephora.ts` | Scraper Sephora |
-| `src/lib/scraping/marionnaud.ts` | Scraper Marionnaud |
-| `src/lib/scraping/ImportEngine.ts` | Moteur d'import unifié |
-| `src/lib/scraping/types.ts` | Interfaces communes |
-| `data/category-links.json` | URLs des catégories à scraper |
+|---|---|
+| `data/scrape-sources.json` | URLs des pages catégorie par enseigne (versionné) |
+| `src/lib/scraping/types.ts` | Interfaces `Scraper` et `ScrapedProduct` |
+| `src/lib/scraping/{nocibe,marionnaud,sephora}.ts` | Scrapers (un par enseigne) |
+| `src/lib/scraping/validate.ts` | Filtrage/normalisation pur (tests : `validate.test.ts`) |
+| `src/lib/scraping/import.ts` | Moteur d'import + expiration |
+| `src/scripts/scrape.ts` | CLI unique |
+| `scripts/netcheck.mjs` | Diagnostic d'accès réseau aux 3 sites |
 
 ---
 
-## 🟣 Nocibé
+## ⚠️ Anti-bot : Akamai et le User-Agent mobile
 
-### Informations générales
+**Nocibé et Sephora sont derrière Akamai.** Point crucial découvert en juillet 2026 :
 
-| Propriété | Valeur |
-|-----------|--------|
-| **Fichier** | `nocibe.ts` |
-| **Technologie** | Cheerio + fetch (HTML statique) |
-| **Raison** | Nocibé rend le HTML côté serveur, pas de JavaScript nécessaire |
-| **Volume estimé** | ~5000 produits |
+- Un **User-Agent desktop** (même un vrai Chrome non-headless) reçoit un **403 « Access Denied »** immédiat.
+- Un **User-Agent mobile** (iOS Safari / Android Chrome) passe en **HTTP 200** avec la page complète — les données produit sont dans le HTML statique (Sephora : attribut `data-tcproduct` JSON ; Nocibé : tuiles `.product-tile`).
 
-### Catégories scrapées
+Les scrapers Nocibé et Sephora utilisent donc un **UA mobile**. ⚠️ **Ne pas repasser en UA desktop** sans revérifier l'accès.
 
-- Parfums
-- Maquillage
-- Soins visage
-- Soins corps
-- Cheveux
+**Sephora fait en plus du rate-limiting / réputation IP** : une rafale de requêtes depuis une même IP finit flaggée (403) même en UA mobile. Le scraper Sephora est donc « poli » : cookies de session persistants, pool d'UA mobiles, espacement minimum de 8 s entre requêtes, et backoff sur 403/429. Les IP datacenter (GitHub Actions) sont plus susceptibles d'être bloquées qu'une IP résidentielle — voir *Déploiement*.
 
-### Données récupérées par produit
-
-| Donnée | Type | Description |
-|--------|------|-------------|
-| `name` | string | Nom du produit |
-| `brand` | string | Marque (ex: Dior, Chanel) |
-| `currentPrice` | number | Prix soldé |
-| `originalPrice` | number | Prix barré |
-| `discountPercent` | number | Pourcentage de réduction |
-| `productUrl` | string | Lien vers la fiche produit |
-| `imageUrl` | string | URL de l'image produit |
-| `category` | string | parfums, maquillage, soins-visage, soins-corps, cheveux |
-| `size` | string | Volume (50ml, 100ml, etc.) |
-| `rating` | number | Note étoiles (ex: 4.5/5) |
-| `reviewCount` | number | Nombre de reviews |
-| `sku` | string | Identifiant interne Nocibé |
-
-### Configuration
-
-```typescript
-{
-  headless: true,
-  timeout: 15000,        // 15 secondes
-  delayBetweenRequests: 500  // 500ms entre chaque requête
-}
-```
-
-### Particularités
-
-- Scrape **2 pages maximum** par catégorie
-- Timeout de **10 secondes** par page
-- Dédoublonnage automatique par URL produit
-- Mapping automatique des catégories Nocibé → catégories internes
+Marionnaud n'est pas sous Akamai (fetch direct classique).
 
 ---
 
-## 🟠 Sephora
+## Filtrage d'un deal (`validate.ts`)
 
-### Informations générales
+Un produit scrapé devient un deal importable seulement si :
+- marque, nom et URL présents ;
+- volume présent et parsable (ex. `50ml`, `100 g`) ;
+- prix courant > 1 € ;
+- prix barré > prix courant ;
+- réduction ≥ **15 %** et < **90 %** (au-delà = donnée aberrante).
 
-| Propriété | Valeur |
-|-----------|--------|
-| **Fichier** | `sephora.ts` |
-| **Technologie** | Playwright + Stealth Plugin |
-| **Raison** | Sephora a des protections anti-bot |
-| **Volume estimé** | ~1000-2000 produits |
+`normalizePrices` corrige au préalable les incohérences fréquentes (prix barré manquant recalculé depuis le %, ou % recalculé depuis les prix).
 
-### Catégories scrapées
+---
 
-- Cheveux (C307)
-- Corps et bain (C304)
-- Maquillage (C302)
-- Parfums (C301)
-- Skincare (C303)
-- Ongles (C305)
+## Expiration des deals (`import.ts`)
 
-### Données récupérées par produit
+En fin de run, les deals `ACTIVE` de l'enseigne non revus (`lastSeenAt < début du run`) passent `EXPIRED`, protégés par deux garde-fous **plus** une échappatoire :
 
-| Donnée | Type | Description |
-|--------|------|-------------|
-| `name` | string | Nom du produit |
-| `brand` | string | Marque |
-| `currentPrice` | number | Prix soldé |
-| `originalPrice` | number | Prix barré |
-| `discountPercent` | number | Pourcentage de réduction |
-| `productUrl` | string | Lien vers la fiche |
-| `imageUrl` | string | Image haute qualité (amélioration auto) |
-| `category` | string | maquillage, parfums, soins-visage, cheveux, ongles |
-| `volume` | string | Taille du produit |
-| `sku` | string | Identifiant Sephora |
+1. **Plancher** : n'expire rien si moins de **10** deals importés (run probablement raté / site bloqué).
+2. **Ratio** : n'expire que si le run couvre ≥ **50 %** des deals `ACTIVE` existants du marchand (protège d'un blocage partiel).
+3. **Échappatoire** : quels que soient les garde-fous, tout deal non revu depuis **7 jours** est expiré (borne le blocage des garde-fous après une baisse légitime du catalogue, ex. fin de soldes).
 
-### Configuration
+---
 
-```typescript
-{
-  headless: true,
-  timeout: 30000,        // 30 secondes
-  delayBetweenRequests: 2000  // 2 secondes entre chaque requête
-}
-```
+## Enrichissement (2ᵉ passe quotidienne)
 
-### Particularités
+Le scrape de listing ne fournit qu'une image et les prix. Une seconde passe
+(`src/scripts/enrich.ts`, step « Enrich » du workflow) visite les fiches produit
+des deals `ACTIVE` pas encore enrichis (whyGoodDeal manquant ou produit sans
+images), avec le même throttling anti-Akamai, et remplit :
 
-- Utilise le **plugin Stealth** pour éviter la détection bot
-- Clique automatiquement sur "Voir plus de produits" pour charger plus d'offres
-- Extrait les données depuis l'attribut `data-tcproduct` (JSON embarqué)
-- Amélioration automatique de la qualité des images
-- Headers personnalisés pour simuler un navigateur réel
+| Donnée | Source | Champ |
+|---|---|---|
+| Images multiples (max 5, HD) | fiche produit | `ProductImage[]` |
+| Description brute | fiche produit | alimente l'IA |
+| Ingrédients INCI | fiche produit | `Product.ingredients` |
+| Conditions de prix / code promo | fiche produit | `Deal.priceConditions` / `Deal.promoCode` |
+| Description SEO (ton City Baddies) | IA gpt-4o-mini | `Product.seoDescription` |
+| « Notre analyse » | IA gpt-4o-mini | `Deal.whyGoodDeal` |
 
-### Anti-bot contourné
+À l'import (scrape), en plus : `Deal.score` + `Deal.tags` calculés **localement**
+(`src/lib/utils/scoring.ts`, sans IA) pour chaque deal, et les **nouveaux**
+produits passent par `categorizeProductsBatch` (IA) → sous-catégories,
+`brandTier`, `refinedTitle`. Échec OpenAI toléré partout (fallbacks, retry au
+run suivant). Coût IA ≈ quelques centimes/jour.
 
-```typescript
-args: [
-  '--disable-blink-features=AutomationControlled',
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-  '--disable-web-security',
-  '--disable-features=IsolateOrigins,site-per-process',
-]
+Fichiers : `src/lib/scraping/details.ts` (extracteurs fiches), `src/lib/ai/enrich-content.ts` (IA), `src/scripts/enrich.ts` (CLI).
+
+```bash
+npx tsx src/scripts/enrich.ts marionnaud --limit 5 --dry-run   # sans écrire
+npx tsx src/scripts/enrich.ts nocibe --limit 40                # réel
 ```
 
 ---
 
-## 🔵 Marionnaud
+## Commandes
 
-### Informations générales
+```bash
+# Dry-run : scrape + affiche un échantillon, n'écrit RIEN en base (pas besoin de DB)
+npx tsx src/scripts/scrape.ts nocibe --limit 30 --dry-run
 
-| Propriété | Valeur |
-|-----------|--------|
-| **Fichier** | `marionnaud.ts` |
-| **Technologie** | Cheerio + fetch (HTML statique) |
-| **Raison** | Pages rendues côté serveur |
-| **Volume estimé** | ~1500 produits |
+# Import réel en base (nécessite DATABASE_URL / DIRECT_URL dans .env)
+npx tsx src/scripts/scrape.ts marionnaud
+npx tsx src/scripts/scrape.ts nocibe
+npx tsx src/scripts/scrape.ts sephora
 
-### Catégories scrapées
+# Tests unitaires (validate.ts)
+npx vitest run
 
-- Parfums
-- Maquillage
-- Soins
-- Corps
-- Cheveux
-
-### Données récupérées par produit
-
-| Donnée | Type | Description |
-|--------|------|-------------|
-| `name` | string | Nom du produit |
-| `brand` | string | Marque |
-| `productLine` | string | Gamme du produit (ex: "J'adore") |
-| `productType` | string | Type (Eau de Parfum, Mascara, etc.) |
-| `currentPrice` | number | Prix soldé |
-| `originalPrice` | number | Prix barré |
-| `discountPercent` | number | Pourcentage de réduction |
-| `promoCode` | string? | Code promo si applicable |
-| `priceWithCode` | number? | Prix après application du code |
-| `productUrl` | string | Lien vers la fiche |
-| `imageUrl` | string | Image produit |
-| `category` | string | Catégorie mappée |
-| `size` | string | Volume |
-| `rating` | number | Note étoiles |
-| `reviewCount` | number | Nombre de reviews |
-| `sku` | string | Identifiant Marionnaud (format BP_XXXXXX) |
-
-### Configuration
-
-```typescript
-{
-  headless: true,
-  timeout: 30000,        // 30 secondes
-  delayBetweenRequests: 2000  // 2 secondes entre chaque requête
-}
+# Diagnostic d'accès réseau (à lancer depuis différentes IP)
+node scripts/netcheck.mjs
 ```
 
-### Particularités
-
-- **Rotation de User-Agents** (5 différents) pour éviter la détection
-- Headers complets pour simuler un vrai navigateur (Sec-Ch-Ua, Sec-Fetch-*, etc.)
-- Peut récupérer les **images HD (2000x2000)** via `enrichProductsWithHDImages()`
-- Gestion des codes promo
-- Extraction du SKU depuis l'URL produit
-
-### User-Agents utilisés
-
-```typescript
-[
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/121.0.0.0',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15',
-]
-```
+Exit code : `0` si au moins 1 deal importé, `1` sinon (→ job GitHub rouge = alerte).
 
 ---
 
-## 📊 Comparatif
+## ☁️ Déploiement
 
-| Critère | Nocibé | Sephora | Marionnaud |
-|---------|--------|---------|------------|
-| **Technologie** | Cheerio (léger) | Playwright (lourd) | Cheerio (léger) |
-| **Volume estimé** | ~5000 produits | ~1000-2000 produits | ~1500 produits |
-| **Niveau anti-bot** | Basique | Fort | Modéré |
-| **Contournement** | Headers simples | Stealth Plugin | User-Agent rotation |
-| **Images HD** | ❌ Non | ✅ Automatique | ✅ Enrichissement séparé |
-| **Codes promo** | ❌ Non | ❌ Non | ✅ Oui |
-| **Timeout** | 15s | 30s | 30s |
-| **Délai entre requêtes** | 500ms | 2s | 2s |
-| **Pages par catégorie** | 2 max | Scroll infini | Variable |
+**Par défaut : GitHub Actions** (`.github/workflows/scrape.yml`) — cron quotidien 04:30 UTC + `workflow_dispatch`, matrice sur les 3 enseignes, `fail-fast: false`. Secrets requis : `DATABASE_URL`, `DIRECT_URL`. Aucun navigateur à installer (tout est fetch + cheerio).
+
+**Risque Sephora/Nocibé sur GitHub Actions** : les IP datacenter de GHA peuvent être bloquées par Akamai même en UA mobile. Si un job ressort systématiquement à 0 produit importé (rouge), exécuter ce marchand depuis une **IP résidentielle** :
+- une machine perso / VPS résidentiel avec un cron `npx tsx src/scripts/scrape.ts <merchant>` ;
+- ou via un proxy résidentiel.
+
+Le CLI est identique partout — seuls `DATABASE_URL`/`DIRECT_URL` (fichier `.env`) sont nécessaires.
 
 ---
 
-## 🔄 Flux de données
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        SCRAPING (5h00)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  1. Scraper récupère les pages catégories                       │
-│  2. Extraction des produits en promotion                        │
-│  3. Normalisation vers ScrapedProduct                           │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     IMPORT ENGINE                                │
-├─────────────────────────────────────────────────────────────────┤
-│  1. Filtrage (réduction min 15%, prix > 1€)                     │
-│  2. Création/MAJ des Brands                                      │
-│  3. Création/MAJ des Products                                    │
-│  4. Création/MAJ des Deals (isActive: true, isExpired: false)   │
-│  5. Traitement par batch de 3 (évite timeout pool connexion)    │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    ENRICHISSEMENT (8h-9h)                        │
-├─────────────────────────────────────────────────────────────────┤
-│  • enrich-nocibe : Catégories + images HD                       │
-│  • enrich-sephora : Catégories + images HD                      │
-│  • enrich-marionnaud : Catégories + images HD                   │
-│  • enrich-competitor-prices : Prix concurrents                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## ☁️ Jobs GCP associés
-
-| Job | Horaire | Description |
-|-----|---------|-------------|
-| `scrape-nocibe` | 05:00 | Import produits Nocibé |
-| `scrape-sephora` | 05:00 | Import produits Sephora |
-| `scrape-marionnaud` | 05:00 | Import produits Marionnaud |
-| `expire-deals` | 07:00 | Marque les deals expirés |
-| `enrich-competitor-prices` | 07:00 | Compare les prix entre enseignes |
-| `enrich-nocibe` | 08:00 | Enrichit catégories + images HD |
-| `enrich-sephora` | 08:30 | Enrichit catégories + images HD |
-| `enrich-marionnaud` | 09:00 | Enrichit catégories + images HD |
-| `validate-sephora` | 09:00 | Vérifie validité des deals Sephora |
-| `validate-nocibe` | 10:00 | Vérifie validité des deals Nocibé |
-
-### Ressources allouées
-
-- **Mémoire** : 2Gi (4Gi pour Sephora car Playwright)
-- **CPU** : 2
-- **Timeout** : 30-60 minutes selon le job
-- **Région** : europe-west1
-
----
-
-## 📁 Structure des fichiers
-
-```
-src/lib/scraping/
-├── ImportEngine.ts          # Moteur d'import unifié
-├── index.ts                  # Exports
-├── types.ts                  # Interfaces communes
-├── nocibe.ts                 # Scraper Nocibé
-├── nocibe-search.ts          # Recherche produit spécifique
-├── sephora.ts                # Scraper Sephora
-├── sephora-search.ts         # Recherche produit spécifique
-├── marionnaud.ts             # Scraper Marionnaud
-├── marionnaud-search.ts      # Recherche produit spécifique
-├── competitor-price-search.ts # Comparaison prix
-└── search-utils.ts           # Utilitaires recherche
-
-src/scripts/
-├── import-nocibe.ts          # Script import Nocibé
-├── import-sephora.ts         # Script import Sephora
-├── import-marionnaud.ts      # Script import Marionnaud
-├── enrich-nocibe.ts          # Script enrichissement
-├── enrich-sephora.ts         # Script enrichissement
-└── enrich-competitor-prices.ts # Script prix concurrents
-```
-
----
-
-## ⚠️ Points d'attention
-
-### Connection Pool
-
-L'ImportEngine utilise un batch de **3 produits maximum** en parallèle pour éviter les timeouts de connexion Prisma/Supabase (limite de 5 connexions).
-
-### Détection anti-bot
-
-- **Sephora** : Le plus restrictif, nécessite Playwright + Stealth
-- **Marionnaud** : Rotation User-Agent obligatoire
-- **Nocibé** : Le moins restrictif
-
-### Images HD
-
-Les images haute définition ne sont pas récupérées pendant le scraping initial mais lors de l'étape d'enrichissement (jobs `enrich-*`).
-
----
-
-*Documentation générée le 4 février 2026*
+*Documentation V2 — 9 juillet 2026*

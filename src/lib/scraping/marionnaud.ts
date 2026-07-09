@@ -34,6 +34,7 @@ export interface MarionnaudProduct {
   rating?: number;
   reviewCount?: number;
   sku?: string;
+  ean?: string;
 }
 
 export interface MarionnaudScrapingResult {
@@ -127,6 +128,7 @@ export class MarionnaudScraper implements Scraper {
       category: p.category,
       rating: p.rating,
       reviewCount: p.reviewCount,
+      ean: p.ean,
       sourceUrl: url,
     }));
 
@@ -244,9 +246,31 @@ export class MarionnaudScraper implements Scraper {
     return { success: products.length > 0, products, errors, duration: Date.now() - startTime };
   }
 
+  /**
+   * Construit une Map<baseCode, ean> à partir du tableau JSON produits embarqué
+   * dans le HTML de la page catégorie. Chaque objet produit contient
+   * `"code":"BP_xxxxx"` (base-code, présent aussi dans l'URL de la tuile /p/BP_xxxxx)
+   * et `"ean":"3614274656978"`. On associe la tuile → ean via ce base-code partagé.
+   *
+   * Regex robuste : entre "code" et "ean" on interdit tout autre "code":"BP_ afin de
+   * ne jamais associer le code d'un produit à l'ean du produit suivant.
+   */
+  private buildEanMap(html: string): Map<string, string> {
+    const map = new Map<string, string>();
+    const re = /"code":"(BP_\d+)"(?:(?!"code":"BP_)[\s\S])*?"ean":"(\d{8,14})"/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null) {
+      if (!map.has(m[1])) map.set(m[1], m[2]);
+    }
+    return map;
+  }
+
   private extractProductsFromHtml(html: string, category: string): MarionnaudProduct[] {
     const $ = cheerio.load(html);
     const products: MarionnaudProduct[] = [];
+
+    // EAN par base-code, extrait du tableau JSON produits du listing
+    const eanByCode = this.buildEanMap(html);
 
     // Sélecteur principal: chaque tuile produit est un bloc .product-list-item
     // (contenu dans une balise <e2-product-tile>). Markup mis à jour ~2026-07.
@@ -264,6 +288,10 @@ export class MarionnaudScraper implements Scraper {
         const varSelMatch = href.match(/varSel=(\d+)/);
         const skuMatch = href.match(/\/p\/([A-Za-z0-9_]+)/);
         const sku = (varSelMatch && varSelMatch[1]) || (skuMatch && skuMatch[1]) || $tile.attr('id') || $tile.attr('data-base-code') || '';
+
+        // EAN: base-code (BP_xxxxx) présent dans l'URL /p/BP_xxxxx → lookup dans la map
+        const baseCodeMatch = href.match(/\/p\/(BP_\d+)/);
+        const ean = baseCodeMatch ? eanByCode.get(baseCodeMatch[1]) : undefined;
 
         // Image - prioriser les URLs haute qualité
         const $img = $tile.find('.product-list-item__image img, e2core-media img');
@@ -410,6 +438,7 @@ export class MarionnaudScraper implements Scraper {
             category,
             size,
             sku,
+            ean,
             rating,
             reviewCount,
           });

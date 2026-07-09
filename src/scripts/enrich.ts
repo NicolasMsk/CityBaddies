@@ -58,10 +58,13 @@ async function main() {
     where: {
       status: 'ACTIVE',
       merchant: { slug: merchant },
+      // NB: ingredients absent n'est PAS un critère de sélection — certaines fiches
+      // n'ont pas de section INCI et deviendraient des candidats perpétuels
+      // (re-scrape quotidien à vide). L'INCI est rempli opportunément quand le deal
+      // est sélectionné pour une autre raison.
       OR: [
         { whyGoodDeal: null },
         { product: { images: { none: {} } } },
-        { product: { ingredients: null } },
       ],
     },
     orderBy: { createdAt: 'desc' },

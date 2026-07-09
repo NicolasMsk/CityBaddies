@@ -18,45 +18,35 @@ Bienvenue dans la documentation technique de City Baddies, la plateforme de bons
 
 ---
 
-## 🗓️ Planning quotidien des jobs
+> ⚠️ **Cette page décrit en partie l'ancienne V1 (GCP Cloud Run + validation +
+> enrichissement GPT), supprimée en février 2026.** Pour le pipeline de scraping
+> actuel (V2 minimal), la référence à jour est **[SCRAPERS.md](SCRAPERS.md)**.
+
+## 🗓️ Planning quotidien (V2)
+
+Un seul job par enseigne, chaque matin, via **GitHub Actions** (`.github/workflows/scrape.yml`, cron 04:30 UTC) :
 
 ```
-05:00 ─── IMPORT ──────────────────────────────────────
-         │
-         ├── scrape-nocibe     (~5000 produits, isActive=false)
-         ├── scrape-sephora    (~500 produits, isActive=false)
-         └── scrape-marionnaud (~1500 produits, isActive=false)
-         
-07:00 ─── VALIDATION ──────────────────────────────────
-         │
-         ├── validate-nocibe    (07:00) → active les deals OK
-         └── validate-sephora   (07:00) → active les deals OK
-
-08:30 ─── ENRICHISSEMENT ───────────────────────────────
-         │
-         ├── enrich-nocibe           (08:30)
-         ├── enrich-sephora          (08:30)
-         ├── enrich-marionnaud       (08:30)
-         └── enrich-competitor-prices (08:30)
+04:30 UTC ─── SCRAPE (matrice) ────────────────────────
+         ├── scrape nocibe      (fetch + cheerio, UA mobile)
+         ├── scrape marionnaud  (fetch + cheerio)
+         └── scrape sephora     (fetch + cheerio, UA mobile + anti-Akamai)
+              → normalise, filtre (≥15 %), upsert Deal(ACTIVE), expire les non-revus
 ```
+
+Plus de validation ni d'enrichissement GPT : les deals sont créés directement en `ACTIVE`.
 
 ---
 
-## 📊 Tableau récapitulatif des jobs
+## 📊 Récapitulatif (V2)
 
-| Job | Type | Horaire | Mémoire | Timeout | Technologie |
-|-----|------|---------|---------|---------|-------------|
-| `scrape-nocibe` | Import | 05:00 | 2 Gi | 60 min | Cheerio |
-| `scrape-sephora` | Import | 05:00 | 4 Gi | 60 min | Playwright |
-| `scrape-marionnaud` | Import | 05:00 | 2 Gi | 60 min | Cheerio |
-| `validate-nocibe` | Validation | 07:00 | 2 Gi | 60 min | Cheerio |
-| `validate-sephora` | Validation | 07:00 | 4 Gi | 60 min | Playwright |
-| `enrich-nocibe` | Enrichissement | 08:30 | 2 Gi | 60 min | Playwright + GPT |
-| `enrich-sephora` | Enrichissement | 08:30 | 4 Gi | 60 min | Playwright + GPT |
-| `enrich-marionnaud` | Enrichissement | 08:30 | 4 Gi | 60 min | Playwright + GPT |
-| `enrich-competitor-prices` | Enrichissement | 08:30 | 4 Gi | 60 min | Playwright + GPT Vision |
+| Job | Horaire | Technologie | Notes |
+|-----|---------|-------------|-------|
+| `scrape nocibe` | 04:30 UTC | fetch + cheerio | UA mobile (Akamai) |
+| `scrape marionnaud` | 04:30 UTC | fetch + cheerio | direct |
+| `scrape sephora` | 04:30 UTC | fetch + cheerio | UA mobile + cookies/spacing/backoff (Akamai + rate-limit) |
 
-> **Note** : Le job `expire-deals` a été supprimé car redondant avec la validation.
+> Détails complets, garde-fous d'expiration et anti-bot : **[SCRAPERS.md](SCRAPERS.md)**.
 
 ---
 
@@ -100,41 +90,32 @@ Bienvenue dans la documentation technique de City Baddies, la plateforme de bons
 
 ## 🔧 Commandes utiles
 
-### Exécution locale
+### Exécution locale (V2)
 
 ```bash
-# Import
-npx tsx src/scripts/import-nocibe.ts
-npx tsx src/scripts/import-sephora.ts
-npx tsx src/scripts/import-marionnaud.ts
+# Dry-run (n'écrit rien en base, pas besoin de DB)
+npx tsx src/scripts/scrape.ts nocibe --limit 30 --dry-run
 
-# Enrichissement
-npx tsx src/scripts/enrich-nocibe.ts --limit 5
-npx tsx src/scripts/enrich-sephora.ts --limit 5
-npx tsx src/scripts/enrich-competitor-prices.ts --limit 10
+# Import réel (nécessite .env avec DATABASE_URL / DIRECT_URL)
+npx tsx src/scripts/scrape.ts nocibe
+npx tsx src/scripts/scrape.ts marionnaud
+npx tsx src/scripts/scrape.ts sephora
 
-# Validation
-npx tsx src/scripts/validate-deals-nocibe.ts --limit 10
-npx tsx src/scripts/validate-deals-sephora.ts --limit 10
+# Tests unitaires
+npx vitest run
 
-# Maintenance
-npx tsx src/scripts/update-is-active.ts
+# Diagnostic d'accès réseau aux 3 sites
+node scripts/netcheck.mjs
 ```
 
-### Gestion GCP
+### Déploiement (V2)
+
+GitHub Actions (`.github/workflows/scrape.yml`) : cron quotidien + déclenchement manuel.
 
 ```bash
-# Déployer un job
-.\deploy-nocibe.ps1
-
-# Exécuter un job manuellement
-gcloud run jobs execute scrape-nocibe --region=europe-west1
-
-# Voir les logs
-gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=scrape-nocibe" --limit=50
-
-# Lister tous les jobs
-gcloud run jobs list --region=europe-west1
+# Lancer manuellement (nécessite gh CLI authentifié)
+gh workflow run "Daily scrape"                 # les 3 enseignes
+gh workflow run "Daily scrape" -f merchant=nocibe
 ```
 
 ### Base de données

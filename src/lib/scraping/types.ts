@@ -17,6 +17,7 @@ export interface ScrapedProduct {
   brand: string;
   productUrl: string;
   sku?: string;
+  ean?: string;             // Code-barres EAN-13, clé de matching cross-marchand
 
   // Prix
   currentPrice: number;

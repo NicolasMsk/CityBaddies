@@ -41,6 +41,7 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -55,3 +56,10 @@ jobs:
 
       - name: Scrape ${{ matrix.merchant }}
         run: npx tsx src/scripts/scrape.ts ${{ matrix.merchant }}
+
+      # Enrichissement fiches produit (multi-images, description, INCI, conditions)
+      # + IA (seoDescription, whyGoodDeal). Tourne même si de nouveaux deals sont
+      # rares : ne traite que les deals ACTIVE encore non enrichis.
+      - name: Enrich ${{ matrix.merchant }}
+        if: success()
+        run: npx tsx src/scripts/enrich.ts ${{ matrix.merchant }} --limit 40

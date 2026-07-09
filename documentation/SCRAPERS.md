@@ -92,6 +92,37 @@ En fin de run, les deals `ACTIVE` de l'enseigne non revus (`lastSeenAt < début 
 
 ---
 
+## Enrichissement (2ᵉ passe quotidienne)
+
+Le scrape de listing ne fournit qu'une image et les prix. Une seconde passe
+(`src/scripts/enrich.ts`, step « Enrich » du workflow) visite les fiches produit
+des deals `ACTIVE` pas encore enrichis (whyGoodDeal manquant ou produit sans
+images), avec le même throttling anti-Akamai, et remplit :
+
+| Donnée | Source | Champ |
+|---|---|---|
+| Images multiples (max 5, HD) | fiche produit | `ProductImage[]` |
+| Description brute | fiche produit | alimente l'IA |
+| Ingrédients INCI | fiche produit | `Product.ingredients` |
+| Conditions de prix / code promo | fiche produit | `Deal.priceConditions` / `Deal.promoCode` |
+| Description SEO (ton City Baddies) | IA gpt-4o-mini | `Product.seoDescription` |
+| « Notre analyse » | IA gpt-4o-mini | `Deal.whyGoodDeal` |
+
+À l'import (scrape), en plus : `Deal.score` + `Deal.tags` calculés **localement**
+(`src/lib/utils/scoring.ts`, sans IA) pour chaque deal, et les **nouveaux**
+produits passent par `categorizeProductsBatch` (IA) → sous-catégories,
+`brandTier`, `refinedTitle`. Échec OpenAI toléré partout (fallbacks, retry au
+run suivant). Coût IA ≈ quelques centimes/jour.
+
+Fichiers : `src/lib/scraping/details.ts` (extracteurs fiches), `src/lib/ai/enrich-content.ts` (IA), `src/scripts/enrich.ts` (CLI).
+
+```bash
+npx tsx src/scripts/enrich.ts marionnaud --limit 5 --dry-run   # sans écrire
+npx tsx src/scripts/enrich.ts nocibe --limit 40                # réel
+```
+
+---
+
 ## Commandes
 
 ```bash

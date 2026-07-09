@@ -20,6 +20,10 @@ const EXPIRE_MIN_IMPORTED = 50;
 // Garde-fou relatif: le run doit couvrir au moins 50% des deals ACTIVE existants
 // du marchand — sinon (blocage partiel du site) on n'expire rien.
 const EXPIRE_MIN_RATIO = 0.5;
+// Échappatoire: un deal non revu depuis 7 runs quotidiens est mort, quelles que
+// soient les gardes — borne le blocage du garde-fou relatif après une baisse
+// légitime du catalogue (ex: fin de soldes).
+const STALE_EXPIRE_DAYS = 7;
 
 const DB_CATEGORIES = [
   { slug: 'maquillage', name: 'Maquillage', icon: 'Sparkles', description: 'Fonds de teint, rouges à lèvres...' },
@@ -110,6 +114,9 @@ export async function importProducts(
           let brandPromise = brandCache.get(p.brand);
           if (!brandPromise) {
             brandPromise = findOrCreateBrand(p.brand);
+            // Éviction en cas d'échec: une erreur DB transitoire sur une marque
+            // ne doit pas empoisonner le cache pour tout le reste du run.
+            brandPromise.catch(() => brandCache.delete(p.brand));
             brandCache.set(p.brand, brandPromise);
           }
           const brandId = await brandPromise;
@@ -224,6 +231,15 @@ export async function importProducts(
       `[import] ⚠️ Seulement ${result.imported} deals importés (min: ${EXPIRE_MIN_IMPORTED}, actifs existants: ${activeCount}, ratio min: ${EXPIRE_MIN_RATIO}) — expiration SKIPPÉE par sécurité`,
     );
   }
+
+  // Échappatoire inconditionnelle: expirer les deals non revus depuis STALE_EXPIRE_DAYS,
+  // que les garde-fous aient laissé passer l'expiration normale ou non.
+  const staleCutoff = new Date(Date.now() - STALE_EXPIRE_DAYS * 86_400_000);
+  const staleExpired = await prisma.deal.updateMany({
+    where: { merchantId: merchant.id, status: 'ACTIVE', lastSeenAt: { lt: staleCutoff } },
+    data: { status: 'EXPIRED' },
+  });
+  result.expired += staleExpired.count;
 
   return result;
 }

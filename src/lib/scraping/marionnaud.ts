@@ -248,18 +248,22 @@ export class MarionnaudScraper implements Scraper {
     const $ = cheerio.load(html);
     const products: MarionnaudProduct[] = [];
 
-    // Sélecteur principal: e2-flex.product-grid__product-item ou .product-list-item
-    $('e2-flex.product-grid__product-item, .product-grid__product-item').each((_, tile) => {
+    // Sélecteur principal: chaque tuile produit est un bloc .product-list-item
+    // (contenu dans une balise <e2-product-tile>). Markup mis à jour ~2026-07.
+    $('.product-list-item').each((_, tile) => {
       try {
         const $tile = $(tile);
-        
-        // SKU depuis l'attribut id ou data-base-code
-        const sku = $tile.attr('id') || $tile.attr('data-base-code') || '';
-        
+
         // URL du produit
         const href = $tile.find('a.product-list-item__link, a.product-list-item__details-wrapper').first().attr('href') || '';
-        const productUrl = href ? 'https://www.marionnaud.fr' + href : '';
+        const productUrl = href ? 'https://www.marionnaud.fr' + href.split('?')[0] : '';
         if (!productUrl) return;
+
+        // SKU: l'attribut id/data-base-code n'existe plus sur la tuile.
+        // On le dérive de l'URL produit (/p/BP_XXXXXX) ou du paramètre varSel (variante).
+        const varSelMatch = href.match(/varSel=(\d+)/);
+        const skuMatch = href.match(/\/p\/([A-Za-z0-9_]+)/);
+        const sku = (varSelMatch && varSelMatch[1]) || (skuMatch && skuMatch[1]) || $tile.attr('id') || $tile.attr('data-base-code') || '';
 
         // Image - prioriser les URLs haute qualité
         const $img = $tile.find('.product-list-item__image img, e2core-media img');

@@ -55,8 +55,11 @@ const DEFAULT_CONFIG: NocibeConfig = {
   delayBetweenRequests: 500,
 };
 
+// IMPORTANT: Nocibé (Akamai) bloque les User-Agents desktop (403 Access Denied),
+// y compris un vrai Chrome. Un User-Agent mobile iOS passe (HTTP 200). NE PAS
+// repasser en UA desktop sans revérifier l'accès.
 const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
   'Accept-Language': 'fr-FR,fr;q=0.9',
 };

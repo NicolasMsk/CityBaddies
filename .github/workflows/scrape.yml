@@ -29,11 +29,6 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Ne lance que le marchand choisi en dispatch ; sinon (schedule ou dispatch vide) les 3.
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event.inputs.merchant == '' ||
-      github.event.inputs.merchant == matrix.merchant
     strategy:
       fail-fast: false
       matrix:
@@ -54,12 +49,21 @@ jobs:
 
       - run: npx prisma generate
 
+      # Le filtre par marchand se fait au niveau des STEPS (le contexte `matrix`
+      # n'est pas disponible dans un `if:` de job). Sur schedule, inputs.merchant
+      # est absent -> la 1re condition (event != workflow_dispatch) laisse tout passer.
       - name: Scrape ${{ matrix.merchant }}
+        if: >-
+          github.event_name != 'workflow_dispatch' ||
+          github.event.inputs.merchant == '' ||
+          github.event.inputs.merchant == matrix.merchant
         run: npx tsx src/scripts/scrape.ts ${{ matrix.merchant }}
 
       # Enrichissement fiches produit (multi-images, description, INCI, conditions)
-      # + IA (seoDescription, whyGoodDeal). Tourne même si de nouveaux deals sont
-      # rares : ne traite que les deals ACTIVE encore non enrichis.
+      # + IA (seoDescription, whyGoodDeal). Ne traite que les deals ACTIVE non enrichis.
       - name: Enrich ${{ matrix.merchant }}
-        if: success()
+        if: >-
+          github.event_name != 'workflow_dispatch' ||
+          github.event.inputs.merchant == '' ||
+          github.event.inputs.merchant == matrix.merchant
         run: npx tsx src/scripts/enrich.ts ${{ matrix.merchant }} --limit 40

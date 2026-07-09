@@ -92,12 +92,18 @@ export async function importProducts(
   const categoryBySlug = new Map(categories.map((c) => [c.slug, c]));
   const defaultCategory = categoryBySlug.get('maquillage')!;
 
-  // 2. Normaliser, filtrer, dédupliquer (par URL produit)
+  // 2. Normaliser, filtrer, dédupliquer.
+  // Clé = URL + volume : deux contenances d'un même produit peuvent partager la
+  // même URL de fiche (ex: Marionnaud après retrait de ?varSel) — ce sont bien
+  // deux variantes/deals distincts, il ne faut pas en perdre une.
   const seen = new Set<string>();
   const products = rawProducts
     .map(normalizePrices)
     .filter((p) => isValidDeal(p))
-    .filter((p) => (seen.has(p.productUrl) ? false : (seen.add(p.productUrl), true)));
+    .filter((p) => {
+      const key = `${p.productUrl}|${p.volume ?? ''}`;
+      return seen.has(key) ? false : (seen.add(key), true);
+    });
   result.valid = products.length;
   console.log(`[import] ${result.scraped} scrapés -> ${result.valid} deals valides`);
 

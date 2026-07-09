@@ -2,25 +2,22 @@
  * =============================================================================
  * SEPHORA.TS - SCRAPING EN MASSE DES PAGES CATÉGORIES
  * =============================================================================
- * 
+ *
  * FONCTION : Parcourir les pages catégories Sephora pour récupérer TOUS les
- *            produits en promotion (scraping en masse)
- * 
+ *            produits (et détecter ceux en promotion) en masse.
+ *
  * UTILISÉ PAR : import-sephora.ts, ImportEngine.ts
- * 
- * TECHNOLOGIE : Playwright (navigateur headless) - nécessaire car Sephora
- *               a des protections anti-bot
- * 
+ *
+ * TECHNOLOGIE : Cheerio + fetch (HTML statique). Sephora rend le HTML côté
+ *               serveur : chaque tuile produit expose un attribut
+ *               `data-tcproduct="{...JSON...}"` que l'on peut parser
+ *               directement, sans JavaScript ni navigateur.
+ *
  * NE PAS CONFONDRE AVEC : sephora-search.ts (recherche d'UN produit spécifique)
  * =============================================================================
  */
-import { chromium, Browser, Page } from 'playwright';
-import { chromium as playwrightExtra } from 'playwright-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import * as cheerio from 'cheerio';
 import { Scraper, ScrapedProduct, ScrapingResult } from './types';
-
-// Ajouter le plugin stealth pour éviter la détection
-playwrightExtra.use(StealthPlugin());
 
 export interface SephoraProduct {
   name: string;
@@ -50,13 +47,82 @@ export interface SephoraConfig {
 
 const DEFAULT_CONFIG: SephoraConfig = {
   headless: true,
-  timeout: 30000,
-  delayBetweenRequests: 2000,
+  timeout: 15000,
+  delayBetweenRequests: 500,
 };
+
+// IMPORTANT: Sephora (Akamai) bloque les User-Agents desktop (403 "Access
+// Denied"), y compris un vrai Chrome headed. Un User-Agent MOBILE passe (HTTP
+// 200) avec la page complète via un simple fetch(). NE PAS repasser en UA desktop.
+//
+// Akamai fait aussi du rate-limiting / réputation IP : une rafale de requêtes
+// depuis une même IP finit flaggée (403) même en UA mobile. On reste donc
+// "poli" : pool d'UA mobiles, cookies persistants sur toute la session (le 1er
+// GET pose des cookies Akamai qu'on renvoie ensuite = plus crédible), espacement
+// minimum entre requêtes, et backoff sur 403/429.
+const MOBILE_USER_AGENTS = [
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 13; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+];
+
+// Espacement minimum entre 2 requêtes Sephora (ms) — anti rate-limit Akamai.
+const MIN_REQUEST_SPACING_MS = 8000;
+
+// État de session partagé entre les appels scrape() successifs d'un même run.
+let sessionCookie = '';
+let lastRequestAt = 0;
+let sessionUserAgent = '';
+
+function pickUserAgent(): string {
+  if (!sessionUserAgent) {
+    // UA stable pour toute la session (cohérent avec les cookies posés).
+    const idx = Math.floor((lastRequestAt || 1) % MOBILE_USER_AGENTS.length);
+    sessionUserAgent = MOBILE_USER_AGENTS[idx] || MOBILE_USER_AGENTS[0];
+  }
+  return sessionUserAgent;
+}
+
+function buildHeaders(referer: string): Record<string, string> {
+  const h: Record<string, string> = {
+    'User-Agent': pickUserAgent(),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'fr-FR,fr;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': referer ? 'same-origin' : 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1',
+  };
+  if (referer) h['Referer'] = referer;
+  if (sessionCookie) h['Cookie'] = sessionCookie;
+  return h;
+}
+
+function rememberCookies(res: Response): void {
+  // Concatène les cookies Akamai posés (_abck, bm_sz, ak_bmsc...) pour la suite.
+  const setCookie = (res.headers as any).getSetCookie?.() as string[] | undefined;
+  const raw = setCookie && setCookie.length ? setCookie : (res.headers.get('set-cookie') ? [res.headers.get('set-cookie')!] : []);
+  if (!raw.length) return;
+  const jar = new Map<string, string>();
+  if (sessionCookie) {
+    for (const pair of sessionCookie.split('; ')) {
+      const eq = pair.indexOf('=');
+      if (eq > 0) jar.set(pair.slice(0, eq), pair.slice(eq + 1));
+    }
+  }
+  for (const c of raw) {
+    const first = c.split(';')[0];
+    const eq = first.indexOf('=');
+    if (eq > 0) jar.set(first.slice(0, eq).trim(), first.slice(eq + 1).trim());
+  }
+  sessionCookie = [...jar.entries()].map(([k, v]) => `${k}=${v}`).join('; ');
+}
 
 export class SephoraScraper implements Scraper {
   private config: SephoraConfig;
-  private browser: Browser | null = null;
 
   /** Identifiant du scraper pour l'ImportEngine */
   readonly merchantSlug = 'sephora';
@@ -66,33 +132,11 @@ export class SephoraScraper implements Scraper {
   }
 
   async init(): Promise<void> {
-    if (this.config.headless) {
-      this.browser = await playwrightExtra.launch({
-        headless: true,
-        args: [
-          '--disable-blink-features=AutomationControlled',
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process',
-        ],
-      });
-    } else {
-      this.browser = await chromium.launch({
-        headless: false,
-        args: [
-          '--disable-blink-features=AutomationControlled',
-          '--no-sandbox',
-        ],
-      });
-    }
+    // Plus besoin d'initialiser un navigateur (fetch + cheerio)
   }
 
   async close(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
+    // Plus rien à fermer
   }
 
   /**
@@ -101,7 +145,7 @@ export class SephoraScraper implements Scraper {
    */
   async scrape(url: string, maxProducts: number = 100): Promise<ScrapingResult> {
     const result = await this.scrapeCategoryPage(url, maxProducts);
-    
+
     // Convertir SephoraProduct -> ScrapedProduct
     const standardProducts: ScrapedProduct[] = result.products.map(p => ({
       name: p.name,
@@ -125,372 +169,180 @@ export class SephoraScraper implements Scraper {
     };
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   // Mapper les catégories Sephora vers nos catégories
   private mapCategory(sephoraCategory: string): string {
     const categoryMap: Record<string, string> = {
-      'C302': 'maquillage',      // Maquillage
-      'C301': 'parfums',         // Parfums
-      'C304': 'soins-visage',    // Corps et Bain -> Soins visage
-      'C307': 'cheveux',         // Cheveux
-      'C303': 'soins-visage',    // Skincare
-      'C305': 'ongles',          // Ongles
-      'maquillage': 'maquillage',
-      'parfum': 'parfums',
-      'corps-et-bain': 'soins-visage',
-      'cheveux': 'cheveux',
-      'skincare': 'soins-visage',
+      'c301': 'parfums',
+      'c302': 'maquillage',
+      'c303': 'soins-visage',
+      'c304': 'soins-corps',
+      'c307': 'cheveux',
+      'c305': 'ongles',
     };
-    
-    return categoryMap[sephoraCategory] || 'maquillage';
+    return categoryMap[sephoraCategory.toLowerCase()] || 'maquillage';
   }
 
-  // Scraper une page catégorie Sephora
+  private getCategoryFromUrl(url: string): string {
+    const match = url.match(/-(c\d{3})\b/i);
+    if (match) return this.mapCategory(match[1]);
+    if (url.includes('parfum')) return 'parfums';
+    if (url.includes('maquillage')) return 'maquillage';
+    if (url.includes('soin-visage')) return 'soins-visage';
+    if (url.includes('corps')) return 'soins-corps';
+    if (url.includes('cheveux')) return 'cheveux';
+    return 'maquillage';
+  }
+
+  // Scraper une page catégorie Sephora (HTML statique via fetch + cheerio)
   async scrapeCategoryPage(categoryUrl: string, maxProducts: number = 100): Promise<SephoraScrapingResult> {
     const startTime = Date.now();
     const products: SephoraProduct[] = [];
     const errors: string[] = [];
+    const category = this.getCategoryFromUrl(categoryUrl);
 
-    if (!this.browser) await this.init();
-    const page = await this.browser!.newPage();
+    // Le HTML mobile expose ~24 produits par défaut. On demande davantage en une
+    // seule requête via le paramètre `sz` (taille de page Demandware), confirmé
+    // fonctionnel : `?sz=48` renvoie 48 produits. On plafonne à 96 pour rester
+    // léger. Pas de scroll/pagination multi-requêtes nécessaire.
+    const size = Math.min(Math.max(maxProducts, 24), 96);
+    const sep = categoryUrl.includes('?') ? '&' : '?';
+    const pageUrl = `${categoryUrl}${sep}sz=${size}`;
 
-    try {
-      await page.setExtraHTTPHeaders({
-        'Accept-Language': 'fr-FR,fr;q=0.9',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      });
+    // Jusqu'à 3 tentatives avec backoff en cas de 403/429 (rate-limit Akamai).
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await this.throttle();
 
-      console.log('[Sephora] Chargement de la page:', categoryUrl);
-      await page.goto(categoryUrl, { waitUntil: 'domcontentloaded', timeout: this.config.timeout });
-      
-      // Attendre que les produits soient chargés
-      console.log('[Sephora] Attente du chargement des produits...');
-      await page.waitForSelector('.product-tile', { timeout: 15000 }).catch(() => {
-        console.log('[Sephora] Timeout, on essaie avec grid-tile...');
-      });
-      
-      await page.waitForSelector('.grid-tile', { timeout: 10000 }).catch(() => {
-        console.log('[Sephora] Pas de grid-tile trouvé');
-      });
-      
-      await this.delay(2000);
-
-      // Cliquer sur "Voir plus de produits" plusieurs fois pour charger plus d'offres
-      await this.loadMoreProducts(page, maxProducts);
-
-      // Extraire les données des produits directement depuis le JSON data-tcproduct
-      const extractedProducts = await page.evaluate(() => {
-        const productTiles = document.querySelectorAll('.product-tile[data-tcproduct]');
-        const products: any[] = [];
-        
-        productTiles.forEach((tile) => {
-          try {
-            const dataAttr = tile.getAttribute('data-tcproduct');
-            if (!dataAttr) return;
-            
-            const data = JSON.parse(dataAttr);
-            
-            // Extraire l'image - priorité aux sources haute qualité
-            const imgEl = tile.querySelector('.product-first-img') as HTMLImageElement;
-            let imageUrl = imgEl?.dataset?.src || imgEl?.src || '';
-            
-            // Améliorer la qualité de l'image Sephora
-            // Remplacer scaleWidth=240 par scaleWidth=500 pour avoir des images HD
-            if (imageUrl.includes('sephora')) {
-              imageUrl = imageUrl
-                .replace(/scaleWidth=\d+/, 'scaleWidth=500')
-                .replace(/scaleHeight=\d+/, 'scaleHeight=500');
-            }
-            
-            // Extraire le lien produit
-            const linkEl = tile.querySelector('a.product-tile-link') as HTMLAnchorElement;
-            const productUrl = linkEl?.href || data.product_url_page || '';
-            
-            // Extraire le volume depuis product-variation-name (ex: "75 ml")
-            const volumeEl = tile.querySelector('.product-variation-name');
-            let volume = volumeEl?.textContent?.trim() || '';
-            
-            // Si pas trouvé, essayer d'extraire depuis product_sku_name (ex: "j.p. gault le male edp 75ml-515091")
-            if (!volume && data.product_sku_name) {
-              const volumeMatch = data.product_sku_name.match(/(\d+)\s*(ml|g|ML|G)/i);
-              if (volumeMatch) {
-                volume = volumeMatch[1] + ' ' + volumeMatch[2].toLowerCase();
-              }
-            }
-            
-            // Calculer la réduction
-            const currentPrice = parseFloat(data.product_price_ati) || 0;
-            const originalPrice = parseFloat(data.product_old_price_ati) || currentPrice;
-            const discount = originalPrice > currentPrice 
-              ? Math.round((1 - currentPrice / originalPrice) * 100) 
-              : 0;
-            
-            products.push({
-              name: data.product_pid_name || '',
-              brand: data.product_brand || data.product_trademark || '',
-              currentPrice: currentPrice,
-              originalPrice: originalPrice,
-              discountPercent: discount,
-              productUrl: productUrl,
-              imageUrl: imageUrl,
-              category: data.product_breadcrumb_id?.[0] || '',
-              volume: volume,
-              sku: data.product_sku || '',
-            });
-          } catch (e) {
-            // Ignorer les erreurs de parsing
-          }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.config.timeout);
+      try {
+        console.log(`[Sephora] GET (essai ${attempt}/3): ${pageUrl}`);
+        const response = await fetch(pageUrl, {
+          headers: buildHeaders('https://www.sephora.fr/'),
+          signal: controller.signal,
         });
-        
-        return products;
-      });
+        clearTimeout(timeout);
+        rememberCookies(response);
 
-      console.log(`[Sephora] ${extractedProducts.length} produits extraits depuis data-tcproduct`);
-
-      // Si aucun produit trouvé avec data-tcproduct, essayer la méthode manuelle
-      if (extractedProducts.length === 0) {
-        console.log('[Sephora] Tentative extraction manuelle...');
-        const manualProducts = await this.extractProductsManually(page);
-        products.push(...manualProducts.slice(0, maxProducts));
-      } else {
-        // Mapper les catégories et ajouter les produits
-        for (const p of extractedProducts.slice(0, maxProducts)) {
-          if (p.name && p.currentPrice > 0 && p.productUrl) {
-            products.push({
-              ...p,
-              category: this.mapCategory(p.category),
-            });
-          }
+        if (response.status === 403 || response.status === 429) {
+          const wait = attempt * 15000; // 15s, 30s
+          console.warn(`[Sephora] ${response.status} (rate-limit Akamai), attente ${wait / 1000}s...`);
+          if (attempt < 3) { await this.delay(wait); continue; }
+          errors.push(`HTTP ${response.status} après 3 essais pour ${pageUrl}`);
+          break;
         }
+        if (!response.ok) {
+          errors.push(`HTTP ${response.status} pour ${pageUrl}`);
+          break;
+        }
+
+        const html = await response.text();
+        const pageProducts = this.extractProductsFromHtml(html, category);
+        for (const p of pageProducts) {
+          if (!products.find(existing => existing.productUrl === p.productUrl)) products.push(p);
+          if (products.length >= maxProducts) break;
+        }
+        console.log(`[Sephora] ${products.length} produits valides trouvés`);
+        break;
+      } catch (err) {
+        clearTimeout(timeout);
+        const error = err instanceof Error ? err.message : 'Unknown';
+        if (err instanceof Error && err.name === 'AbortError') {
+          errors.push(`Timeout pour ${pageUrl}`);
+          if (attempt < 3) { await this.delay(attempt * 5000); continue; }
+        } else {
+          errors.push('Erreur scraping catégorie: ' + error);
+        }
+        break;
       }
-
-      console.log(`[Sephora] ${products.length} produits valides trouvés`);
-
-    } catch (err) {
-      const error = err instanceof Error ? err.message : 'Unknown';
-      errors.push('Erreur scraping catégorie: ' + error);
-      console.error('[Sephora] Erreur:', error);
-    } finally {
-      await page.close();
     }
 
     return { success: products.length > 0, products, errors, duration: Date.now() - startTime };
   }
 
-  // Extraction manuelle si data-tcproduct n'est pas disponible
-  private async extractProductsManually(page: Page): Promise<SephoraProduct[]> {
-    const products: SephoraProduct[] = [];
-    
-    const extractedData = await page.evaluate(() => {
-      const tiles = document.querySelectorAll('.grid-tile, .product-tile');
-      const data: any[] = [];
-      
-      tiles.forEach((tile) => {
-        try {
-          // Nom du produit
-          const titleEl = tile.querySelector('.product-title, h3.product-title');
-          const name = titleEl?.textContent?.trim() || '';
-          
-          // Marque
-          const brandEl = tile.querySelector('.product-brand');
-          const brand = brandEl?.textContent?.trim() || '';
-          
-          // Prix
-          const priceEl = tile.querySelector('.price-sales, .price-sales-standard');
-          const priceText = priceEl?.textContent?.replace(/[^\d,\.]/g, '').replace(',', '.') || '0';
-          const currentPrice = parseFloat(priceText) || 0;
-          
-          // Prix barré
-          const oldPriceEl = tile.querySelector('.price-standard');
-          const oldPriceText = oldPriceEl?.textContent?.replace(/[^\d,\.]/g, '').replace(',', '.') || '0';
-          const originalPrice = parseFloat(oldPriceText) || currentPrice;
-          
-          // Image
-          const imgEl = tile.querySelector('img.product-first-img, img.primary-image') as HTMLImageElement;
-          const imageUrl = imgEl?.src || '';
-          
-          // URL
-          const linkEl = tile.querySelector('a.product-tile-link, a[href*="/p/"]') as HTMLAnchorElement;
-          const productUrl = linkEl?.href || '';
-          
-          if (name && currentPrice > 0) {
-            data.push({
-              name: `${brand} - ${name}`.trim(),
-              brand,
-              currentPrice,
-              originalPrice,
-              productUrl,
-              imageUrl,
-            });
-          }
-        } catch (e) {}
-      });
-      
-      return data;
-    });
-    
-    for (const p of extractedData) {
-      products.push({
-        ...p,
-        discountPercent: p.originalPrice > p.currentPrice 
-          ? Math.round((1 - p.currentPrice / p.originalPrice) * 100)
-          : 0,
-        category: 'maquillage',
-      });
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /** Impose un espacement minimum entre 2 requêtes Sephora (anti rate-limit). */
+  private async throttle(): Promise<void> {
+    const since = Date.now() - lastRequestAt;
+    if (lastRequestAt && since < MIN_REQUEST_SPACING_MS) {
+      await this.delay(MIN_REQUEST_SPACING_MS - since);
     }
-    
+    lastRequestAt = Date.now();
+  }
+
+  // Extraire les produits depuis les tuiles data-tcproduct du HTML statique
+  private extractProductsFromHtml(html: string, category: string): SephoraProduct[] {
+    const $ = cheerio.load(html);
+    const products: SephoraProduct[] = [];
+
+    $('.product-tile[data-tcproduct]').each((_, tile) => {
+      try {
+        const $tile = $(tile);
+        const raw = $tile.attr('data-tcproduct');
+        if (!raw) return;
+
+        // Cheerio décode déjà les entités HTML (&quot; -> ", &eacute; -> é...),
+        // donc l'attribut est du JSON directement parsable.
+        const data = JSON.parse(raw);
+
+        const name = (data.product_pid_name || '').trim();
+        const brand = (data.product_brand || data.product_trademark || '').trim();
+        const productUrl = data.product_url_page || '';
+
+        const currentPrice = parseFloat(data.product_price_ati) || 0;
+        const originalPrice = parseFloat(data.product_old_price_ati) || currentPrice;
+
+        // Réduction calculée à partir des prix (product_discount_ati seul n'est
+        // pas fiable).
+        const discountPercent = originalPrice > currentPrice
+          ? Math.round((1 - currentPrice / originalPrice) * 100)
+          : 0;
+
+        // Image : product_url_picture est souvent vide -> fallback sur la tuile.
+        let imageUrl = (data.product_url_picture || '').trim();
+        if (!imageUrl) {
+          const $img = $tile.find('.product-first-img').first();
+          imageUrl = $img.attr('src') || $img.attr('data-src') || '';
+          if (!imageUrl) {
+            const srcset = $img.attr('srcset') || '';
+            if (srcset) imageUrl = srcset.split(',')[0].trim().split(/\s+/)[0];
+          }
+        }
+        // Normaliser les URLs protocol-relative (//host/...)
+        if (imageUrl.startsWith('//')) imageUrl = 'https:' + imageUrl;
+
+        // Volume : extraire depuis product_sku_name, sinon product_pid_name.
+        const volumeRegex = /(\d+(?:[.,]\d+)?)\s*(ml|g|l|cl)\b/i;
+        let volume: string | undefined;
+        const volSource = (data.product_sku_name || '') + ' ' + (data.product_pid_name || '');
+        const volMatch = volSource.match(volumeRegex);
+        if (volMatch) {
+          volume = volMatch[1].replace(',', '.') + volMatch[2].toLowerCase();
+        }
+
+        const sku = data.product_sku || data.product_pid || '';
+
+        if (name && currentPrice > 0 && productUrl) {
+          products.push({
+            name,
+            brand,
+            currentPrice,
+            originalPrice,
+            discountPercent,
+            productUrl,
+            imageUrl,
+            category,
+            volume,
+            sku,
+          });
+        }
+      } catch {
+        // Ignorer les tuiles dont le JSON ne parse pas
+      }
+    });
+
     return products;
   }
-
-  // Cliquer sur "Voir plus de produits" une fois puis scroller pour charger plus d'offres (infinite scroll)
-  private async loadMoreProducts(page: Page, maxProducts: number): Promise<void> {
-    const maxScrolls = Math.max(20, Math.ceil(maxProducts / 24)); // Plus de scrolls pour charger plus
-    let scrollCount = 0;
-    let lastProductCount = 0;
-    let noNewProductsCount = 0;
-    
-    // D'abord, fermer la popup de cookies si elle existe
-    await this.closeCookiePopup(page);
-    
-    console.log(`[Sephora] Chargement de plus de produits (infinite scroll, max ${maxScrolls} scrolls)...`);
-    
-    // Cliquer une seule fois sur le bouton "Voir plus" pour activer l'infinite scroll
-    try {
-      const seeMoreButton = await page.$('button.see-more-button, button[data-js-infinitescroll-see-more]');
-      if (seeMoreButton && await seeMoreButton.isVisible()) {
-        await seeMoreButton.click({ force: true, timeout: 5000 });
-        console.log(`[Sephora] Bouton "Voir plus" cliqué - Infinite scroll activé`);
-        await this.delay(2000);
-      }
-    } catch (err) {
-      console.log(`[Sephora] Pas de bouton "Voir plus" ou déjà en infinite scroll`);
-    }
-    
-    // Maintenant scroller pour charger les produits via infinite scroll
-    while (scrollCount < maxScrolls) {
-      try {
-        // Compter les produits actuels
-        const currentCount = await page.evaluate(() => {
-          return document.querySelectorAll('.product-tile[data-tcproduct]').length;
-        });
-        
-        // Vérifier si de nouveaux produits ont été chargés
-        if (currentCount === lastProductCount) {
-          noNewProductsCount++;
-          if (noNewProductsCount >= 3) {
-            console.log(`[Sephora] Fin du scroll - Plus de nouveaux produits après 3 tentatives (${currentCount} produits)`);
-            break;
-          }
-        } else {
-          noNewProductsCount = 0;
-          lastProductCount = currentCount;
-        }
-        
-        // Si on a assez de produits, on arrête
-        if (currentCount >= maxProducts) {
-          console.log(`[Sephora] Objectif atteint: ${currentCount} produits`);
-          break;
-        }
-        
-        // Scroll progressif vers le bas
-        await page.evaluate(() => {
-          window.scrollBy(0, window.innerHeight * 1.5);
-        });
-        await this.delay(500);
-        
-        // Scroll jusqu'en bas de la page
-        await page.evaluate(() => {
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-        
-        scrollCount++;
-        
-        // Attendre 2 secondes pour que les nouveaux produits se chargent
-        await this.delay(2000);
-        
-        // Log tous les 5 scrolls
-        if (scrollCount % 5 === 0) {
-          const newCount = await page.evaluate(() => {
-            return document.querySelectorAll('.product-tile[data-tcproduct]').length;
-          });
-          console.log(`[Sephora] Scroll ${scrollCount}/${maxScrolls} - ${newCount} produits chargés`);
-        }
-        
-      } catch (err) {
-        console.log(`[Sephora] Erreur pendant le scroll, on continue...`);
-        await this.delay(1000);
-      }
-    }
-    
-    // Compter final
-    const finalCount = await page.evaluate(() => {
-      return document.querySelectorAll('.product-tile[data-tcproduct]').length;
-    });
-    console.log(`[Sephora] Scroll terminé - ${finalCount} produits chargés après ${scrollCount} scrolls`);
-  }
-
-  // Fermer la popup de cookies/consentement
-  private async closeCookiePopup(page: Page): Promise<void> {
-    try {
-      // Essayer de cliquer sur "Accepter" ou fermer la popup de cookies
-      const cookieSelectors = [
-        'button#footer_tc_privacy_button_2', // Bouton "Tout accepter" Sephora
-        'button.tc-privacy-button',
-        'button[id*="accept"]',
-        'button[class*="accept"]',
-        '.tc-privacy-wrapper button',
-        '#tc-privacy-wrapper button:first-child',
-      ];
-      
-      for (const selector of cookieSelectors) {
-        const button = await page.$(selector);
-        if (button && await button.isVisible()) {
-          await button.click({ force: true, timeout: 3000 });
-          console.log(`[Sephora] Popup cookies fermée`);
-          await this.delay(1000);
-          return;
-        }
-      }
-      
-      // Si pas de bouton trouvé, essayer de supprimer l'overlay avec JavaScript
-      await page.evaluate(() => {
-        const overlay = document.querySelector('#tc-privacy-wrapper');
-        if (overlay) overlay.remove();
-        
-        const banner = document.querySelector('#tc-privacy-overlay-banner');
-        if (banner) banner.remove();
-        
-        // Réactiver le scroll
-        document.body.style.overflow = 'auto';
-      });
-      
-    } catch (err) {
-      // Ignorer les erreurs silencieusement
-    }
-  }
-
-  // Faire défiler la page pour charger plus de produits (lazy loading)
-  private async scrollPage(page: Page): Promise<void> {
-    await page.evaluate(async () => {
-      const scrollStep = 500;
-      const scrollDelay = 300;
-      let currentPosition = 0;
-      const maxScroll = Math.min(document.body.scrollHeight, 5000);
-      
-      while (currentPosition < maxScroll) {
-        window.scrollTo(0, currentPosition);
-        currentPosition += scrollStep;
-        await new Promise(r => setTimeout(r, scrollDelay));
-      }
-      
-      // Remonter en haut
-      window.scrollTo(0, 0);
-    });
-    
-    await this.delay(1000);
-  }
-
 }

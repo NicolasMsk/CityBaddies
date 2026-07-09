@@ -101,6 +101,7 @@ async function getCategoryDeals(slug: string) {
   const rawDeals = await (prisma.deal as any).findMany({
     where: {
       status: 'ACTIVE',
+      discountPercent: { gt: 0 }, // liste "bons plans" = promos réelles (variantes non-promo exclues)
       product: {
         categoryId: category.id,
       },

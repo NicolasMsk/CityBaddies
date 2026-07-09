@@ -69,8 +69,9 @@ async function getHomeData() {
   // Récupération séquentielle pour éviter les doublons entre sections
   // 1. D'abord les hotDeals (Sélection Virale)
   const hotDeals = await prisma.deal.findMany({
-    where: { 
+    where: {
       status: 'ACTIVE',
+      discountPercent: { gt: 0 }, // fil "bons plans" = vraies promos uniquement (les variantes non-promo ont discount 0)
     },
     distinct: ['productId'],
     include: {
@@ -93,8 +94,9 @@ async function getHomeData() {
   
   // 2. Ensuite les luxeDeals (Archives de Luxe) - en excluant les hotDeals
   const luxeDeals = await prisma.deal.findMany({
-    where: { 
+    where: {
       status: 'ACTIVE',
+      discountPercent: { gt: 0 },
       brandTier: 1,
       id: { notIn: hotDealIds },
     },
@@ -126,6 +128,7 @@ async function getHomeData() {
         deals: {
           some: {
             status: 'ACTIVE',
+            discountPercent: { gt: 0 },
             id: { notIn: excludedIds },
           },
         },
@@ -141,6 +144,7 @@ async function getHomeData() {
         prisma.deal.findMany({
           where: {
             status: 'ACTIVE',
+            discountPercent: { gt: 0 },
             merchantId: merchant.id,
             id: { notIn: excludedIds },
           },

@@ -30,6 +30,8 @@ import { generateProductContent } from '../lib/ai/enrich-content';
 
 const MAX_IMAGES_PER_PRODUCT = 5;
 
+const IMG_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1';
+
 const MERCHANTS: Record<string, { fetcher: (url: string) => Promise<ProductDetails>; delayMs: number }> = {
   nocibe: { fetcher: fetchNocibeDetails, delayMs: 1500 },
   marionnaud: { fetcher: fetchMarionnaudDetails, delayMs: 1500 },
@@ -38,6 +40,29 @@ const MERCHANTS: Record<string, { fetcher: (url: string) => Promise<ProductDetai
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Ne stocke QUE des images qui existent réellement (200 + content-type image) et
+ * qui ne sont pas des logos/visuels de marque. Évite d'insérer des URLs 404 que
+ * les extracteurs peuvent parfois deviner (variantes -2/-3, chemins HD, etc.).
+ */
+async function keepValidImages(urls: string[]): Promise<string[]> {
+  const valid: string[] = [];
+  for (const url of urls) {
+    if (/brand-images|\/logo|logogive/i.test(url)) continue;
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 12000);
+      const r = await fetch(url, { headers: { 'User-Agent': IMG_UA, Accept: 'image/*,*/*' }, signal: c.signal, redirect: 'follow' });
+      clearTimeout(t);
+      if (r.ok && (r.headers.get('content-type') || '').startsWith('image')) valid.push(url);
+    } catch {
+      // URL injoignable -> on ne la stocke pas
+    }
+    if (valid.length >= MAX_IMAGES_PER_PRODUCT) break;
+  }
+  return valid;
 }
 
 async function main() {
@@ -126,9 +151,11 @@ async function main() {
         existingUrls = new Set(product.images.map((img) => img.url));
         productImageUrls.set(product.id, existingUrls);
       }
-      if (details.images.length > 0 && existingUrls.size < MAX_IMAGES_PER_PRODUCT) {
-        for (let pos = 0; pos < details.images.length; pos++) {
-          const url = details.images[pos];
+      // Valider les URLs (200 + image, hors logos) AVANT insertion en base.
+      const validImages = details.images.length > 0 ? await keepValidImages(details.images) : [];
+      if (validImages.length > 0 && existingUrls.size < MAX_IMAGES_PER_PRODUCT) {
+        for (let pos = 0; pos < validImages.length; pos++) {
+          const url = validImages[pos];
           const isNew = !existingUrls.has(url);
           if (isNew && existingUrls.size >= MAX_IMAGES_PER_PRODUCT) break;
           await prisma.productImage.upsert({

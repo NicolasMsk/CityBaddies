@@ -22,13 +22,22 @@ const getClient = () => {
 };
 
 const SYSTEM_PROMPT = `Tu es la rédactrice beauté de City Baddies, un site français de bons plans beauté.
-Ton style : dynamique, complice, expert beauté — tu connais les textures, les usages, les marques.
-Pas de superlatifs creux ("incroyable", "révolutionnaire"), pas d'emojis, pas d'invention.
+Ton style : dynamique, complice, mais FACTUEL. Pas de superlatifs creux, pas d'emojis.
+
+RÈGLE ABSOLUE — ZÉRO INVENTION (le site affiche ces textes publiquement, une info fausse = faute grave) :
+- N'écris un ingrédient, un actif, une note olfactive (ex: bergamote, muguet), un pourcentage
+  (ex: "92% d'origine naturelle") ou une certification QUE s'il apparaît littéralement dans les
+  "Données fournies" ci-dessous (description scrapée ou INCI). Sinon, NE LE MENTIONNE PAS.
+- N'invente aucun chiffre, aucune statistique, aucune durée de tenue, aucun résultat clinique.
+- Interdiction de "compléter" une pyramide olfactive ou une liste d'ingrédients à partir de tes
+  connaissances : si seuls 2 ingrédients sont fournis, n'en cite que 2.
+- Si les données sont pauvres, fais court et générique (type de produit + marque + usage évident
+  d'après le nom). Une description courte et vraie vaut mieux qu'une longue inventée.
 
 Tu réponds UNIQUEMENT en JSON avec exactement ces deux clés :
 {
-  "seoDescription": "Description produit de 120 à 200 mots, en français. Présente les bénéfices du produit, sa texture et son usage UNIQUEMENT si la description scrapée les mentionne. N'invente JAMAIS d'ingrédients ou de propriétés non fournis. Si peu d'infos sont disponibles, reste général sur le type de produit et la marque.",
-  "whyGoodDeal": "2 à 3 phrases en HTML simple (balises <p> uniquement) expliquant pourquoi c'est un bon deal : ampleur de la réduction, positionnement prix, notoriété de la marque. En français."
+  "seoDescription": "80 à 180 mots en français, décrivant le produit à partir des SEULES données fournies. Bénéfices/texture/usage uniquement s'ils sont dans les données. Aucun ingrédient/note/chiffre non fourni.",
+  "whyGoodDeal": "2 à 3 phrases en HTML simple (<p> uniquement), en français : ampleur de la réduction, positionnement prix, notoriété de la marque. Utilise UNIQUEMENT les prix fournis, n'invente pas de 'prix habituel'."
 }`;
 
 export async function generateProductContent(input: {
@@ -66,7 +75,7 @@ export async function generateProductContent(input: {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.7,
+      temperature: 0.3,
       max_tokens: 900,
     });
 

@@ -11,6 +11,8 @@ import { ScrapedProduct } from './types';
 import { normalizePrices, isValidDeal, productSlug } from './validate';
 import { findOrCreateBrand } from '../brands';
 import { findOrCreateVariant, calculatePricePerUnit } from '../utils/volume';
+import { categorizeProductsBatch, CategorizeResult } from '../ai/categorize';
+import { calculateDealScore, tagsToString } from '../utils/scoring';
 
 const BATCH_SIZE = 3; // limite pool Supabase (~5 connexions)
 
@@ -107,6 +109,44 @@ export async function importProducts(
   result.valid = products.length;
   console.log(`[import] ${result.scraped} scrapés -> ${result.valid} deals valides`);
 
+  // 2b. Catégorisation IA — uniquement pour les produits NOUVEAUX (absents en base).
+  // Échec OpenAI toléré: Map vide -> les fallbacks (catégorie scrapée, tier 2) s'appliquent.
+  const allSlugs = [...new Set(products.map((p) => productSlug(p.brand, p.name)))];
+  const existingSlugs = new Set(
+    (
+      await prisma.product.findMany({
+        where: { slug: { in: allSlugs } },
+        select: { slug: true },
+      })
+    ).map((prod) => prod.slug),
+  );
+  const newProductsByName = new Map<string, ScrapedProduct>();
+  for (const p of products) {
+    if (!existingSlugs.has(productSlug(p.brand, p.name))) newProductsByName.set(p.name, p);
+  }
+  // Map clé = nom du produit (même clé que categorizeProductsBatch)
+  let classifications = new Map<string, CategorizeResult>();
+  if (newProductsByName.size > 0) {
+    try {
+      // categorizeProductsBatch découpe lui-même en batches de 50
+      classifications = await categorizeProductsBatch(
+        [...newProductsByName.values()].map((p) => ({
+          name: p.name,
+          brand: p.brand,
+          volume: p.volume,
+        })),
+      );
+      console.log(
+        `[import] Catégorisation IA: ${classifications.size}/${newProductsByName.size} nouveaux produits classifiés`,
+      );
+    } catch (err) {
+      classifications = new Map();
+      console.warn(
+        `[import] Catégorisation IA indisponible: ${err instanceof Error ? err.message : String(err)} — import sans sous-catégories/refinedTitle`,
+      );
+    }
+  }
+
   // Cache de PROMESSES pour éviter la course find-then-create de findOrCreateBrand
   // quand plusieurs produits d'une même marque arrivent dans le même batch.
   const brandCache = new Map<string, Promise<string | null>>();
@@ -136,6 +176,11 @@ export async function importProducts(
             console.warn(`[import] Catégorie inconnue "${p.category}" -> fallback maquillage (${p.name})`);
           }
           const slug = productSlug(p.brand, p.name);
+          // Classification IA (uniquement présente pour les produits nouveaux)
+          const classification = classifications.get(p.name);
+          const aiCategory = classification
+            ? categoryBySlug.get(classification.categorySlug)
+            : undefined;
           const product = await prisma.product.upsert({
             where: { slug },
             update: {},
@@ -146,7 +191,9 @@ export async function importProducts(
               imageUrl: p.imageUrl || null,
               brand: p.brand,
               brandId,
-              categoryId: (category ?? defaultCategory).id,
+              categoryId: (aiCategory ?? category ?? defaultCategory).id,
+              subcategory: classification?.subcategorySlug ?? null,
+              subsubcategory: classification?.subsubcategorySlug ?? null,
             },
           });
 
@@ -156,6 +203,19 @@ export async function importProducts(
 
           // Deal — upsert sur la contrainte unique [variantId, merchantId]
           const priceInfo = calculatePricePerUnit(p.currentPrice, p.volume);
+
+          // Score + tags — calcul LOCAL, toujours effectué (aucune dépendance IA)
+          const { score, tags } = calculateDealScore({
+            discountPercent: p.discountPercent,
+            brandTier: classification?.brandTier ?? null, // null = score marque neutre
+            pricePerUnit: priceInfo?.pricePerUnit ?? null,
+            isHot: false,
+            isTrending: false,
+            categorySlug: p.category,
+            subcategorySlug: classification?.subcategorySlug,
+            productName: p.name,
+          });
+
           const dealData = {
             title: `${p.brand} -${p.discountPercent}% : ${p.name.substring(0, 100)}`,
             description: `${p.discountPercent}% de réduction !`,
@@ -174,16 +234,25 @@ export async function importProducts(
             pricePerUnit: priceInfo?.pricePerUnit ?? null,
             status: 'ACTIVE' as const,
             lastSeenAt: new Date(),
+            score,
+            tags: tagsToString(tags),
           };
           await prisma.deal.upsert({
             where: { variantId_merchantId: { variantId: variant.id, merchantId: merchant.id } },
-            update: dealData,
+            update: {
+              ...dealData,
+              // Ne pas écraser brandTier/refinedTitle existants sans nouvelle classification
+              ...(classification ? { brandTier: classification.brandTier } : {}),
+              ...(classification?.refinedTitle ? { refinedTitle: classification.refinedTitle } : {}),
+            },
             create: {
               ...dealData,
               productId: product.id,
               variantId: variant.id,
               merchantId: merchant.id,
               type: 'scraped',
+              brandTier: classification?.brandTier ?? 2,
+              refinedTitle: classification?.refinedTitle ?? null,
             },
           });
 

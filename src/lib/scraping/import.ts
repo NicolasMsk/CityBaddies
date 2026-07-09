@@ -17,6 +17,9 @@ const BATCH_SIZE = 3; // limite pool Supabase (~5 connexions)
 // Garde-fou expiration: on n'expire les deals non revus que si le run
 // a ramené un volume normal — sinon (site bloqué / HTML changé) on ne touche à rien.
 const EXPIRE_MIN_IMPORTED = 50;
+// Garde-fou relatif: le run doit couvrir au moins 50% des deals ACTIVE existants
+// du marchand — sinon (blocage partiel du site) on n'expire rien.
+const EXPIRE_MIN_RATIO = 0.5;
 
 const DB_CATEGORIES = [
   { slug: 'maquillage', name: 'Maquillage', icon: 'Sparkles', description: 'Fonds de teint, rouges à lèvres...' },
@@ -43,6 +46,12 @@ export interface ImportResult {
   errors: Array<{ product: string; error: string }>;
 }
 
+/**
+ * Importe le résultat d'un run de scraping pour un marchand.
+ *
+ * @param rawProducts DOIT être le scrape COMPLET du marchand pour ce run — un
+ * sous-ensemble (une seule catégorie) ferait expirer tous les autres deals du marchand.
+ */
 export async function importProducts(
   merchantSlug: string,
   rawProducts: ScrapedProduct[],
@@ -86,7 +95,10 @@ export async function importProducts(
   result.valid = products.length;
   console.log(`[import] ${result.scraped} scrapés -> ${result.valid} deals valides`);
 
-  const brandCache = new Map<string, string | null>();
+  // Cache de PROMESSES pour éviter la course find-then-create de findOrCreateBrand
+  // quand plusieurs produits d'une même marque arrivent dans le même batch.
+  const brandCache = new Map<string, Promise<string | null>>();
+  const warnedCategories = new Set<string>();
 
   // 3. Import par batch de 3
   for (let i = 0; i < products.length; i += BATCH_SIZE) {
@@ -95,13 +107,19 @@ export async function importProducts(
       batch.map(async (p) => {
         try {
           // Brand
-          let brandId = brandCache.get(p.brand);
-          if (brandId === undefined) {
-            brandId = await findOrCreateBrand(p.brand);
-            brandCache.set(p.brand, brandId);
+          let brandPromise = brandCache.get(p.brand);
+          if (!brandPromise) {
+            brandPromise = findOrCreateBrand(p.brand);
+            brandCache.set(p.brand, brandPromise);
           }
+          const brandId = await brandPromise;
 
           // Product (partagé entre enseignes, matché par slug marque-nom)
+          const category = categoryBySlug.get(p.category);
+          if (!category && !warnedCategories.has(p.category)) {
+            warnedCategories.add(p.category);
+            console.warn(`[import] Catégorie inconnue "${p.category}" -> fallback maquillage (${p.name})`);
+          }
           const slug = productSlug(p.brand, p.name);
           const product = await prisma.product.upsert({
             where: { slug },
@@ -113,7 +131,7 @@ export async function importProducts(
               imageUrl: p.imageUrl || null,
               brand: p.brand,
               brandId,
-              categoryId: (categoryBySlug.get(p.category) ?? defaultCategory).id,
+              categoryId: (category ?? defaultCategory).id,
             },
           });
 
@@ -187,8 +205,11 @@ export async function importProducts(
     }
   }
 
-  // 4. Expiration des deals non revus — avec garde-fou
-  if (result.imported >= EXPIRE_MIN_IMPORTED) {
+  // 4. Expiration des deals non revus — avec garde-fous absolu ET relatif
+  const activeCount = await prisma.deal.count({
+    where: { merchantId: merchant.id, status: 'ACTIVE' },
+  });
+  if (result.imported >= EXPIRE_MIN_IMPORTED && result.imported >= activeCount * EXPIRE_MIN_RATIO) {
     const expired = await prisma.deal.updateMany({
       where: {
         merchantId: merchant.id,
@@ -200,7 +221,7 @@ export async function importProducts(
     result.expired = expired.count;
   } else {
     console.warn(
-      `[import] ⚠️ Seulement ${result.imported} deals importés (< ${EXPIRE_MIN_IMPORTED}) — expiration SKIPPÉE par sécurité`,
+      `[import] ⚠️ Seulement ${result.imported} deals importés (min: ${EXPIRE_MIN_IMPORTED}, actifs existants: ${activeCount}, ratio min: ${EXPIRE_MIN_RATIO}) — expiration SKIPPÉE par sécurité`,
     );
   }
 

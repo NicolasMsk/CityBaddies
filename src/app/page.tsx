@@ -45,7 +45,10 @@ async function getHomeData() {
   const categoriesWithProducts = await prisma.category.findMany({
     include: {
       _count: {
-        select: { products: true },
+        // Ne compter que les produits ayant AU MOINS un deal ACTIVE : les
+        // catégories sans offre active (non-parfum aujourd'hui) tombent à 0 et
+        // sont filtrées plus bas → le site n'affiche QUE les parfums.
+        select: { products: { where: { deals: { some: { status: 'ACTIVE' } } } } },
       },
     },
   });

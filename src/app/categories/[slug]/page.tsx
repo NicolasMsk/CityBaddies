@@ -65,6 +65,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!category) {
     return {
       title: 'Catégorie non trouvée',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  // Catégorie sans aucun deal actif (ex: non-parfum aujourd'hui) → noindex.
+  const activeDeals = await prisma.deal.count({
+    where: { status: 'ACTIVE', discountPercent: { gt: 0 }, product: { categoryId: category.id } },
+  });
+  if (activeDeals === 0) {
+    return {
+      title: `${category.name} | City Baddies`,
+      robots: { index: false, follow: false },
     };
   }
 
@@ -173,7 +185,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const data = await getCategoryDeals(slug);
 
-  if (!data) {
+  // 404 si catégorie inexistante OU sans deal actif (pages vides/expirées non indexées).
+  if (!data || data.deals.length === 0) {
     notFound();
   }
 

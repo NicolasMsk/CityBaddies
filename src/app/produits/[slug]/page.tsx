@@ -33,7 +33,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
   });
 
-  if (!product) {
+  // Aucun produit OU aucun deal actif (offre expirée) → noindex : on ne veut pas
+  // indexer une fiche sans prix en cours.
+  if (!product || product.deals.length === 0) {
     return {
       title: 'Produit non trouvé',
       description: "Ce produit n'existe pas.",

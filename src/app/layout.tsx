@@ -136,7 +136,6 @@ export default function RootLayout({
     <html lang="fr" style={{ backgroundColor: '#0a0a0a' }}>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" href="/images/logo.png" />
         <Script
           id="organization-schema"
           type="application/ld+json"

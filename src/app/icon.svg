@@ -1,0 +1,16 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="City Baddies">
+  <defs>
+    <linearGradient id="gold" x1="8" y1="6" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e7c574"/>
+      <stop offset="0.5" stop-color="#d4a855"/>
+      <stop offset="1" stop-color="#b8863a"/>
+    </linearGradient>
+  </defs>
+  <!-- Fond carré arrondi noir + fine bordure or -->
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="#0a0a0a"/>
+  <rect x="1.75" y="1.75" width="44.5" height="44.5" rx="10.25" fill="none" stroke="url(#gold)" stroke-width="1.5" stroke-opacity="0.85"/>
+  <!-- Monogramme CB, empattements fins (Didone), doré -->
+  <text x="24" y="24" fill="url(#gold)" text-anchor="middle" dominant-baseline="central"
+        font-family="Georgia, 'Times New Roman', 'Playfair Display', serif"
+        font-weight="700" font-size="25" letter-spacing="-1.5">CB</text>
+</svg>

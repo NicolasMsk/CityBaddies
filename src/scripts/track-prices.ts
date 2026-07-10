@@ -26,7 +26,9 @@ import {
   fetchMarionnaudProductPrice,
   fetchNocibeProductPrice,
   fetchSephoraProductPrice,
+  warmupSession,
   ProductPrice,
+  PriceFetchResult,
 } from '../lib/scraping/product-price';
 import { findOrCreateBrand } from '../lib/brands';
 import { findOrCreateVariant, calculatePricePerUnit } from '../lib/utils/volume';
@@ -40,14 +42,24 @@ const MERCHANT_INFO: Record<MerchantSlug, { name: string; website: string }> = {
 };
 
 // Espacement minimum entre 2 fetches d'un même marchand (ms). Akamai (nocibe /
-// sephora) rate-limite par IP → espacement large. Marionnaud : poli.
+// sephora) rate-limite par IP même sur IP GitHub (observé: coupure après ~15-20
+// requêtes à 5-8s) → espacement large + jitter. Marionnaud : poli.
 const THROTTLE_MS: Record<MerchantSlug, number> = {
   marionnaud: 1500,
-  nocibe: 5000,
-  sephora: 8000,
+  nocibe: 10000,
+  sephora: 12000,
 };
+// Jitter aléatoire ajouté au throttle (0..JITTER_MS) — motif moins mécanique.
+const JITTER_MS = 4000;
 
-const FETCHERS: Record<MerchantSlug, (url: string) => Promise<ProductPrice | null>> = {
+// Backoffs successifs quand un blocage (403/challenge) est détecté : on attend
+// longuement puis on reprend — le rate-limit Akamai se relâche après une pause.
+const BLOCK_BACKOFFS_MS = [90_000, 180_000];
+// Au-delà de N événements de blocage malgré les backoffs, on abandonne le
+// marchand pour ce run (le cron du lendemain reprendra).
+const MAX_BLOCK_EVENTS = 4;
+
+const FETCHERS: Record<MerchantSlug, (url: string) => Promise<PriceFetchResult>> = {
   marionnaud: fetchMarionnaudProductPrice,
   nocibe: fetchNocibeProductPrice,
   sephora: fetchSephoraProductPrice,
@@ -112,7 +124,8 @@ async function main() {
 
   // Charger les fiches vérifiées à fiche-produit, par marchand.
   const rows = await prisma.scrapingQueue.findMany({
-    where: { verified: true, merchantSlug: { in: merchants } },
+    // status 'error' = lien mort marqué par un run précédent (404) — on ne retente pas.
+    where: { verified: true, merchantSlug: { in: merchants }, status: { not: 'error' } },
     select: { id: true, productName: true, merchantSlug: true, productUrl: true },
     orderBy: [{ merchantSlug: 'asc' }, { productName: 'asc' }],
   });
@@ -140,11 +153,15 @@ async function main() {
 
   const summary: Summary = { processed: 0, written: 0, priceChanges: 0, skipped: 0, errors: 0 };
   const lastFetchAt: Record<string, number> = {};
+  const blockEvents: Record<string, number> = {};
+  const abandoned = new Set<MerchantSlug>();
+  const warmedUp = new Set<MerchantSlug>();
   let count = 0;
 
   for (const row of rows) {
     if (count >= limit) break;
     const merchant = row.merchantSlug as MerchantSlug;
+    if (abandoned.has(merchant)) continue;
 
     if (!isProductUrl(merchant, row.productUrl)) {
       summary.skipped++;
@@ -153,19 +170,55 @@ async function main() {
     count++;
     summary.processed++;
 
-    // Throttle par marchand.
-    const throttle = THROTTLE_MS[merchant];
+    // Warmup de session (cookies Akamai) au 1er fetch du marchand.
+    if (!warmedUp.has(merchant)) {
+      warmedUp.add(merchant);
+      await warmupSession(MERCHANT_INFO[merchant].website, merchant !== 'marionnaud');
+      await delay(2000);
+    }
+
+    // Throttle par marchand (+ jitter anti-motif mécanique).
+    const throttle = THROTTLE_MS[merchant] + Math.floor(Math.random() * JITTER_MS);
     const since = Date.now() - (lastFetchAt[merchant] || 0);
     if (lastFetchAt[merchant] && since < throttle) await delay(throttle - since);
     lastFetchAt[merchant] = Date.now();
 
-    let price: ProductPrice | null = null;
-    try {
-      price = await FETCHERS[merchant](row.productUrl);
-    } catch (err) {
-      console.warn(`[track] fetch throw ${row.productName} (${merchant}): ${err instanceof Error ? err.message : err}`);
+    // Fetch avec gestion du blocage: long backoff puis reprise.
+    let result: PriceFetchResult = null;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        result = await FETCHERS[merchant](row.productUrl);
+      } catch (err) {
+        console.warn(`[track] fetch throw ${row.productName} (${merchant}): ${err instanceof Error ? err.message : err}`);
+        result = null;
+      }
+      if (result !== 'BLOCKED') break;
+      blockEvents[merchant] = (blockEvents[merchant] || 0) + 1;
+      if (blockEvents[merchant] >= MAX_BLOCK_EVENTS) {
+        console.warn(`[track] ⛔ ${merchant}: ${blockEvents[merchant]} blocages malgré les pauses — abandon du marchand pour ce run`);
+        abandoned.add(merchant);
+        break;
+      }
+      const wait = BLOCK_BACKOFFS_MS[Math.min(attempt, BLOCK_BACKOFFS_MS.length - 1)];
+      console.warn(`[track] 🚧 ${merchant} rate-limité (blocage #${blockEvents[merchant]}) — pause ${wait / 1000}s puis reprise...`);
+      await delay(wait);
+      if (attempt >= BLOCK_BACKOFFS_MS.length) break; // 2 retries max par fiche
+    }
+    if (abandoned.has(merchant)) { summary.errors++; continue; }
+
+    if (result === 'NOT_FOUND') {
+      summary.errors++;
+      console.warn(`[track] ✗ ${row.productName} | ${merchant} | lien mort (404) — marqué en base, ne sera plus retenté`);
+      if (!dryRun) {
+        await prisma.scrapingQueue.update({
+          where: { id: row.id },
+          data: { status: 'error', errorMessage: 'HTTP 404 — lien mort (track-prices)' },
+        }).catch(() => {});
+      }
+      continue;
     }
 
+    const price = result === 'BLOCKED' ? null : (result as ProductPrice | null);
     if (!price || !(price.currentPrice > 0)) {
       summary.errors++;
       console.warn(`[track] ✗ ${row.productName} | ${merchant} | prix introuvable`);

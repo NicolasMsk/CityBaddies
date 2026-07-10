@@ -37,6 +37,16 @@ export interface ProductPrice {
   priceConditions?: string;
 }
 
+/**
+ * Résultat d'un fetch de prix :
+ *  - ProductPrice : prix trouvé
+ *  - 'BLOCKED'    : rate-limit/blocage Akamai (403/429 ou page challenge) —
+ *                   l'appelant doit faire un LONG backoff puis retenter
+ *  - 'NOT_FOUND'  : HTTP 404, lien mort — à marquer en base, ne plus retenter
+ *  - null         : échec d'extraction (page OK mais prix non trouvé)
+ */
+export type PriceFetchResult = ProductPrice | 'BLOCKED' | 'NOT_FOUND' | null;
+
 const TIMEOUT_MS = 20000;
 
 // UA mobile iOS — obligatoire pour Nocibé et Sephora (Akamai).
@@ -67,24 +77,85 @@ const DESKTOP_HEADERS: Record<string, string> = {
   Referer: 'https://www.marionnaud.fr/',
 };
 
-/** Fetch avec timeout — retourne null (jamais de throw) si HTTP != 2xx ou erreur réseau. */
-async function fetchHtml(url: string, headers: Record<string, string>): Promise<string | null> {
+// ─── Session cookies par hôte ────────────────────────────────────────────────
+// Akamai (Nocibé/Sephora) note le comportement : renvoyer les cookies posés
+// (bm_sz, _abck, ak_bmsc...) rend la session crédible et retarde le rate-limit.
+const cookieJar = new Map<string, string>();
+
+function hostOf(url: string): string {
+  try { return new URL(url).host; } catch { return ''; }
+}
+
+function rememberCookies(host: string, res: Response): void {
+  const setCookie = (res.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ??
+    (res.headers.get('set-cookie') ? [res.headers.get('set-cookie')!] : []);
+  if (!setCookie.length) return;
+  const jar = new Map<string, string>();
+  const existing = cookieJar.get(host);
+  if (existing) {
+    for (const pair of existing.split('; ')) {
+      const eq = pair.indexOf('=');
+      if (eq > 0) jar.set(pair.slice(0, eq), pair.slice(eq + 1));
+    }
+  }
+  for (const c of setCookie) {
+    const first = c.split(';')[0];
+    const eq = first.indexOf('=');
+    if (eq > 0) jar.set(first.slice(0, eq).trim(), first.slice(eq + 1).trim());
+  }
+  cookieJar.set(host, [...jar.entries()].map(([k, v]) => `${k}=${v}`).join('; '));
+}
+
+/** Page challenge Akamai servie en 200 (sans le produit) ? */
+function looksBlocked(html: string): boolean {
+  if (html.length < 4000) return /access denied|edgesuite|challenge|captcha|pardon our interruption/i.test(html);
+  return false;
+}
+
+interface FetchOutcome {
+  status: number; // 0 = erreur réseau/timeout
+  html: string | null;
+}
+
+/** Fetch avec timeout + cookies de session — jamais de throw. */
+async function fetchHtml(url: string, headers: Record<string, string>): Promise<FetchOutcome> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const host = hostOf(url);
   try {
-    const response = await fetch(url, { headers, signal: controller.signal });
+    const h = { ...headers };
+    const cookies = cookieJar.get(host);
+    if (cookies) h['Cookie'] = cookies;
+    const response = await fetch(url, { headers: h, signal: controller.signal });
+    rememberCookies(host, response);
     if (!response.ok) {
       console.warn(`[product-price] HTTP ${response.status} pour ${url}`);
-      return null;
+      return { status: response.status, html: null };
     }
-    return await response.text();
+    return { status: response.status, html: await response.text() };
   } catch (err) {
     const msg = err instanceof Error ? (err.name === 'AbortError' ? 'timeout' : err.message) : String(err);
     console.warn(`[product-price] Erreur fetch ${url}: ${msg}`);
-    return null;
+    return { status: 0, html: null };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/** Convertit un FetchOutcome raté en résultat typé (BLOCKED / NOT_FOUND / null). */
+function classifyFailure(outcome: FetchOutcome): PriceFetchResult {
+  if (outcome.status === 403 || outcome.status === 429) return 'BLOCKED';
+  if (outcome.status === 404 || outcome.status === 410) return 'NOT_FOUND';
+  return null;
+}
+
+/**
+ * Warmup de session : visite la homepage du marchand pour récolter les cookies
+ * Akamai avant d'enchaîner les fiches. À appeler une fois par run et par site.
+ */
+export async function warmupSession(origin: string, mobile: boolean): Promise<void> {
+  const headers = mobile ? MOBILE_HEADERS : DESKTOP_HEADERS;
+  await fetchHtml(origin, headers);
 }
 
 /** Extrait le 1er montant en euros d'une chaîne (ex: "  103,50 €" -> 103.5). */
@@ -130,9 +201,11 @@ function isJunkImage(url: string): boolean {
  * Marque : `.product-details-brand-link__text-link` ; titre : `h1`.
  * Image  : 1er visuel produit `[class*="product-image"] img` (media.marionnaud.fr).
  */
-export async function fetchMarionnaudProductPrice(url: string): Promise<ProductPrice | null> {
-  const html = await fetchHtml(url, DESKTOP_HEADERS);
-  if (!html) return null;
+export async function fetchMarionnaudProductPrice(url: string): Promise<PriceFetchResult> {
+  const outcome = await fetchHtml(url, DESKTOP_HEADERS);
+  if (!outcome.html) return classifyFailure(outcome);
+  const html = outcome.html;
+  if (looksBlocked(html)) return 'BLOCKED';
 
   try {
     const $ = cheerio.load(html);
@@ -184,9 +257,11 @@ export async function fetchMarionnaudProductPrice(url: string): Promise<ProductP
  *  - contenance   : name (ex: "100 ml")
  *  - image        : image
  */
-export async function fetchNocibeProductPrice(url: string): Promise<ProductPrice | null> {
-  const html = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.nocibe.fr/' });
-  if (!html) return null;
+export async function fetchNocibeProductPrice(url: string): Promise<PriceFetchResult> {
+  const outcome = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.nocibe.fr/' });
+  if (!outcome.html) return classifyFailure(outcome);
+  const html = outcome.html;
+  if (looksBlocked(html)) return 'BLOCKED';
 
   try {
     const $ = cheerio.load(html);
@@ -258,9 +333,11 @@ export async function fetchNocibeProductPrice(url: string): Promise<ProductPrice
  * ⚠️ Si data-tcproduct réapparaît (ancien markup), on le lit en priorité :
  * product_price_ati / product_old_price_ati / product_sku_name.
  */
-export async function fetchSephoraProductPrice(url: string): Promise<ProductPrice | null> {
-  const html = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.sephora.fr/' });
-  if (!html) return null;
+export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchResult> {
+  const outcome = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.sephora.fr/' });
+  if (!outcome.html) return classifyFailure(outcome);
+  const html = outcome.html;
+  if (looksBlocked(html)) return 'BLOCKED';
 
   try {
     const $ = cheerio.load(html);
@@ -314,6 +391,16 @@ export async function fetchSephoraProductPrice(url: string): Promise<ProductPric
       currentPrice = displayed ?? (offerPrices.length ? Math.min(...offerPrices) : null);
     }
     if (currentPrice == null) {
+      // Page 200 SANS aucun marqueur produit (ni microdata, ni og:title, ni €)
+      // = challenge Akamai servi en 200, pas un échec de parsing.
+      const hasProductMarkers =
+        $('[itemtype*="Product"]').length > 0 ||
+        !!$('meta[property="og:title"]').attr('content') ||
+        /€/.test($('body').text());
+      if (!hasProductMarkers) {
+        console.warn(`[product-price][sephora] page challenge (200 sans produit) ${url}`);
+        return 'BLOCKED';
+      }
       console.warn(`[product-price][sephora] prix introuvable ${url}`);
       return null;
     }

@@ -7,8 +7,18 @@ name: Track prices
 # (Nocibé/Sephora) ; Marionnaud en direct.
 
 on:
+  # Plusieurs passages/jour : le tracker est INCRÉMENTAL (ne retraite que les
+  # fiches périmées >20h). Chaque run part d'une IP GitHub fraîche et attrape
+  # ~12-15 fiches Nocibé/Sephora avant blocage Akamai ; sur la journée, les
+  # ~45+41 fiches se remplissent morceau par morceau. Marionnaud (pas d'Akamai)
+  # est couvert dès le 1er passage.
   schedule:
-    - cron: "0 5 * * *" # 05:00 UTC ≈ 07:00 Paris
+    - cron: "0 5 * * *"   # 05:00 UTC
+    - cron: "0 8 * * *"   # 08:00
+    - cron: "0 11 * * *"  # 11:00
+    - cron: "0 14 * * *"  # 14:00
+    - cron: "0 17 * * *"  # 17:00
+    - cron: "0 20 * * *"  # 20:00
   workflow_dispatch:
     inputs:
       merchant:

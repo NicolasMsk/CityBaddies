@@ -52,12 +52,19 @@ const THROTTLE_MS: Record<MerchantSlug, number> = {
 // Jitter aléatoire ajouté au throttle (0..JITTER_MS) — motif moins mécanique.
 const JITTER_MS = 4000;
 
-// Backoffs successifs quand un blocage (403/challenge) est détecté : on attend
-// longuement puis on reprend — le rate-limit Akamai se relâche après une pause.
-const BLOCK_BACKOFFS_MS = [90_000, 180_000];
-// Au-delà de N événements de blocage malgré les backoffs, on abandonne le
-// marchand pour ce run (le cron du lendemain reprendra).
-const MAX_BLOCK_EVENTS = 4;
+// IMPORTANT (constat des runs GHA) : le blocage Akamai est lié à la RÉPUTATION
+// de l'IP datacenter, PAS au rythme. Attendre 90-180s ne lève pas le blocage.
+// Stratégie retenue : sur blocage, 1 courte retry puis on ABANDONNE le marchand
+// pour ce run — c'est un run ULTÉRIEUR (IP GitHub fraîche) qui reprendra les
+// fiches manquantes. Le tracker est INCRÉMENTAL (voir STALE_HOURS) : chaque run
+// ne retraite que les fiches périmées, donc plusieurs petits runs/jour couvrent
+// tout le catalogue morceau par morceau.
+const BLOCK_RETRY_MS = 20_000; // une seule courte retry
+const MAX_BLOCK_EVENTS = 2; // au 2e blocage, on abandonne le marchand pour ce run
+
+// Ne retraiter une fiche que si son offre n'a pas été rafraîchie depuis N heures.
+// Rend les runs incrémentaux/idempotents : les runs suivants attaquent le reliquat.
+const DEFAULT_STALE_HOURS = 20;
 
 const FETCHERS: Record<MerchantSlug, (url: string) => Promise<PriceFetchResult>> = {
   marionnaud: fetchMarionnaudProductPrice,
@@ -112,7 +119,10 @@ async function main() {
   const merchantArg = merchantIdx >= 0 ? (args[merchantIdx + 1] as MerchantSlug) : null;
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : Infinity;
+  const staleIdx = args.indexOf('--stale-hours');
+  const staleHours = staleIdx >= 0 ? parseInt(args[staleIdx + 1], 10) : DEFAULT_STALE_HOURS;
   const dryRun = args.includes('--dry-run');
+  const staleCutoff = new Date(Date.now() - staleHours * 3600_000);
 
   if (merchantArg && !MERCHANT_INFO[merchantArg]) {
     console.error(`Marchand inconnu: ${merchantArg} (attendu: marionnaud|nocibe|sephora)`);
@@ -151,6 +161,17 @@ async function main() {
     }
   }
 
+  // Offres tracker déjà rafraîchies récemment -> on les saute (incrémental).
+  const freshKeys = new Set<string>();
+  if (!dryRun) {
+    const recent = await prisma.deal.findMany({
+      where: { type: 'tracked', lastSeenAt: { gte: staleCutoff }, merchant: { slug: { in: merchants } } },
+      select: { merchant: { select: { slug: true } }, product: { select: { slug: true } } },
+    });
+    for (const d of recent) freshKeys.add(`${d.product.slug}|${d.merchant.slug}`);
+    console.log(`Incrémental: ${freshKeys.size} offres déjà rafraîchies (<${staleHours}h) seront sautées`);
+  }
+
   const summary: Summary = { processed: 0, written: 0, priceChanges: 0, skipped: 0, errors: 0 };
   const lastFetchAt: Record<string, number> = {};
   const blockEvents: Record<string, number> = {};
@@ -164,6 +185,12 @@ async function main() {
     if (abandoned.has(merchant)) continue;
 
     if (!isProductUrl(merchant, row.productUrl)) {
+      summary.skipped++;
+      continue;
+    }
+
+    // Incrémental : sauter les offres déjà rafraîchies récemment.
+    if (freshKeys.has(`${canonicalSlug(row.productName)}|${merchant}`)) {
       summary.skipped++;
       continue;
     }
@@ -194,15 +221,13 @@ async function main() {
       }
       if (result !== 'BLOCKED') break;
       blockEvents[merchant] = (blockEvents[merchant] || 0) + 1;
-      if (blockEvents[merchant] >= MAX_BLOCK_EVENTS) {
-        console.warn(`[track] ⛔ ${merchant}: ${blockEvents[merchant]} blocages malgré les pauses — abandon du marchand pour ce run`);
+      if (blockEvents[merchant] >= MAX_BLOCK_EVENTS || attempt >= 1) {
+        console.warn(`[track] ⛔ ${merchant}: bloqué par Akamai (IP datacenter) — abandon du marchand pour CE run ; un run ultérieur (IP fraîche) reprendra le reliquat`);
         abandoned.add(merchant);
         break;
       }
-      const wait = BLOCK_BACKOFFS_MS[Math.min(attempt, BLOCK_BACKOFFS_MS.length - 1)];
-      console.warn(`[track] 🚧 ${merchant} rate-limité (blocage #${blockEvents[merchant]}) — pause ${wait / 1000}s puis reprise...`);
-      await delay(wait);
-      if (attempt >= BLOCK_BACKOFFS_MS.length) break; // 2 retries max par fiche
+      console.warn(`[track] 🚧 ${merchant} bloqué — 1 courte retry dans ${BLOCK_RETRY_MS / 1000}s...`);
+      await delay(BLOCK_RETRY_MS);
     }
     if (abandoned.has(merchant)) { summary.errors++; continue; }
 

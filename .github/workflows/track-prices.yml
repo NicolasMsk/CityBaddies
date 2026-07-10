@@ -58,3 +58,13 @@ jobs:
           github.event.inputs.merchant == '' ||
           github.event.inputs.merchant == matrix.merchant
         run: npx tsx src/scripts/track-prices.ts --merchant ${{ matrix.merchant }}
+
+      # Enrichissement des fiches suivies (multi-images, description, INCI + IA
+      # seoDescription/whyGoodDeal). Incrémental: ne traite que les deals ACTIVE
+      # pas encore enrichis — no-op la plupart du temps.
+      - name: Enrich ${{ matrix.merchant }}
+        if: >-
+          github.event_name != 'workflow_dispatch' ||
+          github.event.inputs.merchant == '' ||
+          github.event.inputs.merchant == matrix.merchant
+        run: npx tsx src/scripts/enrich.ts ${{ matrix.merchant }} --limit 15

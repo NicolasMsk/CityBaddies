@@ -9,9 +9,12 @@ name: Daily scrape
 # ressort systématiquement à 0 produit importé (donc rouge), c'est le signal qu'il
 # faut exécuter ce marchand depuis une IP résidentielle (voir documentation/SCRAPERS.md).
 
+# ⚠️ CRON DÉSACTIVÉ (pivot comparateur, juillet 2026) : ce workflow importait les
+# promos des pages catégories — y compris des produits HORS de la liste des
+# parfums suivis, polluant le comparateur. Le site est désormais alimenté
+# uniquement par "Track prices" (ScrapingQueue = liste de parfums vérifiée).
+# Ce workflow reste déclenchable manuellement si besoin ponctuel.
 on:
-  schedule:
-    - cron: "30 4 * * *" # 04:30 UTC ≈ 06:30 Paris (été) / 05:30 (hiver)
   workflow_dispatch:
     inputs:
       merchant:

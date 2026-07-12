@@ -3,11 +3,12 @@
  * TRACK-PRICES.TS — PRICE TRACKER QUOTIDIEN (comparateur)
  * =============================================================================
  *
- * Pour chaque fiche produit VÉRIFIÉE de ScrapingQueue, récupère le prix courant
- * chez le marchand et écrit un Deal ACTIVE par (variante, marchand) sous un
- * Product CANONIQUE partagé (slug = slugify(productName)). Les 3 marchands d'un
- * même parfum convergent donc vers UN seul Product → la fiche produit affiche la
- * comparaison multi-marchands.
+ * Pour chaque fiche produit VÉRIFIÉE de ScrapingQueue, récupère TOUTES les
+ * contenances (tailles) et leurs prix chez le marchand et écrit un Deal ACTIVE
+ * par (variante, marchand) sous un Product CANONIQUE partagé
+ * (slug = slugify(productName)). Les 3 marchands d'un même parfum convergent
+ * donc vers UN seul Product → la fiche produit affiche la comparaison
+ * multi-marchands ET multi-contenances (sélecteur de taille).
  *
  * Usage:
  *   npx tsx src/scripts/track-prices.ts [--merchant nocibe|sephora|marionnaud] [--limit N] [--dry-run]
@@ -29,9 +30,10 @@ import {
   warmupSession,
   ProductPrice,
   PriceFetchResult,
+  VariantPrice,
 } from '../lib/scraping/product-price';
 import { findOrCreateBrand } from '../lib/brands';
-import { findOrCreateVariant, calculatePricePerUnit } from '../lib/utils/volume';
+import { findOrCreateVariant, calculatePricePerUnit, parseVolume } from '../lib/utils/volume';
 
 type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora';
 
@@ -251,12 +253,15 @@ async function main() {
     }
 
     if (dryRun) {
-      console.log(`${row.productName} | ${merchant} | ${price.currentPrice}€ | ${price.volume ?? '?'}`);
+      const sizes = variantsToWrite(price)
+        .map((v) => `${v.volume || '?'}=${v.currentPrice}€`)
+        .join(', ');
+      console.log(`${row.productName} | ${merchant} | ${sizes}`);
       continue;
     }
 
     try {
-      await writeDeal(row, merchant, price, merchantIdBySlug.get(merchant)!, parfumsCategoryId, summary);
+      await writeDeals(row, merchant, price, merchantIdBySlug.get(merchant)!, parfumsCategoryId, summary);
     } catch (err) {
       summary.errors++;
       console.warn(`[track] ✗ écriture ${row.productName} (${merchant}): ${err instanceof Error ? err.message : err}`);
@@ -265,7 +270,7 @@ async function main() {
 
   console.log('\n=== Résumé ===');
   console.log(`fiches traitées : ${summary.processed}`);
-  console.log(`deals écrits    : ${summary.written}`);
+  console.log(`offres écrites  : ${summary.written} (une par taille x marchand)`);
   console.log(`changements prix: ${summary.priceChanges}`);
   console.log(`URLs ignorées   : ${summary.skipped}`);
   console.log(`erreurs         : ${summary.errors}`);
@@ -275,7 +280,17 @@ async function main() {
   process.exit(summary.written > 0 || summary.processed === 0 || dryRun ? 0 : 1);
 }
 
-async function writeDeal(
+/**
+ * Contenances à écrire pour une fiche : toutes celles remontées par le fetcher
+ * (`price.variants`, qui inclut la variante affichée), sinon — fail soft — la
+ * seule variante affichée (comportement historique).
+ */
+function variantsToWrite(price: ProductPrice): VariantPrice[] {
+  if (price.variants && price.variants.length > 0) return price.variants;
+  return [{ volume: price.volume ?? '', currentPrice: price.currentPrice, originalPrice: price.originalPrice }];
+}
+
+async function writeDeals(
   row: { id: string; productName: string; productUrl: string },
   merchant: MerchantSlug,
   price: ProductPrice,
@@ -283,11 +298,6 @@ async function writeDeal(
   categoryId: string,
   summary: Summary,
 ): Promise<void> {
-  const currentPrice = price.currentPrice;
-  const originalPrice = price.originalPrice && price.originalPrice > currentPrice ? price.originalPrice : currentPrice;
-  const discountAmount = Math.round((originalPrice - currentPrice) * 100) / 100;
-  const discountPercent = originalPrice > currentPrice ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
-
   // Marque : celle de la fiche, sinon 1er(s) mot(s) du productName.
   const brandName = (price.brand && price.brand.trim()) || row.productName.split(/\s+/).slice(0, 2).join(' ');
   const brandId = await findOrCreateBrand(brandName);
@@ -308,65 +318,91 @@ async function writeDeal(
     },
   });
 
-  // Variant (nécessite une contenance parsable).
-  const variant = await findOrCreateVariant(prisma, product.id, price.volume);
-  if (!variant) {
-    summary.errors++;
-    console.warn(`[track] ✗ ${row.productName} | ${merchant} | contenance non parsable "${price.volume ?? ''}"`);
-    return;
-  }
+  // Une offre (Deal) par contenance de la fiche.
+  const written: string[] = [];
+  const seenVolumes = new Set<string>();
+  for (const v of variantsToWrite(price)) {
+    const currentPrice = v.currentPrice;
+    if (!(currentPrice > 0)) continue;
 
-  const priceInfo = calculatePricePerUnit(currentPrice, price.volume);
+    // Garde-fous : contenance parsable + dédup par volume normalisé.
+    const volInfo = parseVolume(v.volume);
+    if (!volInfo) {
+      console.warn(`[track] ✗ ${row.productName} | ${merchant} | contenance non parsable "${v.volume ?? ''}"`);
+      continue;
+    }
+    const volKey = `${volInfo.volumeValue}${volInfo.volumeUnit}`;
+    if (seenVolumes.has(volKey)) continue;
+    seenVolumes.add(volKey);
 
-  const dealData = {
-    title: `${brandName} : ${row.productName}`.substring(0, 150),
-    dealPrice: currentPrice,
-    originalPrice,
-    discountPercent,
-    discountAmount,
-    productUrl: row.productUrl,
-    imageUrl: price.imageUrl || null,
-    promoCode: price.promoCode || null,
-    priceConditions: price.priceConditions || null,
-    volume: price.volume || null,
-    volumeValue: priceInfo?.volumeValue ?? variant.volumeValue,
-    volumeUnit: priceInfo?.volumeUnit ?? variant.volumeUnit,
-    pricePerUnit: priceInfo?.pricePerUnit ?? null,
-    status: 'ACTIVE' as const,
-    lastSeenAt: new Date(),
-  };
+    // Promo valide uniquement si prix barré > prix courant.
+    const originalPrice = v.originalPrice && v.originalPrice > currentPrice ? v.originalPrice : currentPrice;
+    const discountAmount = Math.round((originalPrice - currentPrice) * 100) / 100;
+    const discountPercent = originalPrice > currentPrice ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
 
-  await prisma.deal.upsert({
-    where: { variantId_merchantId: { variantId: variant.id, merchantId } },
-    update: dealData,
-    create: {
-      ...dealData,
-      productId: product.id,
-      variantId: variant.id,
-      merchantId,
-      type: 'tracked',
-    },
-  });
-  summary.written++;
+    const variant = await findOrCreateVariant(prisma, product.id, v.volume, v.ean);
+    if (!variant) continue; // même parseVolume → ne devrait pas arriver
 
-  // PriceHistory — uniquement si le dernier prix connu diffère.
-  const last = await prisma.priceHistory.findFirst({
-    where: { productId: product.id, variantId: variant.id },
-    orderBy: { date: 'desc' },
-    select: { price: true },
-  });
-  if (!last || last.price !== currentPrice) {
-    await prisma.priceHistory.create({
-      data: {
+    const priceInfo = calculatePricePerUnit(currentPrice, v.volume);
+
+    const dealData = {
+      title: `${brandName} : ${row.productName}`.substring(0, 150),
+      dealPrice: currentPrice,
+      originalPrice,
+      discountPercent,
+      discountAmount,
+      productUrl: v.url || row.productUrl,
+      imageUrl: price.imageUrl || null,
+      promoCode: price.promoCode || null,
+      priceConditions: price.priceConditions || null,
+      volume: v.volume || null,
+      volumeValue: priceInfo?.volumeValue ?? variant.volumeValue,
+      volumeUnit: priceInfo?.volumeUnit ?? variant.volumeUnit,
+      pricePerUnit: priceInfo?.pricePerUnit ?? null,
+      status: 'ACTIVE' as const,
+      lastSeenAt: new Date(),
+    };
+
+    await prisma.deal.upsert({
+      where: { variantId_merchantId: { variantId: variant.id, merchantId } },
+      update: dealData,
+      create: {
+        ...dealData,
         productId: product.id,
         variantId: variant.id,
-        price: currentPrice,
-        volumeValue: priceInfo?.volumeValue ?? null,
-        volumeUnit: priceInfo?.volumeUnit ?? null,
-        volumeRaw: price.volume || null,
+        merchantId,
+        type: 'tracked',
       },
     });
-    summary.priceChanges++;
+    summary.written++;
+
+    // PriceHistory — uniquement si le dernier prix connu diffère (par variante).
+    const last = await prisma.priceHistory.findFirst({
+      where: { productId: product.id, variantId: variant.id },
+      orderBy: { date: 'desc' },
+      select: { price: true },
+    });
+    if (!last || last.price !== currentPrice) {
+      await prisma.priceHistory.create({
+        data: {
+          productId: product.id,
+          variantId: variant.id,
+          price: currentPrice,
+          volumeValue: priceInfo?.volumeValue ?? null,
+          volumeUnit: priceInfo?.volumeUnit ?? null,
+          volumeRaw: v.volume || null,
+        },
+      });
+      summary.priceChanges++;
+    }
+
+    written.push(`${v.volume}=${currentPrice}€${discountPercent ? ` (-${discountPercent}%)` : ''}`);
+  }
+
+  if (written.length === 0) {
+    summary.errors++;
+    console.warn(`[track] ✗ ${row.productName} | ${merchant} | aucune contenance exploitable`);
+    return;
   }
 
   // Marquer la ligne de queue comme traitée.
@@ -376,7 +412,7 @@ async function writeDeal(
   });
 
   console.log(
-    `[track] ✓ ${row.productName} | ${merchant} | ${currentPrice}€${discountPercent ? ` (-${discountPercent}%)` : ''} | ${price.volume ?? '?'}`,
+    `[track] ✓ ${row.productName} | ${merchant} | ${written.length} taille${written.length > 1 ? 's' : ''}: ${written.join(', ')}`,
   );
 }
 

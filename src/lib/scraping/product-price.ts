@@ -25,6 +25,17 @@
  * =============================================================================
  */
 import * as cheerio from 'cheerio';
+import { decompress } from 'compress-json';
+
+/** Une contenance listée sur la fiche, avec son propre prix. */
+export interface VariantPrice {
+  volume: string;
+  currentPrice: number;
+  originalPrice?: number;
+  ean?: string;
+  /** Lien profond vers CETTE contenance (varSel/variant/sku) si disponible. */
+  url?: string;
+}
 
 export interface ProductPrice {
   name?: string;
@@ -35,6 +46,8 @@ export interface ProductPrice {
   imageUrl?: string;
   promoCode?: string;
   priceConditions?: string;
+  /** TOUTES les contenances de la fiche (y compris celle affichée). */
+  variants?: VariantPrice[];
 }
 
 /**
@@ -176,6 +189,32 @@ function parseVolumeString(text: string | null | undefined): string | undefined 
   return m[1].replace(',', '.') + m[2].toLowerCase();
 }
 
+/**
+ * Nettoie une liste de contenances extraites d'une fiche :
+ *  - volume normalisé parsable requis (sinon la variante est écartée)
+ *  - déduplication par volume (1re occurrence gardée = ordre de la page)
+ *  - prix barré gardé UNIQUEMENT s'il est > prix courant (sinon pas de promo)
+ * Retourne undefined si la liste finale est vide (l'appelant retombe alors sur
+ * le comportement mono-variante actuel — fail soft, jamais de casse).
+ */
+function sanitizeVariants(list: VariantPrice[]): VariantPrice[] | undefined {
+  const seen = new Set<string>();
+  const out: VariantPrice[] = [];
+  for (const v of list) {
+    const volume = parseVolumeString(v.volume);
+    if (!volume) continue;
+    if (!(Number.isFinite(v.currentPrice) && v.currentPrice > 0)) continue;
+    if (seen.has(volume)) continue;
+    seen.add(volume);
+    const originalPrice =
+      v.originalPrice && Number.isFinite(v.originalPrice) && v.originalPrice > v.currentPrice
+        ? v.originalPrice
+        : undefined;
+    out.push({ volume, currentPrice: v.currentPrice, originalPrice, ean: v.ean, url: v.url });
+  }
+  return out.length > 0 ? out : undefined;
+}
+
 function toAbsolute(url: string, origin: string): string {
   const u = (url || '').trim();
   if (!u) return '';
@@ -200,6 +239,13 @@ function isJunkImage(url: string): boolean {
  * La contenance sélectionnée est dans `.variant-selected__option` ("35ML"/"50mL").
  * Marque : `.product-details-brand-link__text-link` ; titre : `h1`.
  * Image  : 1er visuel produit `[class*="product-image"] img` (media.marionnaud.fr).
+ *
+ * TOUTES LES CONTENANCES (VÉRIFIÉ LIVE 2026-07) : la fiche embarque un
+ * `<script id="json-ld">` avec un `@graph` contenant un ProductGroup dont
+ * `hasVariant[]` liste chaque taille : `size` ("50ML"), `offers.price`,
+ * `offers.url` (lien ?varSel=), `offers.availability`, `gtin13` (EAN).
+ * Le json-ld ne porte que le prix de VENTE (pas le prix barré) → pour la
+ * variante affichée on garde les prix du DOM (courant + barré).
  */
 export async function fetchMarionnaudProductPrice(url: string): Promise<PriceFetchResult> {
   const outcome = await fetchHtml(url, DESKTOP_HEADERS);
@@ -237,7 +283,50 @@ export async function fetchMarionnaudProductPrice(url: string): Promise<PriceFet
       if (src && /media\.marionnaud\.fr/i.test(src) && !isJunkImage(src)) imageUrl = src;
     });
 
-    return { name, brand, currentPrice, originalPrice, volume, imageUrl: imageUrl || undefined };
+    // Toutes les contenances via le json-ld ProductGroup (fail soft : si absent
+    // ou illisible, variants reste undefined → mono-variante comme avant).
+    let variants: VariantPrice[] | undefined;
+    try {
+      const collected: VariantPrice[] = [];
+      $('script#json-ld, script[type="application/ld+json"]').each((_, el) => {
+        let parsed: unknown;
+        try { parsed = JSON.parse($(el).html() || ''); } catch { return; }
+        const nodes: any[] = [];
+        for (const item of Array.isArray(parsed) ? parsed : [parsed]) {
+          if (item && Array.isArray((item as any)['@graph'])) nodes.push(...(item as any)['@graph']);
+          else if (item) nodes.push(item);
+        }
+        for (const node of nodes) {
+          if (!node || node['@type'] !== 'ProductGroup' || !Array.isArray(node.hasVariant)) continue;
+          for (const v of node.hasVariant) {
+            const offer = Array.isArray(v?.offers) ? v.offers[0] : v?.offers;
+            const priceNum = typeof offer?.price === 'number' ? offer.price : parseFloat(offer?.price);
+            const vol = parseVolumeString(v?.size) ?? parseVolumeString(v?.name);
+            if (!vol || !Number.isFinite(priceNum) || priceNum <= 0) continue;
+            if (offer?.availability && /OutOfStock/i.test(String(offer.availability))) continue;
+            collected.push({
+              volume: vol,
+              currentPrice: priceNum,
+              ean: v?.gtin13 ? String(v.gtin13) : undefined,
+              url: typeof offer?.url === 'string' ? toAbsolute(offer.url, 'https://www.marionnaud.fr') : undefined,
+            });
+          }
+        }
+      });
+      // Pour la contenance affichée, le DOM fait foi (il porte le prix barré).
+      if (volume) {
+        const selected = collected.find((v) => v.volume === parseVolumeString(volume));
+        if (selected) {
+          selected.currentPrice = currentPrice;
+          selected.originalPrice = originalPrice > currentPrice ? originalPrice : undefined;
+        }
+      }
+      variants = sanitizeVariants(collected);
+    } catch {
+      variants = undefined;
+    }
+
+    return { name, brand, currentPrice, originalPrice, volume, imageUrl: imageUrl || undefined, variants };
   } catch (err) {
     console.warn(`[product-price][marionnaud] parsing ${url}:`, err instanceof Error ? err.message : err);
     return null;
@@ -256,7 +345,93 @@ export async function fetchMarionnaudProductPrice(url: string): Promise<PriceFet
  *  - marque       : brand.name
  *  - contenance   : name (ex: "100 ml")
  *  - image        : image
+ *
+ * TOUTES LES CONTENANCES (VÉRIFIÉ LIVE 2026-07) : la page embarque
+ * `window.__INITIAL_DATA_CACHE__` au format compress-json ; une fois décodé,
+ * l'entrée `GET_PRODUCT:<variant>` expose `response.variantOptions[]` avec,
+ * pour CHAQUE taille : `code`, `variantName` ("50 ml"), `priceData.value`,
+ * `priceData.originalValue` (prix barré si promo), `url`, `availability.code`,
+ * et `couponPromotionBoxes[]` (promo par CODE : `coupon`, `discountedPrice`).
+ * Le ld+json de la variante sélectionnée affiche déjà le prix APRÈS code
+ * (vérifié : 132,75 € barré 177 € = coupon HOLIDAY25 -25%) → pour être
+ * cohérent, chaque variante applique son `discountedPrice` si présent.
+ * L'EAN n'existe qu'au niveau de la variante sélectionnée (`response.ean`).
  */
+
+/** Décode window.__INITIAL_DATA_CACHE__ (compress-json) — null si absent/illisible. */
+function decodeNocibeDataCache(html: string): any[] | null {
+  const idx = html.indexOf('__INITIAL_DATA_CACHE__');
+  if (idx < 0) return null;
+  const start = html.indexOf('[', idx);
+  if (start < 0) return null;
+  // Scanner à équilibrage de crochets (les chaînes peuvent contenir ']').
+  let depth = 0, k = start, inStr = false, esc = false;
+  for (; k < html.length; k++) {
+    const c = html[k];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '[') depth++;
+    else if (c === ']') { depth--; if (depth === 0) { k++; break; } }
+  }
+  try {
+    const packed = JSON.parse(html.slice(start, k));
+    const data = decompress(packed);
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Extrait les variantOptions (toutes contenances) du DATA_CACHE Nocibé. */
+function extractNocibeVariants(html: string): { variants?: VariantPrice[]; promoCode?: string } {
+  try {
+    const cache = decodeNocibeDataCache(html);
+    if (!cache) return {};
+    const entry = cache.find((e) => Array.isArray(e) && typeof e[0] === 'string' && e[0].startsWith('GET_PRODUCT:'));
+    const resp = entry?.[1]?.data?.response;
+    if (!resp || !Array.isArray(resp.variantOptions)) return {};
+    const collected: VariantPrice[] = [];
+    let promoCode: string | undefined;
+    for (const v of resp.variantOptions) {
+      const vol = parseVolumeString(v?.variantName);
+      const base = typeof v?.priceData?.value === 'number' ? v.priceData.value : parseFloat(v?.priceData?.value);
+      if (!vol || !Number.isFinite(base) || base <= 0) continue;
+      if (v?.availability?.code && /NOT_AVAILABLE|OUT_OF_STOCK/i.test(String(v.availability.code))) continue;
+      const origNum = typeof v?.priceData?.originalValue === 'number' ? v.priceData.originalValue : parseFloat(v?.priceData?.originalValue);
+      let currentPrice = base;
+      let originalPrice = Number.isFinite(origNum) && origNum > base ? origNum : undefined;
+      // Promo par CODE : le site (et son ld+json) affiche le prix après code.
+      const coupon = Array.isArray(v?.couponPromotionBoxes) ? v.couponPromotionBoxes[0] : undefined;
+      const discounted = typeof coupon?.discountedPrice === 'number' ? coupon.discountedPrice : parseFloat(coupon?.discountedPrice);
+      if (Number.isFinite(discounted) && discounted > 0 && discounted < currentPrice) {
+        originalPrice = originalPrice && originalPrice > currentPrice ? originalPrice : currentPrice;
+        currentPrice = discounted;
+        if (!promoCode && typeof coupon?.coupon === 'string' && coupon.coupon) promoCode = coupon.coupon;
+      }
+      let deepUrl: string | undefined;
+      if (typeof v?.url === 'string' && v.url) {
+        deepUrl = /[?&]variant=/.test(v.url) || !v.code ? v.url : `${v.url}?variant=${v.code}`;
+        deepUrl = toAbsolute(deepUrl, 'https://www.nocibe.fr');
+      }
+      collected.push({
+        volume: vol,
+        currentPrice,
+        originalPrice,
+        // EAN connu uniquement pour la variante sélectionnée.
+        ean: v?.code && resp.code && String(v.code) === String(resp.code) && resp.ean ? String(resp.ean) : undefined,
+        url: deepUrl,
+      });
+    }
+    return { variants: sanitizeVariants(collected), promoCode };
+  } catch {
+    return {};
+  }
+}
 export async function fetchNocibeProductPrice(url: string): Promise<PriceFetchResult> {
   const outcome = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.nocibe.fr/' });
   if (!outcome.html) return classifyFailure(outcome);
@@ -309,7 +484,10 @@ export async function fetchNocibeProductPrice(url: string): Promise<PriceFetchRe
     const img = Array.isArray(ld.image) ? ld.image[0] : ld.image;
     if (typeof img === 'string' && !isJunkImage(img)) imageUrl = toAbsolute(img, 'https://www.nocibe.fr');
 
-    return { brand: brand?.trim(), currentPrice, originalPrice, volume, imageUrl };
+    // Toutes les contenances via __INITIAL_DATA_CACHE__ (fail soft).
+    const { variants, promoCode } = extractNocibeVariants(html);
+
+    return { brand: brand?.trim(), currentPrice, originalPrice, volume, imageUrl, variants, promoCode };
   } catch (err) {
     console.warn(`[product-price][nocibe] parsing ${url}:`, err instanceof Error ? err.message : err);
     return null;
@@ -332,7 +510,46 @@ export async function fetchNocibeProductPrice(url: string): Promise<PriceFetchRe
  *
  * ⚠️ Si data-tcproduct réapparaît (ancien markup), on le lit en priorité :
  * product_price_ati / product_old_price_ati / product_sku_name.
+ *
+ * TOUTES LES CONTENANCES (VÉRIFIÉ LIVE 2026-07) : chaque `[itemtype*=Offer]`
+ * porte AUSSI un `[itemprop=name]` dont le content se termine par la taille
+ * (ex: "COCO MADEMOISELLE - Eau De Parfum Vaporisateur - 100 ml"). Les
+ * coffrets multi-flacons ("3x20ml") sont écartés. Le prix barré par taille
+ * vient du payload Next.js Flight embarqué (objets échappés
+ * `{\"id\":\"<sku>\",...,\"price\":72.75,\"priceBeforeDiscount\":97,...}`).
  */
+
+/** Dernière contenance mentionnée dans une chaîne (ex: "... - 100 ml" -> "100ml"). */
+function parseLastVolume(text: string | null | undefined): string | undefined {
+  if (!text) return undefined;
+  const matches = [...text.matchAll(/(\d+(?:[.,]\d+)?)\s*(ml|mL|ML|cl|l|L|g|gr|G)\b/g)];
+  if (!matches.length) return undefined;
+  const m = matches[matches.length - 1];
+  return m[1].replace(',', '.') + m[2].toLowerCase();
+}
+
+/**
+ * Prix barré d'un sku Sephora depuis le payload Flight (JSON échappé dans les
+ * <script>). Cherche l'objet `\"id\":\"<sku>\"` puis `priceBeforeDiscount`
+ * AVANT le début de l'objet suivant. undefined si pas de promo / introuvable.
+ */
+function sephoraPriceBeforeDiscount(html: string, sku: string): number | undefined {
+  for (const needle of [`\\"id\\":\\"${sku}\\"`, `"id":"${sku}"`]) {
+    const idx = html.indexOf(needle);
+    if (idx < 0) continue;
+    let window = html.slice(idx + needle.length, idx + needle.length + 2000);
+    // Tronquer au prochain objet variante pour ne pas lire son prix.
+    const next = window.search(/\\?"id\\?":\\?"/);
+    if (next >= 0) window = window.slice(0, next);
+    const m = window.match(/\\?"priceBeforeDiscount\\?":\s*([\d.]+)/);
+    if (m) {
+      const val = parseFloat(m[1]);
+      if (Number.isFinite(val) && val > 0) return val;
+    }
+    return undefined;
+  }
+  return undefined;
+}
 export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchResult> {
   const outcome = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.sephora.fr/' });
   if (!outcome.html) return classifyFailure(outcome);
@@ -368,9 +585,12 @@ export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchR
     const productEl = $('[itemtype*="schema.org/Product"][data-product-sku], [itemtype*="Product"][data-product-sku]').first();
     const selectedSku = productEl.attr('data-product-sku') || '';
 
-    // Offres variante -> map sku:price. On récupère le prix de la variante sélectionnée.
+    // Offres variante -> une entrée par sku (prix + taille dans le name).
+    // On récupère au passage le prix de la variante sélectionnée.
     let currentPrice: number | null = null;
     const offerPrices: number[] = [];
+    const collected: VariantPrice[] = [];
+    let selectedVariant: VariantPrice | undefined;
     $('[itemtype*="Offer"]').each((_, el) => {
       const $o = $(el);
       const sku = $o.find('[itemprop="sku"]').attr('content') || '';
@@ -378,6 +598,22 @@ export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchR
       if (!Number.isFinite(price) || price <= 0) return;
       offerPrices.push(price);
       if (selectedSku && sku === selectedSku) currentPrice = price;
+
+      // Contenance depuis le name de l'offre (dernier "N ml" de la chaîne).
+      const offerName = $o.find('[itemprop="name"]').attr('content') || '';
+      if (/\d+\s*[x×]\s*\d+\s*ml/i.test(offerName)) return; // coffret multi-flacons
+      const vol = parseLastVolume(offerName);
+      if (!vol) return;
+      const avail = $o.find('[itemprop="availability"]').attr('content') || '';
+      if (/OutOfStock/i.test(avail)) return;
+      const v: VariantPrice = {
+        volume: vol,
+        currentPrice: price,
+        originalPrice: sku ? sephoraPriceBeforeDiscount(html, sku) : undefined,
+        url: $o.find('[itemprop="url"]').attr('content') || undefined,
+      };
+      collected.push(v);
+      if (selectedSku && sku === selectedSku) selectedVariant = v;
     });
 
     // Fallback : prix affiché en évidence, puis prix le plus bas parmi les offres.
@@ -409,6 +645,12 @@ export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchR
     const struck = parseEuro($('[class*="line-through"], del, s, .strikethrough').first().text());
     const originalPrice = struck && struck > currentPrice ? struck : currentPrice;
 
+    // La variante affichée hérite du prix barré du DOM si le Flight ne l'a pas.
+    if (selectedVariant && !selectedVariant.originalPrice && struck && struck > selectedVariant.currentPrice) {
+      selectedVariant.originalPrice = struck;
+    }
+    const variants = sanitizeVariants(collected);
+
     // Contenance : libellé de taille affiché (la variante sélectionnée).
     let volume: string | undefined;
     $('*').each((_, el) => {
@@ -430,7 +672,7 @@ export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchR
     const name = ogTitle.split('|')[0].trim() || undefined;
     const imageUrl = $('meta[property="og:image"]').attr('content') || undefined;
 
-    return { name, brand, currentPrice, originalPrice, volume, imageUrl };
+    return { name, brand, currentPrice, originalPrice, volume, imageUrl, variants };
   } catch (err) {
     console.warn(`[product-price][sephora] parsing ${url}:`, err instanceof Error ? err.message : err);
     return null;

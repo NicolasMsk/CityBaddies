@@ -135,12 +135,26 @@ async function main() {
   console.log(`Price tracker — marchands: ${merchants.join(', ')}${dryRun ? ' (DRY RUN)' : ''}, limit=${limit}`);
 
   // Charger les fiches vérifiées à fiche-produit, par marchand.
+  // - status 'error' = lien mort (404) marqué par un run précédent — jamais retenté.
+  // - retryCount >= QUARANTINE_RETRIES = fiche dont l'extraction échoue en boucle
+  //   (markup incompatible) — mise en quarantaine pour ne pas faire échouer le job
+  //   à chaque cron. Un déploiement d'extracteur corrigé remet retryCount à 0 au
+  //   1er succès ; pour forcer une retentative: UPDATE ScrapingQueue SET retryCount=0.
+  const QUARANTINE_RETRIES = 5;
   const rows = await prisma.scrapingQueue.findMany({
-    // status 'error' = lien mort marqué par un run précédent (404) — on ne retente pas.
-    where: { verified: true, merchantSlug: { in: merchants }, status: { not: 'error' } },
-    select: { id: true, productName: true, merchantSlug: true, productUrl: true },
+    where: {
+      verified: true,
+      merchantSlug: { in: merchants },
+      status: { not: 'error' },
+      retryCount: { lt: QUARANTINE_RETRIES },
+    },
+    select: { id: true, productName: true, merchantSlug: true, productUrl: true, retryCount: true },
     orderBy: [{ merchantSlug: 'asc' }, { productName: 'asc' }],
   });
+  const quarantined = await prisma.scrapingQueue.count({
+    where: { verified: true, merchantSlug: { in: merchants }, status: { not: 'error' }, retryCount: { gte: QUARANTINE_RETRIES } },
+  });
+  if (quarantined > 0) console.log(`Quarantaine: ${quarantined} fiche(s) en échec récurrent ignorée(s) (retryCount >= ${QUARANTINE_RETRIES})`);
 
   // Pré-charger merchant + catégorie parfums (une fois, hors dry-run).
   const merchantIdBySlug = new Map<string, string>();
@@ -248,8 +262,20 @@ async function main() {
     const price = result === 'BLOCKED' ? null : (result as ProductPrice | null);
     if (!price || !(price.currentPrice > 0)) {
       summary.errors++;
-      console.warn(`[track] ✗ ${row.productName} | ${merchant} | prix introuvable`);
+      const retries = (row.retryCount ?? 0) + 1;
+      console.warn(`[track] ✗ ${row.productName} | ${merchant} | prix introuvable (échec ${retries}/${QUARANTINE_RETRIES})`);
+      // Blocage réseau ≠ échec d'extraction : seul le 2e incrémente la quarantaine.
+      if (result !== 'BLOCKED' && !dryRun) {
+        await prisma.scrapingQueue.update({
+          where: { id: row.id },
+          data: { retryCount: retries, errorMessage: 'extraction prix échouée (track-prices)' },
+        }).catch(() => {});
+      }
       continue;
+    }
+    // Succès -> reset du compteur de quarantaine si nécessaire.
+    if (!dryRun && (row.retryCount ?? 0) > 0) {
+      await prisma.scrapingQueue.update({ where: { id: row.id }, data: { retryCount: 0, errorMessage: null } }).catch(() => {});
     }
 
     if (dryRun) {

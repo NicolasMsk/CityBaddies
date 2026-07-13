@@ -6,7 +6,6 @@ import DealCard from '@/components/deals/DealCard';
 import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
-import { AIAssistant } from '@/components/ai';
 import { getAllPromoPages, stripHtml } from '@/lib/promo-queries';
 import type { Metadata } from 'next';
 
@@ -330,46 +329,15 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Stats Column - Vertical on Desktop */}
-          <div className="hidden md:block min-w-[200px] space-y-8 animate-in fade-in slide-in-from-right-10 duration-1000 delay-300 border-l border-white/10 pl-8">
-             <div>
-                <div className="text-3xl font-serif text-white mb-1">{stats.variants.toLocaleString()}</div>
-                <div className="text-xs text-[#d4a855] uppercase tracking-widest">Variantes Suivies</div>
-             </div>
-             <div>
-                <div className="text-3xl font-serif text-white mb-1">{stats.products.toLocaleString()}</div>
-                <div className="text-xs text-neutral-500 uppercase tracking-widest">Produits Suivis</div>
-             </div>
-             <div>
-                <div className="text-3xl font-serif text-white mb-1">+{stats.variantsToday}</div>
-                <div className="text-xs text-neutral-500 uppercase tracking-widest">Ajoutés Aujourd&apos;hui</div>
-             </div>
+        </div>
+
+        {/* Provenance — la donnée réelle comme preuve, pas des gros chiffres */}
+        <div className="relative z-10 w-full border-t border-white/10 bg-black/30">
+          <div className="max-w-[1400px] mx-auto px-6 py-3">
+            <p className="font-mono text-[11px] md:text-xs text-neutral-400 tracking-wide">
+              Prix relevés six fois par jour chez Sephora, Nocibé et Marionnaud — chaque contenance, avec historique.
+            </p>
           </div>
-        </div>
-
-        {/* Mobile Stats Bar */}
-        <div className="md:hidden w-full border-t border-white/10 bg-black/20 backdrop-blur-md">
-           <div className="grid grid-cols-3 divide-x divide-white/10">
-              <div className="p-4 text-center">
-                 <div className="text-white font-serif text-lg">{stats.variants}</div>
-                 <div className="text-[10px] text-neutral-400 uppercase">Variantes</div>
-              </div>
-              <div className="p-4 text-center">
-                 <div className="text-white font-serif text-lg">{stats.products}</div>
-                 <div className="text-[10px] text-neutral-400 uppercase">Produits</div>
-              </div>
-              <div className="p-4 text-center">
-                 <div className="text-white font-serif text-lg">+{stats.variantsToday}</div>
-                 <div className="text-[10px] text-neutral-400 uppercase">New</div>
-              </div>
-           </div>
-        </div>
-      </section>
-
-      {/* AI Shopping Assistant */}
-      <section className="relative z-10 py-16 md:py-20 bg-gradient-to-b from-transparent via-[#0a0a0a]/50 to-transparent">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AIAssistant />
         </div>
       </section>
 
@@ -863,102 +831,88 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 pb-8 border-b border-white/10">
-            <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">
-              LE <span className="font-semibold text-[#d4a855]">CONCEPT</span>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 pb-8 border-b border-white/10">
+            <h2 className="text-4xl md:text-6xl font-serif text-white tracking-tight">
+              La méthode
             </h2>
             <div className="mt-4 md:mt-0 text-right">
               <p className="text-xs font-medium tracking-[0.3em] uppercase text-neutral-500">
-                 Analyse de Prix Indépendante
+                 Comparateur indépendant
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
-            
-            {/* Left Column: Manifesto */}
-            <div className="lg:col-span-5 space-y-12">
+
+            {/* Colonne gauche : le principe, en clair */}
+            <div className="lg:col-span-5 space-y-10">
               <div>
-                <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">01 — Le Problème</span>
                 <h3 className="text-2xl font-light text-white mb-6 leading-tight">
-                  80% des « promos » beauté n&apos;en sont pas.
+                  Un prix barré ne prouve rien.<br />Un historique, si.
                 </h3>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  Prix barrés gonflés, réductions sur des prix déjà augmentés, « offres exclusives » disponibles partout… Le marketing beauté vous ment constamment. Et personne ne vous le dit.
+                  « −30 % » sur un prix gonflé la veille, ce n&apos;est pas une réduction.
+                  La seule façon de le savoir, c&apos;est de suivre le prix dans le temps.
+                  C&apos;est exactement ce qu&apos;on fait, parfum par parfum, contenance par contenance.
                 </p>
               </div>
 
               <div>
-                <span className="text-[#9b1515] text-xs font-bold tracking-widest uppercase mb-4 block">02 — Notre Approche</span>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
-                  City Baddies analyse chaque offre et lui attribue une <span className="text-white">note /10</span>. On compare les prix entre enseignes, on vérifie l&apos;historique, on détecte les fausses promos. Une offre à 3/10 ? On vous le dit. <span className="text-white">Pas de bullshit, que la vérité.</span>
+                  Chaque matin (et cinq autres fois dans la journée), on relève les prix
+                  affichés sur les fiches produit de Sephora, Nocibé et Marionnaud.
+                  Chaque relevé est daté et archivé. Tu vois le prix du jour, celui d&apos;hier,
+                  et la courbe complète.
                 </p>
               </div>
             </div>
 
-            {/* Right Column: Features & Sources */}
+            {/* Colonne droite : ce que tu obtiens, concrètement */}
             <div className="lg:col-span-7">
               <div className="space-y-px bg-white/10 border-y border-white/10">
-                
-                {/* Feature 1 */}
-                <div className="group relative bg-[#0a0a0a] p-8 md:p-10 hover:bg-[#0f0f0f] transition-colors duration-500">
-                  <div className="flex flex-col md:flex-row md:items-start gap-6">
-                    <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">01</span>
-                    <div>
-                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Note City Baddies /10</h4>
-                      <p className="text-neutral-500 font-light leading-relaxed">
-                        Chaque offre est analysée et notée de 1 à 10. On prend en compte le prix, la réduction réelle, les prix concurrents et l&apos;historique. Un 8/10 c&apos;est exceptionnel. Un 3/10 c&apos;est une fausse promo — et on vous le dit clairement.
-                      </p>
-                    </div>
-                  </div>
+
+                <div className="bg-[#0a0a0a] p-8 md:p-10">
+                  <h4 className="text-lg font-medium text-white mb-2">Le même flacon, trois prix</h4>
+                  <p className="text-neutral-500 font-light leading-relaxed">
+                    Un parfum, toutes ses contenances, et pour chacune le prix constaté chez
+                    chaque enseigne — avec le prix au millilitre pour comparer ce qui est comparable.
+                    Le 100&nbsp;ml peut coûter 40&nbsp;€ de moins d&apos;une boutique à l&apos;autre : on te montre où.
+                  </p>
                 </div>
 
-                {/* Feature 2 */}
-                <div className="group relative bg-[#0a0a0a] p-8 md:p-10 hover:bg-[#0f0f0f] transition-colors duration-500">
-                  <div className="flex flex-col md:flex-row md:items-start gap-6">
-                    <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">02</span>
-                    <div>
-                      <h4 className="text-lg font-medium text-white mb-2 uppercase tracking-wide">Détection de Fausses Promos</h4>
-                      <p className="text-neutral-500 font-light leading-relaxed">
-                        Prix stable depuis 6 mois mais affiché « -30% » ? Concurrent moins cher sans promo ? On traque ces pratiques et on les expose. Les tags FAUSSE PROMO et MIEUX AILLEURS ne mentent pas.
-                      </p>
-                    </div>
-                  </div>
+                <div className="bg-[#0a0a0a] p-8 md:p-10">
+                  <h4 className="text-lg font-medium text-white mb-2">Des relevés datés, pas des promesses</h4>
+                  <p className="text-neutral-500 font-light leading-relaxed">
+                    Chaque prix affiché ici vient d&apos;une fiche produit publique, relevée
+                    automatiquement dans la journée. Si une « promo » affiche un prix barré
+                    que le produit n&apos;a jamais coûté, ça se voit sur la courbe.
+                  </p>
                 </div>
 
-                {/* Sources */}
-                <div className="group relative bg-[#0a0a0a] p-8 md:p-10 hover:bg-[#0f0f0f] transition-colors duration-500">
-                  <div className="flex flex-col md:flex-row md:items-start gap-6">
-                    <span className="text-2xl font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors">03</span>
-                    <div className="w-full">
-                      <h4 className="text-lg font-medium text-white mb-6 uppercase tracking-wide">Sources Élite</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                          <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Nocibé</p>
-                          <p className="text-sm text-neutral-500 pl-4.5">Partenaire Officiel • 1200+ Réfs</p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Sephora</p>
-                          <p className="text-sm text-neutral-500 pl-4.5">Leader Mondial • Marques Exclusives</p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-white font-medium border-l-2 border-[#d4a855] pl-4">Marionnaud</p>
-                          <p className="text-sm text-neutral-500 pl-4.5">Expert Beauté • 800+ Références</p>
-                        </div>
-                      </div>
+                <div className="bg-[#0a0a0a] p-8 md:p-10">
+                  <h4 className="text-lg font-medium text-white mb-6">Trois enseignes suivies</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="space-y-1 border-l-2 border-[#d4a855] pl-4">
+                      <p className="text-white font-medium">Sephora</p>
+                      <p className="text-sm text-neutral-500">sephora.fr</p>
+                    </div>
+                    <div className="space-y-1 border-l-2 border-[#d4a855] pl-4">
+                      <p className="text-white font-medium">Nocibé</p>
+                      <p className="text-sm text-neutral-500">nocibe.fr</p>
+                    </div>
+                    <div className="space-y-1 border-l-2 border-[#d4a855] pl-4">
+                      <p className="text-white font-medium">Marionnaud</p>
+                      <p className="text-sm text-neutral-500">marionnaud.fr</p>
                     </div>
                   </div>
+                  <p className="text-sm text-neutral-600 font-light mt-6">
+                    City Baddies est indépendant des trois enseignes. Les prix sont ceux
+                    affichés publiquement sur leurs sites au moment du relevé.
+                  </p>
                 </div>
 
               </div>
             </div>
-          </div>
-
-          {/* Footer Statement */}
-          <div className="mt-24 pt-12 border-t border-white/5 text-center">
-            <p className="max-w-xl mx-auto text-xl md:text-2xl font-light italic text-neutral-400">
-              "On a créé ça parce qu&apos;on en avait marre de se faire avoir par de fausses promos. <span className="text-white not-italic font-normal">Ici, on te dit la vérité.</span>"
-            </p>
           </div>
         </div>
       </section>

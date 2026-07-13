@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Bodoni_Moda, Manrope, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,8 +8,24 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import CookieConsent from "@/components/analytics/CookieConsent";
 import Script from "next/script";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Système typographique City Baddies — choisi, pas hérité :
+// - Bodoni Moda (didone) : le langage typographique historique de la mode et de
+//   la parfumerie (titres). Optique variable, italiques réelles.
+// - Manrope : grotesque sobre pour le texte courant.
+// - Spline Sans Mono : chiffres/prix/données — codes de la mesure, pas du code.
+const display = Bodoni_Moda({
+  variable: "--font-display",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
+const body = Manrope({
+  variable: "--font-body",
+  subsets: ["latin"],
+});
+
+const mono = Spline_Sans_Mono({
+  variable: "--font-data",
   subsets: ["latin"],
 });
 
@@ -147,7 +163,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0a] text-neutral-100 min-h-screen flex flex-col`}>
+      <body className={`${display.variable} ${body.variable} ${mono.variable} font-sans antialiased bg-[#0a0a0a] text-neutral-100 min-h-screen flex flex-col`}>
         <GoogleAnalytics />
         <CookieConsent />
         <AuthProvider>

@@ -35,7 +35,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  /* Typo système CB — display didone (codes parfumerie) / body grotesque / mono données.
+     Mappe les utilitaires Tailwind font-serif / font-sans / font-mono existants. */
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-serif: var(--font-display), "Bodoni MT", Didot, Georgia, serif;
+  --font-mono: var(--font-data), "SF Mono", Consolas, monospace;
 }
 
 body {
@@ -44,6 +48,12 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
+}
+
+/* Sélection de texte à la marque — micro-détail de craft */
+::selection {
+  background: #d4a855;
+  color: #0a0a0a;
 }
 
 /* Premium grain overlay effect */

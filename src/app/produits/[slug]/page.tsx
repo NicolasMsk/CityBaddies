@@ -177,6 +177,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     productUrl: deal.productUrl,
     promoCode: deal.promoCode,
     priceConditions: deal.priceConditions,
+    lastSeenAt: deal.lastSeenAt ? deal.lastSeenAt.toISOString() : null,
     merchant: { name: deal.merchant.name, slug: deal.merchant.slug },
     variant: deal.variant ? {
       volumeValue: deal.variant.volumeValue,

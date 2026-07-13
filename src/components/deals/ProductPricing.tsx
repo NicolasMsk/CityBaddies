@@ -24,6 +24,19 @@ interface DealData {
   variant: VariantData | null;
   merchant: { name: string; slug: string };
   productUrl: string | null;
+  lastSeenAt?: string | null;
+}
+
+/** "il y a 3 h", "aujourd'hui", "hier" — fraîcheur du relevé, preuve de sérieux. */
+function releveLabel(iso?: string | null): string {
+  if (!iso) return '';
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const h = Math.floor((Date.now() - then) / 3_600_000);
+  if (h < 1) return "relevé à l'instant";
+  if (h < 24) return `relevé il y a ${h} h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'relevé hier' : `relevé il y a ${d} j`;
 }
 
 interface ProductPricingProps {
@@ -90,6 +103,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
       promoCode: string | null;
       priceConditions: string | null;
       url: string;
+      lastSeenAt: string | null;
     }[] = [];
 
     for (const deal of currentDeals) {
@@ -103,6 +117,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
           promoCode: deal.promoCode || null,
           priceConditions: deal.priceConditions || null,
           url: deal.productUrl || '',
+          lastSeenAt: deal.lastSeenAt || null,
         });
       }
     }
@@ -242,6 +257,11 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                   {diffFromBest > 0 && (
                     <span className="text-[10px] sm:text-xs text-neutral-500 font-light">
                       +{diffFromBest.toFixed(2)} € vs meilleur prix
+                    </span>
+                  )}
+                  {releveLabel(mp.lastSeenAt) && (
+                    <span className={`font-mono text-[9px] sm:text-[10px] tracking-wide ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
+                      {releveLabel(mp.lastSeenAt)}
                     </span>
                   )}
                   {mp.promoCode && (

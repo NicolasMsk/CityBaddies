@@ -273,8 +273,10 @@ export default async function HomePage() {
       <div className="fixed top-[40%] right-[-10%] w-[30vw] h-[30vw] bg-[#7b0a0a] opacity-[0.06] blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* Hero Section - Premium Magazine Redesign */}
-      <section className="relative h-screen flex flex-col justify-end pb-0 overflow-hidden">
-        
+      {/* min-h-screen (pas h-screen) : le titre didone est haut, h-screen + justify-end
+          tronquait le haut sur petits écrans. On garantit la hauteur d'écran ET la place. */}
+      <section className="relative min-h-screen flex flex-col justify-end pt-28 pb-0 overflow-hidden">
+
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
            <Image

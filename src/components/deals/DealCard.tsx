@@ -383,9 +383,10 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
         )}
 
         {/* Score City Baddies */}
-        {deal.score && deal.score >= 1 && (
+        {/* NB: pas de `deal.score && ...` — en JSX, `0 && x` rend "0" à l'écran */}
+        {(deal.score ?? 0) >= 1 && (
           <div className="mt-auto">
-            <ScoreGauge score={deal.score} variant="compact" />
+            <ScoreGauge score={deal.score!} variant="compact" />
           </div>
         )}
 

@@ -133,7 +133,16 @@ async function main() {
     }
 
     let didSomething = false;
-    const details = await fetcher(deal.productUrl);
+
+    // La fiche a-t-elle déjà été scrapée ? (images en base + INCI récupéré)
+    // Si oui et qu'il ne manque QUE l'IA (whyGoodDeal), on NE re-télécharge PAS
+    // la fiche — inutile, et ça épargne des requêtes Akamai. On génère l'IA
+    // depuis les données déjà stockées.
+    const pageAlreadyScraped = !dryRun && product.images.length > 0 && !!product.ingredients;
+    const details = pageAlreadyScraped
+      ? { images: [] as string[], description: undefined, ingredients: undefined, priceConditions: undefined, promoCode: undefined }
+      : await fetcher(deal.productUrl);
+    if (pageAlreadyScraped) console.log('   ↳ fiche déjà scrapée — IA seule, pas de re-fetch');
 
     if (dryRun) {
       console.log(`   images: ${details.images.length}${details.images[0] ? ` (1ère: ${details.images[0].substring(0, 90)}...)` : ''}`);
@@ -244,7 +253,11 @@ async function main() {
   console.log(`   images ajoutées: ${imagesAdded} | contenus IA générés: ${aiGenerated} | erreurs: ${errors}`);
 
   await prisma.$disconnect();
-  process.exit(processed > 0 ? 0 : 1);
+  // L'enrichissement est BEST-EFFORT (images/descriptions/IA), secondaire au
+  // relevé de prix. "0 enrichi" (ex: quota IA épuisé, ou rien de nouveau) n'est
+  // PAS un échec — sinon ça fait rougir le job quotidien pour rien. Seul un crash
+  // fatal (catch ci-dessous) sort en 1.
+  process.exit(0);
 }
 
 main().catch((err) => {

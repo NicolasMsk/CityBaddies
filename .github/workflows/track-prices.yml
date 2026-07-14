@@ -62,7 +62,11 @@ jobs:
       # Enrichissement des fiches suivies (multi-images, description, INCI + IA
       # seoDescription/whyGoodDeal). Incrémental: ne traite que les deals ACTIVE
       # pas encore enrichis — no-op la plupart du temps.
+      # continue-on-error : l'enrichissement est secondaire (images/descriptions/IA).
+      # S'il échoue (ex: quota IA), le job NE doit PAS rougir — le relevé de prix
+      # ci-dessus est le cœur et a déjà réussi.
       - name: Enrich ${{ matrix.merchant }}
+        continue-on-error: true
         if: >-
           github.event_name != 'workflow_dispatch' ||
           github.event.inputs.merchant == '' ||

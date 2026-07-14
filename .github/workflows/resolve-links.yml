@@ -1,0 +1,50 @@
+name: Resolve links
+
+# Comble les liens marchands manquants dans ScrapingQueue par PONT EAN
+# (code-barres = même produit, matching infaillible). À déclencher à la main
+# quand on ajoute des parfums ou pour combler les trous restants.
+#
+# - Marionnaud : API JSON hors Akamai → marche partout.
+# - Nocibé : Akamai → nécessite l'IP fraîche de GitHub Actions (échoue en local
+#   sur IP flaggée). C'est LA raison d'être de ce workflow côté nocibe.
+# - Sephora : pas d'EAN exposé → non traité.
+#
+# Après ce run, lancer "Track prices" (ou attendre le cron) pour transformer les
+# nouveaux liens en offres/prix sur le site.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Marchand à combler"
+        required: true
+        default: "nocibe"
+        type: choice
+        options: ["nocibe", "marionnaud"]
+      dry_run:
+        description: "Simulation (n'écrit rien)"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: resolve-links
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Resolve ${{ inputs.target }}
+        run: npx tsx src/scripts/resolve-links.ts --target ${{ inputs.target }} ${{ inputs.dry_run && '--dry-run' || '' }}

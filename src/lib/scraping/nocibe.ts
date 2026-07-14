@@ -119,99 +119,11 @@ export class NocibeScraper implements Scraper {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Normalise une chaîne pour comparaison tolérante (minuscules, sans accents,
-   * sans caractères non alphanumériques). Ex: "Narciso Rodriguez" -> "narcisorodriguez".
-   */
-  private normalize(s: string): string {
-    return s
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '');
-  }
-
-  /**
-   * Extrait l'EAN-13 de la variante scrapée depuis le HTML brut de la fiche produit.
-   *
-   * La fiche embarque plusieurs EAN (~8): 1 pour le produit affiché + ceux des
-   * produits recommandés (carrousel), chacun suivi de sa marque.
-   *
-   * Signal primaire : le marqueur `GET_PRODUCT:<variantId>` (unique par page)
-   * précède immédiatement le bloc du produit sélectionné → on prend le 1er EAN
-   * qui suit ce marqueur.
-   * Fallback : l'EAN suivi (dans ~160 caractères) du nom de marque du produit,
-   * les EAN des recommandations étant suivis d'une AUTRE marque.
-   */
-  private extractVariantEan(html: string, variantId: string | null, brand: string): string | undefined {
-    // 1) EAN suivant le marqueur GET_PRODUCT:<variantId>
-    if (variantId) {
-      const markerIdx = html.indexOf('GET_PRODUCT:' + variantId);
-      if (markerIdx !== -1) {
-        const m = html.slice(markerIdx).match(/\b(3\d{12})\b/);
-        if (m) return m[1];
-      }
-    }
-
-    // 2) Fallback: EAN suivi du nom de marque du produit
-    if (brand) {
-      const normBrand = this.normalize(brand);
-      if (normBrand.length >= 3) {
-        const re = /\b(3\d{12})\b/g;
-        let m: RegExpExecArray | null;
-        while ((m = re.exec(html)) !== null) {
-          const window = this.normalize(html.slice(m.index + 13, m.index + 160));
-          if (window.includes(normBrand)) return m[1];
-        }
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Enrichit les produits avec leur EAN-13 en récupérant la fiche produit
-   * (1 fetch supplémentaire par produit). Méthode OPTIONNELLE : NON appelée
-   * automatiquement par scrape(). À invoquer explicitement après scrape().
-   *
-   * - UA mobile obligatoire (Akamai bloque le desktop)
-   * - Throttle >=600ms entre fetches
-   * - try/catch par produit : une fiche en erreur n'interrompt pas le lot
-   */
-  async enrichEan(products: ScrapedProduct[]): Promise<void> {
-    const THROTTLE_MS = 600;
-
-    for (let i = 0; i < products.length; i++) {
-      const p = products[i];
-      if (!p.productUrl) continue;
-
-      if (i > 0) await this.delay(THROTTLE_MS);
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-
-      try {
-        const response = await fetch(p.productUrl, { headers: HEADERS, signal: controller.signal });
-        clearTimeout(timeout);
-
-        if (!response.ok) {
-          console.log(`[Nocibe] enrichEan HTTP ${response.status} pour ${p.productUrl}`);
-          continue;
-        }
-
-        const html = await response.text();
-        const variantMatch = p.productUrl.match(/[?&]variant=(\d+)/);
-        const variantId = variantMatch ? variantMatch[1] : null;
-
-        const ean = this.extractVariantEan(html, variantId, p.brand);
-        if (ean) p.ean = ean;
-      } catch (err) {
-        clearTimeout(timeout);
-        const msg = err instanceof Error ? err.message : 'Unknown';
-        console.log(`[Nocibe] enrichEan erreur pour ${p.productUrl}: ${msg}`);
-      }
-    }
-  }
+  // NB: l'ancienne méthode enrichEan()/extractVariantEan() (regex EAN sur le HTML
+  // brut de la fiche) a été SUPPRIMÉE : elle risquait de capter les EAN du
+  // carrousel de recommandations (autres produits). La capture d'EAN fiable se
+  // fait via product-price.ts (extractNocibeVariants → response.ean STRUCTURÉ de
+  // la variante sélectionnée uniquement), utilisée par le price tracker.
 
   private mapCategory(nocibeCategory: string): string {
     const categoryMap: Record<string, string> = {

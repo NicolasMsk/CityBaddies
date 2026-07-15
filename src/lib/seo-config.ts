@@ -61,7 +61,10 @@ export function generateDescription(customDesc: string, includeKeywords = true):
 export function fullProductName(brand: string | null | undefined, name: string): string {
   const b = (brand || '').trim();
   if (!b) return name;
-  return name.trim().toLowerCase().startsWith(b.toLowerCase()) ? name.trim() : `${b} ${name.trim()}`;
+  // Comparaison insensible aux accents : la base stocke "CHLOE" mais le nom
+  // produit commence par "Chloé" — sans normalisation, on doublerait la marque.
+  const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return fold(name.trim()).startsWith(fold(b)) ? name.trim() : `${b} ${name.trim()}`;
 }
 
 // Schema Organization réutilisable

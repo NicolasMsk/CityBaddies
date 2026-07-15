@@ -9,47 +9,65 @@ export const revalidate = 3600; // Revalidate every hour
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Date du dernier relevé de prix réel : c'est LA vraie date de modification des
+  // pages dynamiques (home, /produits). Un new Date() à chaque render simule une
+  // fraîcheur permanente et dilue le signal lastmod auprès de Google.
+  const lastTracked = await prisma.deal.findFirst({
+    where: { status: 'ACTIVE', type: 'tracked' },
+    orderBy: { updatedAt: 'desc' },
+    select: { updatedAt: true },
+  });
+  const dataDate = lastTracked?.updatedAt ?? new Date();
+  // Pages éditoriales quasi-statiques : ne pas prétendre qu'elles changent tous les jours.
+  const editorialDate = new Date('2026-07-15');
+
   // Pages statiques
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: dataDate,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${BASE_URL}/produits`,
-      lastModified: new Date(),
+      lastModified: dataDate,
       changeFrequency: 'hourly',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/guides`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/categories`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
+      url: `${BASE_URL}/methodologie`,
+      lastModified: editorialDate,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
       url: `${BASE_URL}/about`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/contact`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/legal`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
@@ -85,7 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // --- SEO Landing Pages : /produits?category=slug (indexables) ---
   const dealsCategoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: `${BASE_URL}/produits?category=${category.slug}`,
-    lastModified: new Date(),
+    lastModified: dataDate,
     changeFrequency: 'daily' as const,
     priority: 0.8,
   }));
@@ -121,7 +139,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const [categorySlug, brand] = key.split('|');
       return {
         url: `${BASE_URL}/produits?category=${categorySlug}&brand=${encodeURIComponent(brand)}`,
-        lastModified: new Date(),
+        lastModified: dataDate,
         changeFrequency: 'daily' as const,
         priority: 0.7,
       };
@@ -177,7 +195,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const promoCodePages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/codes-promo`,
-      lastModified: new Date(),
+      lastModified: editorialDate,
       changeFrequency: 'daily',
       priority: 0.9,
     },

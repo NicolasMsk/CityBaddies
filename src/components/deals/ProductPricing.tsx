@@ -83,7 +83,29 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
   }, [variantMap]);
   const hasMultipleVariants = variantKeys.length > 1;
 
-  const [selectedVariant, setSelectedVariant] = useState(variantKeys[0] || 'standard');
+  // Variante par défaut : la plus COMPARÉE (max d'enseignes), pas la plus petite.
+  // Le tri par volume mettait en vitrine les échantillons (2 ml…) et les variantes
+  // mal parsées, souvent avec une seule offre. Départage : taille la plus proche
+  // de 50 ml (format le plus standard en parfumerie).
+  const defaultVariant = useMemo(() => {
+    let best = variantKeys[0] || 'standard';
+    let bestCount = -1;
+    let bestDist = Infinity;
+    for (const key of variantKeys) {
+      const vDeals = variantMap.get(key)!.deals;
+      const count = new Set(vDeals.map(d => d.merchant.slug)).size;
+      const vol = vDeals[0]?.variant?.volumeValue ?? (parseFloat(key) || 0);
+      const dist = Math.abs(vol - 50);
+      if (count > bestCount || (count === bestCount && dist < bestDist)) {
+        best = key;
+        bestCount = count;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }, [variantKeys, variantMap]);
+
+  const [selectedVariant, setSelectedVariant] = useState(defaultVariant);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [conditionsOpen, setConditionsOpen] = useState(false);
 

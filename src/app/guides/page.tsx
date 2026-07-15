@@ -12,9 +12,15 @@ export const dynamic = 'force-dynamic';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: 'Guides d\'Achat Beauté 2025 | Comparatifs & Avis Experts - City Baddies',
-  description: 'Nos guides d\'achat beauté pour choisir les meilleurs produits maquillage, skincare et parfums. Comparatifs honnêtes, avis experts et bons plans vérifiés.',
-  // ... (reste inchangé)
+  title: 'Guides d\'Achat Parfums | Comparatifs & Avis - City Baddies',
+  description: 'Nos guides d\'achat parfums pour choisir la bonne fragrance au bon prix. Comparatifs honnêtes entre Sephora, Nocibé et Marionnaud.',
+  alternates: { canonical: `${BASE_URL}/guides` },
+  openGraph: {
+    title: 'Guides d\'Achat Parfums | City Baddies',
+    description: 'Comparatifs honnêtes entre Sephora, Nocibé et Marionnaud.',
+    url: `${BASE_URL}/guides`,
+    type: 'website',
+  },
 };
 
 // Couleurs plus premium et "froides/classe"

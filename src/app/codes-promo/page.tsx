@@ -3,12 +3,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getAllPromoPages, stripHtml } from '@/lib/promo-queries';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
+// Mois courant dans le title — jamais de date codée en dur (un title « Février »
+// affiché en juillet ruine la crédibilité fraîcheur en SERP).
+const moisCourant = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date());
+const moisTitre = moisCourant.charAt(0).toUpperCase() + moisCourant.slice(1);
+
 export const metadata: Metadata = {
-  title: 'Codes Promo Beauté — Février 2026 | City Baddies',
+  title: `Codes Promo Beauté — ${moisTitre} | City Baddies`,
   description: 'Tous les codes promo et bons de réduction beauté valides : Sephora, Nocibé, Marionnaud. Réductions vérifiées par la communauté.',
+  alternates: { canonical: `${BASE_URL}/codes-promo` },
   openGraph: {
     title: 'Codes Promo Beauté — City Baddies',
     description: 'Tous les codes promo beauté valides du moment',
+    url: `${BASE_URL}/codes-promo`,
   },
 };
 

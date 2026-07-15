@@ -1,21 +1,19 @@
 import { Sparkles, Shield, Users, Star } from 'lucide-react';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 import type { Metadata } from 'next';
-import Script from 'next/script';
+import JsonLd from '@/components/seo/JsonLd';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: 'À Propos de City Baddies | L\'Expert des Deals Beauté & Luxe',
-  description: 'Découvrez City Baddies : le comparateur de prix beauté qui déniche les vraies promotions Sephora, Nocibé et Marionnaud. Une équipe passionnée au service de votre budget skincare, maquillage et parfums.',
+  title: 'À Propos de City Baddies | Comparateur de Prix Parfums',
+  description: 'Découvrez City Baddies : le comparateur de prix parfums qui relève les prix plusieurs fois par jour chez Sephora, Nocibé et Marionnaud, avec historique par contenance.',
   keywords: [
-    "comparateur prix beauté",
-    "bons plans maquillage luxe",
-    "erreurs de prix sephora",
+    "comparateur prix parfum",
+    "historique prix parfum",
+    "prix sephora nocibé marionnaud",
     "promotions parfum authentique",
-    "expert beauty deals",
     "city baddies concept",
-    "expert deals cosmétiques"
   ],
   alternates: {
     canonical: `${BASE_URL}/about`,
@@ -28,61 +26,30 @@ export const metadata: Metadata = {
   },
 };
 
-// JSON-LD Unifié : Organization + FAQ
+// JSON-LD : AboutPage + Organization uniquement.
+// ⚠️ Pas de FAQPage ici : la page n'affiche AUCUNE FAQ visible, et Google exige
+// que le schema FAQPage reflète un contenu affiché (sinon risque d'action manuelle).
 const structuredData = {
   "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "name": "City Baddies",
-      "url": "https://citybaddies.com",
-      "logo": "https://citybaddies.com/images/logo.png",
-      "sameAs": [
-        "https://instagram.com/citybaddies",
-        "https://tiktok.com/@citybaddies"
-      ],
-      "description": "Le premier comparateur de prix beauté sélectif qui analyse et vérifie les promotions des grandes enseignes en temps réel."
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Qu'est-ce que City Baddies ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "City Baddies est une plateforme dédiée à la beauté qui compare les offres des plus grands distributeurs (Sephora, Nocibé, Marionnaud, etc.). Notre équipe vérifie chaque jour la véracité des remises pour vous garantir les meilleurs prix sur le marché."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Comment garantissez-vous les meilleurs prix beauté ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Notre équipe surveille quotidiennement des milliers de références produits. Nous analysons l'historique des prix sur 30 jours pour détecter les fausses promotions et ne retenons que les baisses de prix réelles (minimum 20%)."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Est-ce que City Baddies vend des produits ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Non, City Baddies est un comparateur et un guide d'achat indépendant. Nous vous redirigeons directement vers les sites officiels de nos partenaires agréés pour finaliser vos achats en toute sécurité."
-          }
-        }
-      ]
-    }
-  ]
+  "@type": "AboutPage",
+  "url": `${BASE_URL}/about`,
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "City Baddies",
+    "url": BASE_URL,
+    "logo": `${BASE_URL}/images/logo.png`,
+    "sameAs": [
+      // Handle unique partout : @city_baddies (aligné footer/layout)
+      "https://www.tiktok.com/@city_baddies"
+    ],
+    "description": "Comparateur de prix parfums indépendant : relevés plusieurs fois par jour chez Sephora, Nocibé et Marionnaud, avec historique des prix par contenance."
+  }
 };
 
 export default function AboutPage() {
   return (
     <>
-      <Script
-        id="structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd id="structured-data" data={structuredData} />
       <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#d4a855] selection:text-black overflow-hidden relative">
       {/* Background Texture */}
       <div 
@@ -127,7 +94,7 @@ export default function AboutPage() {
                   <span className="text-white font-medium">Nous rétablissons la vérité.</span>
                 </p>
                 <p>
-                  Notre équipe analyse chaque jour les catalogues des maisons les plus prestigieuses (Sephora, Nocibé, Marionnaud, LookFantastic). On ne traque pas seulement les prix baissés : on identifie les anomalies de marché, les erreurs de pricing et les opportunités fugaces que les comparateurs classiques ne voient pas.
+                  Nos relevés tournent plusieurs fois par jour sur les fiches produit de Sephora, Nocibé et Marionnaud. On ne traque pas seulement les prix baissés : on archive chaque relevé, contenance par contenance, pour distinguer la vraie baisse du prix barré marketing.
                 </p>
               </div>
             </div>
@@ -159,7 +126,7 @@ export default function AboutPage() {
               },
               {
                 title: "Sélection Curatée",
-                desc: "L'élégance, c'est le choix. Nous ne vous inondons pas d'offres médiocres. Seule l'excellence (minimum 20% de remise réelle) mérite votre attention.",
+                desc: "L'élégance, c'est la transparence. Pour chaque parfum, on montre TOUTES les offres — la moins chère comme les autres — avec la date du relevé.",
                 icon: Sparkles
               },
               {

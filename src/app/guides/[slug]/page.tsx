@@ -60,11 +60,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     select: { title: true, metaTitle: true, metaDescription: true, heroImageUrl: true, targetKeywords: true },
   });
 
-  if (!guide) return { title: 'Guide non trouvé' };
+  if (!guide) return { title: 'Guide non trouvé', robots: { index: false, follow: false } };
 
   return {
     title: guide.metaTitle || `${guide.title} | City Baddies`,
     description: guide.metaDescription || `Guide d'achat : ${guide.title}`,
+    alternates: { canonical: `${BASE_URL}/guides/${slug}` },
     openGraph: {
       title: guide.metaTitle || guide.title,
       description: guide.metaDescription || `Guide d'achat : ${guide.title}`,
@@ -132,12 +133,30 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
     description: guide.metaDescription,
     image: guide.heroImageUrl,
     datePublished: guide.publishedAt?.toISOString(),
-    author: { '@type': 'Organization', name: 'City Baddies' },
+    dateModified: (guide.updatedAt || guide.publishedAt)?.toISOString(),
+    author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
+    mainEntityOfPage: `${BASE_URL}/guides/${guide.slug}`,
   };
+
+  // FAQPage : la FAQ est VISIBLE plus bas dans la page → le schema doit refléter
+  // le contenu affiché (guideline Google : pas de FAQPage sans FAQ visible, et
+  // inversement une FAQ visible mérite son schema).
+  const faqSchema = faq.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map(f => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  } : null;
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      {faqSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      )}
 
       {/* Hero Immersif */}
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">

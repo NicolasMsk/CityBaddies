@@ -7,6 +7,7 @@ import CategoryCard from '@/components/categories/CategoryCard';
 import DealCarouselSection from '@/components/deals/DealCarouselSection';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 import { getAllPromoPages, stripHtml } from '@/lib/promo-queries';
+import JsonLd from '@/components/seo/JsonLd';
 import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
@@ -259,11 +260,48 @@ async function getHomeData() {
   };
 }
 
+// FAQ affichée sur la home — source unique pour le rendu ET le schema FAQPage
+// (Google exige que le schema reflète le contenu visible).
+const HOME_FAQ = [
+  {
+    q: "C'est quoi la Note City Baddies /10 ?",
+    a: "Chaque offre est analysée en profondeur : prix actuel, historique des prix, comparaison avec les concurrents, qualité de la marque. On attribue une note de 1 à 10. Un 8+/10, c'est exceptionnel. Un 3/10, c'est une fausse promo qu'on démasque pour vous."
+  },
+  {
+    q: "Vous ne montrez pas que des bonnes promos ?",
+    a: "Non, et c'est notre force. On affiche TOUTES les offres qu'on trouve, même les mauvaises. Un produit affiché -30% mais dont le prix n'a jamais bougé ? On le dit. Un concurrent moins cher ? On le signale. Notre but c'est l'honnêteté, pas la vente à tout prix."
+  },
+  {
+    q: "Est-ce que je commande chez vous ?",
+    a: "Non, City Baddies est un comparateur et analyste indépendant. On vous redirige vers le site officiel du marchand (Sephora, Nocibé, Marionnaud) pour acheter en toute sécurité. Vous profitez de leurs garanties et SAV."
+  },
+  {
+    q: "Pourquoi City Baddies est gratuit ?",
+    a: "L'accès est 100% gratuit. On se rémunère par l'affiliation : une petite commission quand vous achetez via nos liens, sans surcoût pour vous. Ça ne change rien à nos notes — une mauvaise offre reste une mauvaise offre, même si elle nous rapporterait une commission."
+  },
+  {
+    q: "Comment détectez-vous les fausses promos ?",
+    a: "On suit l'historique des prix sur plusieurs mois. Si un produit est 'en promo' mais que son prix n'a jamais changé, c'est une fausse promo. On compare aussi avec les concurrents : si Nocibé vend le même produit moins cher sans promo, l'offre Sephora n'en est pas une."
+  }
+];
+
+const homeFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: HOME_FAQ.map(item => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
 export default async function HomePage() {
   const { hotDeals, luxeDeals, latestDeals, categories, topBrands, promoPages, guides, stats } = await getHomeData();
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative selection:bg-[#d4a855] selection:text-black">
+      {/* FAQPage : reflète la FAQ visible en bas de page (source unique HOME_FAQ) */}
+      <JsonLd id="home-faq-schema" data={homeFaqSchema} />
       {/* Background Base - Subtle Studio Gradient */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1a1a1a_0%,_#0a0a0a_80%)] z-0 pointer-events-none" />
       
@@ -333,11 +371,11 @@ export default async function HomePage() {
 
         </div>
 
-        {/* Provenance — la donnée réelle comme preuve, pas des gros chiffres */}
+        {/* Provenance — la donnée réelle comme preuve, avec les vrais chiffres du jour */}
         <div className="relative z-10 w-full border-t border-white/10 bg-black/30">
           <div className="max-w-[1400px] mx-auto px-6 py-3">
             <p className="font-mono text-[11px] md:text-xs text-neutral-400 tracking-wide">
-              Prix relevés six fois par jour chez Sephora, Nocibé et Marionnaud — chaque contenance, avec historique.
+              Prix relevés six fois par jour chez {stats.merchants > 0 ? `${stats.merchants} enseignes — Sephora, Nocibé et Marionnaud` : 'Sephora, Nocibé et Marionnaud'} : {stats.products} parfums, {stats.variants} contenances suivies{stats.variantsToday > 0 ? `, ${stats.variantsToday} relevés aujourd'hui` : ''} — avec historique.
             </p>
           </div>
         </div>
@@ -942,28 +980,7 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-4">
-            { [
-              {
-                q: "C'est quoi la Note City Baddies /10 ?",
-                a: "Chaque offre est analysée en profondeur : prix actuel, historique des prix, comparaison avec les concurrents, qualité de la marque. On attribue une note de 1 à 10. Un 8+/10, c'est exceptionnel. Un 3/10, c'est une fausse promo qu'on démasque pour vous."
-              },
-              {
-                q: "Vous ne montrez pas que des bonnes promos ?",
-                a: "Non, et c'est notre force. On affiche TOUTES les offres qu'on trouve, même les mauvaises. Un produit affiché -30% mais dont le prix n'a jamais bougé ? On le dit. Un concurrent moins cher ? On le signale. Notre but c'est l'honnêteté, pas la vente à tout prix."
-              },
-              {
-                q: "Est-ce que je commande chez vous ?",
-                a: "Non, City Baddies est un comparateur et analyste indépendant. On vous redirige vers le site officiel du marchand (Sephora, Nocibé, Marionnaud) pour acheter en toute sécurité. Vous profitez de leurs garanties et SAV."
-              },
-              {
-                q: "Pourquoi City Baddies est gratuit ?",
-                a: "L'accès est 100% gratuit. On se rémunère par l'affiliation : une petite commission quand vous achetez via nos liens, sans surcoût pour vous. Ça ne change rien à nos notes — une mauvaise offre reste une mauvaise offre, même si elle nous rapporterait une commission."
-              },
-              {
-                q: "Comment détectez-vous les fausses promos ?",
-                a: "On suit l'historique des prix sur plusieurs mois. Si un produit est 'en promo' mais que son prix n'a jamais changé, c'est une fausse promo. On compare aussi avec les concurrents : si Nocibé vend le même produit moins cher sans promo, l'offre Sephora n'en est pas une."
-              }
-            ].map((item, i) => (
+            {HOME_FAQ.map((item, i) => (
               <div key={i} className="group border border-white/10 bg-white/5 rounded-none overflow-hidden transition-all hover:bg-white/10">
                 <details className="group [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex items-center justify-between p-6 cursor-pointer text-white">

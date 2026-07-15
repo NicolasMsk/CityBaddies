@@ -361,6 +361,14 @@ async function writeDeals(
     if (seenVolumes.has(volKey)) continue;
     seenVolumes.add(volKey);
 
+    // Garde anti-échantillon/parse foireux : un "2ml à 80€" (≥10€/ml sous 5ml)
+    // est soit une miniature mal parsée, soit un volume erroné — jamais une
+    // contenance comparable. On l'écarte plutôt que d'afficher un prix absurde.
+    if (volInfo.volumeUnit === 'ml' && volInfo.volumeValue <= 5 && currentPrice >= volInfo.volumeValue * 10) {
+      console.warn(`[track] ✗ ${row.productName} | ${merchant} | variante aberrante écartée: ${volKey} à ${currentPrice}€`);
+      continue;
+    }
+
     // Promo valide uniquement si prix barré > prix courant.
     const originalPrice = v.originalPrice && v.originalPrice > currentPrice ? v.originalPrice : currentPrice;
     const discountAmount = Math.round((originalPrice - currentPrice) * 100) / 100;

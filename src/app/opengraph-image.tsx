@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'City Baddies - Bons Plans Beauté';
+export const alt = 'City Baddies — Comparateur de prix parfums';
 export const size = {
   width: 1200,
   height: 630,
@@ -73,16 +73,16 @@ export default async function Image() {
             CITY <span style={{ color: '#d4a855', fontStyle: 'italic' }}>BADDIES</span>
           </div>
 
-          {/* Tagline */}
+          {/* Tagline — positionnement comparateur, pas "bons plans" */}
           <div
             style={{
-              fontSize: 32,
-              color: '#888888',
+              fontSize: 34,
+              color: '#cccccc',
               fontWeight: 300,
               marginBottom: '40px',
             }}
           >
-            Bons Plans Beauté & Promos Maquillage
+            Ton Parfum. Meilleur Prix.
           </div>
 
           {/* Features */}
@@ -101,9 +101,9 @@ export default async function Image() {
                 color: 'white',
               }}
             >
-              <div style={{ fontSize: 48, fontWeight: 300 }}>-70%</div>
-              <div style={{ fontSize: 14, color: '#9b1515', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                Max Réduction
+              <div style={{ fontSize: 48, fontWeight: 300 }}>6×/jour</div>
+              <div style={{ fontSize: 14, color: '#d4a855', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+                Prix relevés
               </div>
             </div>
             <div
@@ -120,9 +120,9 @@ export default async function Image() {
                 color: 'white',
               }}
             >
-              <div style={{ fontSize: 48, fontWeight: 300 }}>24/7</div>
+              <div style={{ fontSize: 48, fontWeight: 300 }}>3</div>
               <div style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                Deals Vérifiés
+                Sephora · Nocibé · Marionnaud
               </div>
             </div>
           </div>

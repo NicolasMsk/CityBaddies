@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/auth";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import CookieConsent from "@/components/analytics/CookieConsent";
-import Script from "next/script";
+import JsonLd from "@/components/seo/JsonLd";
 
 // Système typographique City Baddies — choisi, pas hérité :
 // - Bodoni Moda (didone) : le langage typographique historique de la mode et de
@@ -114,9 +114,8 @@ const organizationSchema = {
   logo: `${BASE_URL}/images/logo.png`,
   description: "Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud. Historique des prix, analyse des vraies promos et alertes prix.",
   sameAs: [
-    // Ajouter les liens réseaux sociaux
-    // "https://www.instagram.com/citybaddies",
-    // "https://www.tiktok.com/@citybaddies",
+    // Handle unique partout : @city_baddies (aligné footer/about)
+    "https://www.tiktok.com/@city_baddies",
   ],
   contactPoint: {
     "@type": "ContactPoint",
@@ -152,16 +151,10 @@ export default function RootLayout({
     <html lang="fr" style={{ backgroundColor: '#0a0a0a' }}>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <Script
-          id="organization-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <Script
-          id="website-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
+        {/* JSON-LD natif (PAS next/script) : doit être dans le HTML initial
+            pour les crawlers sans JS — voir src/components/seo/JsonLd.tsx */}
+        <JsonLd id="organization-schema" data={organizationSchema} />
+        <JsonLd id="website-schema" data={websiteSchema} />
       </head>
       <body className={`${display.variable} ${body.variable} ${mono.variable} font-sans antialiased bg-[#0a0a0a] text-neutral-100 min-h-screen flex flex-col`}>
         <GoogleAnalytics />

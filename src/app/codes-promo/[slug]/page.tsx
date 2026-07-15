@@ -8,6 +8,8 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
+
 export async function generateStaticParams() {
   const pages = await getAllPromoPages();
   return pages.map((page) => ({ slug: page.canonicalSlug }));
@@ -20,15 +22,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!page) {
     return {
       title: 'Page introuvable | City Baddies',
+      robots: { index: false, follow: false },
     };
   }
 
   return {
     title: page.metaTitle || `Codes Promo ${page.heroTitle} | City Baddies`,
     description: page.metaDescription || page.introduction?.substring(0, 155),
+    alternates: { canonical: `${BASE_URL}/codes-promo/${slug}` },
     openGraph: {
       title: page.metaTitle || page.heroTitle || undefined,
       description: page.metaDescription || page.introduction?.substring(0, 155) || undefined,
+      url: `${BASE_URL}/codes-promo/${slug}`,
     },
   };
 }
@@ -73,7 +78,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
     "@type": "WebPage",
     "name": page.metaTitle || `Codes Promo ${merchantName}`,
     "description": page.metaDescription || '',
-    "url": `https://citybaddies.com/codes-promo/${slug}`,
+    "url": `${BASE_URL}/codes-promo/${slug}`,
     "mainEntity": {
       "@type": "ItemList",
       "numberOfItems": realCodeCount,

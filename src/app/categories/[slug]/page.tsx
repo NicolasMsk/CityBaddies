@@ -198,8 +198,34 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   // Compter les deals actifs
   const totalDeals = deals.length;
 
+  // FAQPage : reflète la FAQ visible plus bas (richContent.faq) — schema natif
+  // dans le HTML initial pour crawlers sans JS.
+  const faqSchema = content?.richContent?.faq && content.richContent.faq.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: content.richContent.faq.map((f: { question: string; answer: string }) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  } : null;
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Catégories', item: `${BASE_URL}/categories` },
+      { '@type': 'ListItem', position: 3, name: category.name, item: `${BASE_URL}/categories/${slug}` },
+    ],
+  };
+
   return (
     <div className="min-h-screen pb-16">
+      {faqSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c') }} />
+      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c') }} />
       
       {/* Hero Section Immersive */}
       <div className="relative mb-20">

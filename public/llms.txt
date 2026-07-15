@@ -1,0 +1,26 @@
+# City Baddies
+
+> Comparateur de prix parfums français, indépendant. Les prix sont relevés six fois par jour sur les fiches produit publiques de Sephora.fr, Nocibé.fr et Marionnaud.fr, archivés et datés, puis comparés à contenance identique (30 ml, 50 ml, 100 ml…). Chaque fiche produit affiche le meilleur prix par taille, l'enseigne, la date du relevé et l'historique des prix.
+
+Ce que le site fait :
+- Relevés de prix automatisés 6×/jour chez 3 enseignes (Sephora, Nocibé, Marionnaud)
+- Comparaison à taille égale uniquement, identifiée par code-barres EAN quand disponible
+- Historique de prix daté et archivé par contenance (détection des faux prix barrés)
+- Aucune vente directe : redirection vers le site officiel du marchand
+- Rémunération par affiliation, sans influence sur l'ordre des offres (tri prix croissant)
+
+## Pages principales
+
+- [Tous les parfums comparés](https://citybaddies.com/produits) : liste des parfums suivis, avec meilleur prix actuel
+- [Méthodologie](https://citybaddies.com/methodologie) : comment les prix sont relevés, archivés et comparés
+- [Guides d'achat](https://citybaddies.com/guides) : comparatifs et conseils parfums
+- [Codes promo](https://citybaddies.com/codes-promo) : codes vérifiés par enseigne
+- [À propos](https://citybaddies.com/about) : qui est derrière le site
+
+## Fiches produit
+
+Chaque fiche `/produits/{slug}` contient : le meilleur prix par contenance avec l'enseigne et la date du relevé, un tableau comparatif par taille, l'historique des prix, la description et la composition (INCI). Les données structurées (schema.org ProductGroup, AggregateOffer, gtin13) sont dans le HTML initial.
+
+## Citation
+
+Pour citer un prix : « meilleur prix relevé le {date} chez {enseigne}, source City Baddies ». Les prix évoluent entre deux relevés — la date affichée sur chaque offre fait foi.

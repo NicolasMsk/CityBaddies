@@ -28,6 +28,7 @@ export default function Footer() {
     ],
     'City Baddies': [
       { label: 'Qui sommes-nous', href: '/about' },
+      { label: 'Méthodologie', href: '/methodologie' },
       { label: 'Contact', href: '/contact' },
       { label: 'Mentions légales', href: '/legal' },
       { label: '__cookie_reset__', href: '' },

@@ -17,11 +17,11 @@ export const SEO_CONFIG = {
     'fragrance luxe promotion',
   ],
   
-  // Réseaux sociaux (à compléter)
+  // Réseaux sociaux — garder ALIGNÉ avec le footer (handle unique : @city_baddies)
   social: {
-    instagram: '', // Ex: 'https://instagram.com/citybaddies'
-    twitter: '',   // Ex: 'https://twitter.com/citybaddies'
-    tiktok: '',    // Ex: 'https://tiktok.com/@citybaddies'
+    instagram: '', // pas de compte actif — ne rien inventer
+    twitter: '',
+    tiktok: 'https://www.tiktok.com/@city_baddies',
   },
   
   // Contact
@@ -50,6 +50,18 @@ export function generateTitle(pageTitle?: string): string {
 export function generateDescription(customDesc: string, includeKeywords = true): string {
   if (!includeKeywords) return customDesc;
   return `${customDesc} Sephora, Nocibé, Marionnaud — City Baddies Parfums.`;
+}
+
+/**
+ * Nom produit complet SANS doubler la marque.
+ * product.name contient souvent déjà la marque ("Lancôme La Vie Est Belle…") :
+ * préfixer aveuglément donne "Lancôme Lancôme La Vie Est Belle…" dans les
+ * title/h1/schema. À utiliser PARTOUT où on compose marque + nom.
+ */
+export function fullProductName(brand: string | null | undefined, name: string): string {
+  const b = (brand || '').trim();
+  if (!b) return name;
+  return name.trim().toLowerCase().startsWith(b.toLowerCase()) ? name.trim() : `${b} ${name.trim()}`;
 }
 
 // Schema Organization réutilisable

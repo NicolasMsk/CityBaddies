@@ -4,9 +4,9 @@ import { Suspense } from 'react';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: 'Tous les Produits Beauté | Comparateur de Prix',
+  title: 'Tous les Parfums | Comparateur de Prix',
   description:
-    'Comparez les prix de vos produits beauté préférés entre Sephora, Nocibé, Marionnaud et Notino. Trouvez le meilleur prix garanti.',
+    'Comparez les prix de vos parfums entre Sephora, Nocibé et Marionnaud. Prix relevés six fois par jour, chaque contenance, avec historique.',
   alternates: {
     canonical: `${BASE_URL}/produits`,
   },

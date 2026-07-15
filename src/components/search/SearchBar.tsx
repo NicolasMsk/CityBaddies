@@ -33,15 +33,15 @@ interface CategoryItem {
   keywords: string[]; // Mots clés supplémentaires pour la recherche
 }
 
-// Liste des catégories disponibles
+// Liste des catégories SUGGÉRÉES par la recherche.
+// ⚠️ Ne suggérer QUE des catégories avec des offres actives : /categories/[slug]
+// fait notFound() quand une catégorie n'a aucun deal — suggérer "Maquillage"
+// enverrait le visiteur sur une 404. Les anciennes entrées (maquillage,
+// soins-visage, soins-corps, cheveux, ongles, accessoires) sont désactivées
+// tant que le site est 100% parfums ; les réactiver quand ces catégories
+// auront de vraies offres.
 const ALL_CATEGORIES: CategoryItem[] = [
-  { slug: 'maquillage', label: 'Maquillage', keywords: ['makeup', 'teint', 'fond de teint', 'mascara', 'rouge à lèvres', 'fard', 'blush'] },
-  { slug: 'soins-visage', label: 'Soins Visage', keywords: ['skincare', 'crème', 'sérum', 'nettoyant', 'masque', 'hydratant', 'anti-âge', 'peau'] },
-  { slug: 'soins-corps', label: 'Soins Corps', keywords: ['body', 'corps', 'lotion', 'huile', 'gommage', 'hydratant'] },
-  { slug: 'cheveux', label: 'Cheveux', keywords: ['hair', 'shampoing', 'shampooing', 'après-shampoing', 'masque capillaire', 'huile cheveux'] },
   { slug: 'parfums', label: 'Parfums', keywords: ['parfum', 'fragrance', 'eau de parfum', 'eau de toilette', 'cologne', 'senteur'] },
-  { slug: 'ongles', label: 'Ongles', keywords: ['vernis', 'nail', 'manucure', 'gel', 'semi-permanent', 'nail art'] },
-  { slug: 'accessoires', label: 'Accessoires', keywords: ['pinceau', 'éponge', 'trousse', 'miroir', 'outils'] },
 ];
 
 // Hook pour debounce

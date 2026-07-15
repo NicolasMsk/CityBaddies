@@ -25,7 +25,7 @@ export function getNewsletterConfirmEmailHtml({ email }: NewsletterConfirmEmailP
 <body style="margin: 0; padding: 0; background-color: ${colors.bg}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <!-- Preheader -->
   <div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #000000;">
-    Tu es maintenant inscrit(e) à notre newsletter. Les meilleurs deals beauté arrivent directement dans ta boîte mail.
+    Tu es maintenant inscrit(e) à notre newsletter. Les meilleurs prix parfums arrivent directement dans ta boîte mail.
   </div>
   
   <!-- Main Container -->
@@ -149,7 +149,7 @@ INSCRIPTION CONFIRMÉE
 Tu es dans la liste !
 
 Merci de t'être inscrit(e) à notre newsletter.
-Tu recevras chaque semaine notre sélection des meilleurs deals beauté.
+Tu recevras chaque semaine notre sélection des meilleurs prix parfums.
 
 → VOIR LES PRODUITS : https://beautydeals.fr/produits
 

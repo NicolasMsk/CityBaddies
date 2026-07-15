@@ -40,10 +40,10 @@ const SORT_OPTIONS = [
 
 // Tags disponibles pour filtrer (alignés avec scoring.ts)
 const TAG_OPTIONS = [
-  { value: 'DEAL_EXCEPTIONNEL', label: '� Deal Exceptionnel' },
+  { value: 'DEAL_EXCEPTIONNEL', label: '🔥 Deal Exceptionnel' },
   { value: 'TOP_DEAL', label: '⭐ Top Deal' },
   { value: 'LUXE', label: '💎 Luxe' },
-  { value: 'PROMO_FLASH', label: '� -50% et plus' },
+  { value: 'PROMO_FLASH', label: '⚡ -50% et plus' },
   { value: 'TENDANCE', label: '📈 Tendance' },
   { value: 'PRIX_IMBATTABLE', label: '💰 Prix Imbattable' },
   { value: 'IDEE_CADEAU', label: '🎁 Idée Cadeau' },

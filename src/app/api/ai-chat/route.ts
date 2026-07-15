@@ -98,7 +98,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 ];
 
 // Système prompt pour l'assistant
-const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un site de bons plans beauté premium.
+const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un comparateur de prix parfums premium (Sephora, Nocibé, Marionnaud).
 Tu aides les utilisateurs à trouver les meilleurs deals parmi notre sélection chez Sephora, Nocibé et Marionnaud.
 
 ⚠️ RÈGLE CRITIQUE N°1: CHERCHE TOUJOURS D'ABORD, PARLE ENSUITE.

@@ -63,8 +63,8 @@ export default async function GuidesPage() {
   const collectionSchema = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Guides d\'Achat Beauté - City Baddies',
-    description: 'Collection de guides d\'achat beauté avec comparatifs et avis experts.',
+    name: 'Guides d\'Achat Parfums - City Baddies',
+    description: 'Collection de guides d\'achat parfums avec comparatifs et avis.',
     url: `${BASE_URL}/guides`,
     numberOfItems: guides.length,
     hasPart: guides.map((g) => ({

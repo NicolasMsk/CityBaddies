@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Mail } from 'lucide-react';
 import CookieResetButton from '@/components/analytics/CookieResetButton';
@@ -10,38 +10,44 @@ const TikTokIcon = () => (
   </svg>
 );
 
+// ⚠️ Chaque lien doit mener à une page RÉELLE avec du contenu.
+// Les anciennes entrées subcategory (eau-de-toilette, brumes, coffrets…)
+// pointaient vers des listes vides : les produits suivis n'ont pas de
+// subcategory en base. Ne pas les réintroduire sans vérifier la donnée.
+const footerLinks: Record<string, { label: string; href: string }[]> = {
+  'Parfums': [
+    { label: 'Tous les parfums', href: '/produits' },
+    { label: 'À moins de 50 €', href: '/parfums-moins-de-50-euros' },
+    { label: 'Le match des enseignes', href: '/sephora-vs-nocibe-vs-marionnaud' },
+    { label: 'Codes promo', href: '/codes-promo' },
+    { label: 'Guides d\'achat', href: '/guides' },
+  ],
+  // Top maisons (les plus cherchées) + porte d'entrée vers les 34 pages marques
+  'Marques': [
+    { label: 'Chanel', href: '/marques/chanel' },
+    { label: 'Dior', href: '/marques/christian-dior' },
+    { label: 'Lancôme', href: '/marques/lancome' },
+    { label: 'Yves Saint Laurent', href: '/marques/yves-saint-laurent' },
+    { label: 'Guerlain', href: '/marques/guerlain' },
+    { label: 'Toutes les marques →', href: '/marques' },
+  ],
+  'City Baddies': [
+    { label: 'Qui sommes-nous', href: '/about' },
+    { label: 'Méthodologie', href: '/methodologie' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Mentions légales', href: '/legal' },
+    { label: '__cookie_reset__', href: '' },
+  ],
+};
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-
-  const footerLinks = {
-    'Explorer': [
-      { label: 'Tous les produits', href: '/produits' },
-      { label: 'Par marque', href: '/marques' },
-      { label: 'Guides d\'achat', href: '/guides' },
-      { label: 'Le match des enseignes', href: '/sephora-vs-nocibe-vs-marionnaud' },
-      { label: 'Par catégorie', href: '/categories' },
-    ],
-    'Parfums': [
-      { label: 'Tous les parfums', href: '/categories/parfums' },
-      { label: 'À moins de 50 €', href: '/parfums-moins-de-50-euros' },
-      { label: 'Eau de parfum', href: '/produits?category=parfums&subcategory=eau-de-parfum' },
-      { label: 'Eau de toilette', href: '/produits?category=parfums&subcategory=eau-de-toilette' },
-      { label: 'Coffrets', href: '/produits?category=parfums&subcategory=coffrets-parfums' },
-    ],
-    'City Baddies': [
-      { label: 'Qui sommes-nous', href: '/about' },
-      { label: 'Méthodologie', href: '/methodologie' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Mentions légales', href: '/legal' },
-      { label: '__cookie_reset__', href: '' },
-    ],
-  };
 
   return (
     <footer className="relative z-10 bg-[#0a0a0a] text-white border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer */}
-        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div className="py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2 space-y-6">
             <Link href="/" className="inline-block">
@@ -56,22 +62,30 @@ export default function Footer() {
             <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">
               LE VRAI PRIX, PAS LE FAKE. <br/>
               <span className="text-neutral-600 block mt-2">
-                Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud. Historique des prix et transparence totale.
+                Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud.
+                Chaque contenance, avec historique.
               </span>
             </p>
-            
+
+            {/* Provenance — la preuve, pas le slogan */}
+            <p className="font-mono text-[10px] text-neutral-600 tracking-wide">
+              Prix relevés six fois par jour sur les sites officiels des enseignes.
+            </p>
+
             {/* Social */}
             <div className="flex items-center gap-4">
-              <a 
-                href="https://www.tiktok.com/@city_baddies" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://www.tiktok.com/@city_baddies"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="City Baddies sur TikTok"
                 className="w-10 h-10 border border-white/10 flex items-center justify-center text-neutral-400 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
               >
                 <TikTokIcon />
               </a>
-              <a 
-                href="mailto:contact@citybaddies.com" 
+              <a
+                href="mailto:contact@citybaddies.com"
+                aria-label="Écrire à City Baddies"
                 className="w-10 h-10 border border-white/10 flex items-center justify-center text-neutral-400 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
               >
                 <Mail className="h-4 w-4" />
@@ -91,8 +105,8 @@ export default function Footer() {
                     {link.label === '__cookie_reset__' ? (
                       <CookieResetButton />
                     ) : (
-                    <Link 
-                      href={link.href} 
+                    <Link
+                      href={link.href}
                       className="text-sm font-light text-neutral-400 hover:text-white hover:translate-x-1 transition-all duration-300 inline-block"
                     >
                       {link.label}

@@ -56,12 +56,13 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       title = `${brand} ${categoryName} — Comparer les Prix`;
       description = `Comparez les prix ${brand} en ${categoryName.toLowerCase()} entre Sephora, Nocibé et Marionnaud. Trouvez le meilleur prix garanti.`;
     } else {
-      title = `${categoryName} — Comparateur de Prix Beauté`;
+      title = `${categoryName} — Comparateur de Prix`;
       description = `Comparez les prix ${categoryName.toLowerCase()} entre Sephora, Nocibé et Marionnaud. Offres vérifiées quotidiennement.`;
     }
   } else {
-    title = 'Tous les Produits Beauté | Comparateur de Prix';
-    description = 'Comparez les prix beauté entre Sephora, Nocibé, Marionnaud et Notino. Maquillage, skincare, parfums : trouvez le meilleur prix.';
+    // ⚠️ Recentré parfums, et 3 enseignes uniquement (Notino n'est pas suivi).
+    title = 'Tous les Parfums | Comparateur de Prix';
+    description = 'Comparez les prix des parfums entre Sephora, Nocibé et Marionnaud. Chaque contenance, prix relevés six fois par jour, avec historique.';
   }
 
   if (page > 1) {
@@ -72,11 +73,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     title,
     description,
     keywords: [
-      'comparateur prix beauté',
-      'bons plans maquillage',
-      'promo skincare',
+      'comparateur prix parfum',
+      'parfum pas cher',
       'réduction parfum',
-      'soldes cosmétiques',
       'offres sephora',
       'promo nocibé',
       'deals marionnaud',
@@ -92,7 +91,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     openGraph: {
       title: category
         ? `${CATEGORY_SEO_NAMES[category] || category}${brand ? ` ${brand}` : ''} | City Baddies`
-        : 'Tous les Produits Beauté | City Baddies',
+        : 'Tous les Parfums | City Baddies',
       description: description.substring(0, 200),
       url: canonicalUrl,
       type: 'website',
@@ -345,20 +344,21 @@ export default async function ProduitsPage({ searchParams }: PageProps) {
         <header className="mb-20 text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-[0.3em] uppercase text-[#d4a855] mb-8 hover:bg-white/10 transition-colors cursor-default">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]"></span>
-            {totalProducts} Produits Analysés
+            {totalProducts} Parfums Suivis
           </div>
 
           <h1 className="text-5xl md:text-7xl font-thin tracking-tighter mb-8 text-white uppercase leading-[0.9]">
             Tous les <br/>
-            <span className="font-normal italic text-white/40">Produits</span>
+            <span className="font-normal italic text-white/40">Parfums</span>
           </h1>
 
           <div className="text-neutral-400 font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+            {/* 3 enseignes suivies — Notino n'a jamais été relevé, ne pas le citer */}
             <p className="mb-4">
-              Comparez les prix beauté entre <span className="text-white">Sephora, Nocibé, Marionnaud et Notino</span>.
+              Comparez les prix entre <span className="text-white">Sephora, Nocibé et Marionnaud</span>.
             </p>
             <p className="text-base text-neutral-500">
-              Chaque produit est analysé et noté. On vous dit si c&apos;est vraiment une bonne affaire.
+              Chaque contenance est relevée six fois par jour, avec historique. On te dit si c&apos;est vraiment une bonne affaire.
               {page === 1 && ` Triés par score par défaut.`}
             </p>
           </div>

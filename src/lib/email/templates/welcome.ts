@@ -36,7 +36,7 @@ export function getWelcomeEmailHtml({ username }: WelcomeEmailProps): string {
 <body style="margin: 0; padding: 0; background-color: ${colors.bg}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <!-- Preheader Text (invisible mais aide à éviter les spams) -->
   <div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #000000;">
-    ${username}, ton accès au Club Privé City Baddies est confirmé. Découvre les meilleurs deals beauté réservés aux membres.
+    ${username}, ton accès au Club Privé City Baddies est confirmé. Découvre les meilleurs prix parfums réservés aux membres.
   </div>
   
   <!-- Main Container -->

@@ -94,11 +94,11 @@ export default function LegalPage() {
                 </h3>
                 <div className="text-neutral-400 space-y-3 text-sm leading-relaxed">
                   <p>
-                    City Baddies est une plateforme communautaire de partage de bons plans beauté. 
+                    City Baddies est une plateforme de comparaison de prix de parfums. 
                     Notre service permet aux utilisateurs de :
                   </p>
                   <ul className="list-disc list-inside space-y-2 ml-2">
-                    <li>Découvrir des promotions et offres sur des produits de beauté</li>
+                    <li>Comparer les prix des parfums entre enseignes et suivre leur historique</li>
                     <li>Partager des bons plans avec la communauté</li>
                     <li>Commenter et voter sur les deals</li>
                     <li>Sauvegarder leurs deals favoris</li>

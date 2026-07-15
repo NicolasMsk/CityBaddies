@@ -11,12 +11,12 @@ const moisCourant = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'num
 const moisTitre = moisCourant.charAt(0).toUpperCase() + moisCourant.slice(1);
 
 export const metadata: Metadata = {
-  title: `Codes Promo Beauté — ${moisTitre} | City Baddies`,
-  description: 'Tous les codes promo et bons de réduction beauté valides : Sephora, Nocibé, Marionnaud. Réductions vérifiées par la communauté.',
+  title: `Codes Promo Parfumeries — ${moisTitre} | City Baddies`,
+  description: 'Tous les codes promo valides chez Sephora, Nocibé et Marionnaud pour payer ton parfum moins cher. Codes vérifiés régulièrement.',
   alternates: { canonical: `${BASE_URL}/codes-promo` },
   openGraph: {
-    title: 'Codes Promo Beauté — City Baddies',
-    description: 'Tous les codes promo beauté valides du moment',
+    title: 'Codes Promo Parfumeries — City Baddies',
+    description: 'Tous les codes promo Sephora, Nocibé et Marionnaud valides du moment',
     url: `${BASE_URL}/codes-promo`,
   },
 };
@@ -47,7 +47,7 @@ export default async function CodesPromoPage() {
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-white leading-[0.85] tracking-tight mb-8">
               <span className="block italic font-light opacity-90">Tes codes</span>
-              <span className="block font-medium">Beauté.</span>
+              <span className="block font-medium">Parfum.</span>
             </h1>
 
             <p className="text-xl md:text-2xl text-neutral-400 font-light max-w-xl border-l border-white/20 pl-6">
@@ -208,7 +208,7 @@ export default async function CodesPromoPage() {
               COMMENT <span className="font-semibold text-[#d4a855]">ÇA MARCHE</span>
             </h2>
             <p className="text-neutral-500 text-sm tracking-widest uppercase">
-              Profite des codes promo beauté en toute simplicité
+              Profite des codes promo parfumerie en toute simplicité
             </p>
           </div>
 

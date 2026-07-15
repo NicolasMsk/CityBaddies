@@ -31,24 +31,23 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'accessoires': 'Pinceaux, éponges, trousses et outils indispensables pour votre routine beauté.',
 };
 
+// Metadata recentrées parfums : ne promettre QUE ce que le site propose
+// (les catégories maquillage/soins existent en base mais n'ont aucune offre).
 export const metadata: Metadata = {
-  title: "Catégories Beauté | Maquillage, Skincare, Parfums - City Baddies",
-  description: "Explorez toutes les catégories beauté : maquillage, soins du visage, parfums, corps et cheveux. Trouvez les meilleurs deals par catégorie avec des réductions jusqu'à -70% sur Sephora, Nocibé et Marionnaud.",
+  title: "Catégories | Parfums comparés - City Baddies",
+  description: "Explorez les catégories suivies par City Baddies : parfums comparés entre Sephora, Nocibé et Marionnaud, prix relevés six fois par jour avec historique.",
   keywords: [
-    "catégories beauté",
-    "maquillage deals",
-    "skincare promotion",
     "parfum réduction",
-    "soins visage pas cher",
-    "cosmétiques promo",
-    "bons plans beauté par catégorie",
+    "comparateur prix parfum",
+    "parfum pas cher",
+    "prix parfum sephora nocibé marionnaud",
   ],
   alternates: {
     canonical: `${BASE_URL}/categories`,
   },
   openGraph: {
-    title: "Catégories Beauté | City Baddies",
-    description: "Explorez toutes les catégories beauté et trouvez les meilleurs deals.",
+    title: "Catégories | City Baddies",
+    description: "Parfums comparés entre Sephora, Nocibé et Marionnaud.",
     url: `${BASE_URL}/categories`,
     type: "website",
   },
@@ -105,9 +104,11 @@ export default async function CategoriesPage() {
           </h1>
           
           <div className="max-w-2xl mx-auto text-slate-400 text-sm leading-relaxed opacity-0 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-200 fill-mode-forwards">
+            {/* Copy neutre : ne cite QUE ce qui existe réellement (le site est
+                100% parfums — d'autres catégories pourront revenir plus tard). */}
             <p>
-              Maquillage, soins, parfums ou cheveux : explorez nos {categories.length} catégories 
-              et accédez à plus de <span className="text-white font-medium">{totalDeals} offres exclusives</span>.
+              <span className="text-white font-medium">{totalDeals} offres suivies</span> chez Sephora,
+              Nocibé et Marionnaud — prix relevés six fois par jour, comparés à taille égale.
             </p>
           </div>
         </div>
@@ -176,67 +177,68 @@ export default async function CategoriesPage() {
         {/* Guide d'achat SEO (Style Minimal) */}
         {categories.length > 0 && (
           <section className="border-t border-white/[0.06] pt-24 max-w-5xl mx-auto">
+            {/* Guide recentré parfums : les anciens blocs skincare/maquillage/cheveux
+                promettaient des catégories sans aucune offre (site 100% parfums). */}
             <div className="text-center mb-16">
               <span className="text-[#d4a855] text-xs uppercase tracking-widest font-medium block mb-3">Guide</span>
               <h2 className="text-3xl font-bold text-white">
-                Comment choisir sa catégorie ?
+                Bien choisir son parfum
               </h2>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-              <div className="space-y-4">
-                <h3 className="text-xl text-white font-medium flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
-                  Pour commencer une routine skincare
-                </h3>
-                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
-                  Commencez par les <strong className="text-white font-normal">soins du visage</strong> : un bon nettoyant, 
-                  une crème hydratante adaptée à votre type de peau et un SPF. Les sérums sont un excellent 
-                  investissement pour cibler des problématiques spécifiques.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-xl text-white font-medium flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
-                  Pour un maquillage longue tenue
-                </h3>
-                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
-                  Investissez dans une bonne base (primer) et un fond de teint adapté à votre carnation. 
-                  Les <strong className="text-white font-normal">palettes de fards</strong> offrent un meilleur rapport 
-                  qualité-prix que les produits unitaires.
-                </p>
-              </div>
-              
               <div className="space-y-4">
                 <h3 className="text-xl text-white font-medium flex items-center gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
                   Pour trouver son parfum signature
                 </h3>
                 <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
-                  Profitez des <strong className="text-white font-normal">coffrets parfum</strong> qui incluent souvent 
-                  le lait corps et le gel douche assortis pour un sillage qui dure. Les eaux de parfum ont 
-                  une meilleure tenue que les eaux de toilette.
+                  Commencez par un <strong className="text-white font-normal">petit format</strong> (20 ou 30 ml)
+                  pour tester le parfum sur votre peau plusieurs jours. Une eau de parfum tient mieux
+                  qu&apos;une eau de toilette — mais coûte plus cher : à vous de choisir votre équilibre.
                 </p>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="text-xl text-white font-medium flex items-center gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
-                  Pour des cheveux en pleine santé
+                  Pour payer le bon prix
                 </h3>
                 <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
-                  Adaptez votre routine à votre <strong className="text-white font-normal">type de cheveux</strong> : 
-                  shampoings hydratants pour les cheveux secs, purifiants pour les racines grasses. 
-                  Un masque hebdomadaire et un sérum sans rinçage font toute la différence.
+                  Comparez toujours <strong className="text-white font-normal">à contenance identique</strong> entre
+                  les enseignes, et vérifiez l&apos;historique de prix sur la fiche : un prix barré permanent
+                  n&apos;est pas une promo. Le prix au millilitre départage les formats.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour un budget maîtrisé
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Notre sélection de <Link href="/parfums-moins-de-50-euros" className="text-white font-normal underline decoration-white/30 underline-offset-4 hover:decoration-white">parfums à moins de 50&nbsp;€</Link>{' '}
+                  ne référence que des flacons de 20 ml et plus, vendus par les enseignes officielles —
+                  jamais de miniatures piège ni de revendeurs douteux.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xl text-white font-medium flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4a855]" />
+                  Pour choisir la bonne enseigne
+                </h3>
+                <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
+                  Aucune enseigne n&apos;est toujours la moins chère. Notre page{' '}
+                  <Link href="/sephora-vs-nocibe-vs-marionnaud" className="text-white font-normal underline decoration-white/30 underline-offset-4 hover:decoration-white">Sephora vs Nocibé vs Marionnaud</Link>{' '}
+                  compte les victoires de chacune en continu, à taille égale.
                 </p>
               </div>
             </div>
-            
+
             <div className="mt-20 pt-8 border-t border-dashed border-white/10 text-center">
               <p className="text-slate-500 text-sm">
-                Tous nos deals sont vérifiés quotidiennement. Les prix affichés incluent les promotions 
-                en cours chez Sephora, Nocibé et Marionnaud.
+                Prix relevés six fois par jour sur les fiches produit de Sephora, Nocibé et Marionnaud.
               </p>
             </div>
           </section>

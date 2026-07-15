@@ -360,11 +360,13 @@ export default async function HomePage() {
                   Voir les Offres <ArrowRight className="w-4 h-4" />
                 </span>
               </Link>
+              {/* /marques est l'axe de navigation réel (34 pages) — /categories n'a
+                  qu'une seule carte tant que le site est 100% parfums */}
               <Link
-                href="/categories"
+                href="/marques"
                 className="px-8 py-4 border border-white/20 text-white hover:bg-white/5 text-sm font-bold tracking-widest uppercase transition-colors"
               >
-                Parcourir
+                Par marque
               </Link>
             </div>
           </div>
@@ -591,7 +593,7 @@ export default async function HomePage() {
                   CODES <span className="italic font-normal text-[#d4a855]">PROMO</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-md border-l border-white/20 pl-6 leading-relaxed">
-                  Codes promo beauté vérifiés et testés. Économise sur Sephora, Nocibé et plus.
+                  Codes promo vérifiés et testés. Économise sur ton parfum chez Sephora, Nocibé et Marionnaud.
                 </p>
               </div>
               <Link
@@ -714,7 +716,7 @@ export default async function HomePage() {
                   GUIDES <span className="italic font-normal text-white">D&apos;ACHAT</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-md border-l border-white/20 pl-6 leading-relaxed">
-                  Nos experts beauté t&apos;aident à choisir les meilleurs produits selon ton type de peau, tes besoins et ton budget.
+                  On t&apos;aide à choisir ton parfum selon tes goûts, l&apos;occasion et ton budget — avec les vrais prix en face.
                 </p>
               </div>
               <Link

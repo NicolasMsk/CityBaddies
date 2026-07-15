@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'À Propos de City Baddies | L\'Expert des Deals Beauté',
-    description: 'Plus qu\'un comparateur, une équipe passionnée au service de votre budget beauté. Découvrez comment on déniche les meilleures affaires.',
+    description: 'Plus qu\'un comparateur, une équipe passionnée au service de votre budget parfum. Découvrez comment on relève et compare les prix.',
     url: `${BASE_URL}/about`,
     type: 'website',
   },
@@ -78,7 +78,7 @@ export default function AboutPage() {
             
             <p className="text-xl md:text-2xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed">
               City Baddies n&apos;est pas un simple comparateur. <br />
-              <span className="text-white">C&apos;est votre concierge privé pour l&apos;excellence beauté au meilleur prix.</span>
+              <span className="text-white">C&apos;est votre concierge privé pour le parfum au meilleur prix.</span>
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function AboutPage() {
              <h2 className="text-3xl md:text-4xl font-thin mb-8">Pourquoi <span className="italic font-normal font-serif text-[#d4a855]">City Baddies</span> ?</h2>
              <p className="text-neutral-400 mb-6 leading-relaxed text-lg font-light">
                Parce que le luxe ne devrait pas être une question de budget, mais de savoir-faire. 
-               Nous croyons que l&apos;accès aux meilleurs produits de soin et maquillage est un droit, pas un privilège réservé à celles qui ne regardent pas les étiquettes.
+               Nous croyons que l&apos;accès aux grands parfums est un droit, pas un privilège réservé à celles qui ne regardent pas les étiquettes.
              </p>
              <p className="text-neutral-400 leading-relaxed text-lg font-light">
                Notre standard est simple : <span className="text-white font-medium">si nous ne l&apos;achèterions pas pour nous-mêmes, vous ne le verrez pas ici.</span>
@@ -183,7 +183,7 @@ export default function AboutPage() {
                   <span className="text-[#d4a855] font-serif italic text-2xl opacity-50 group-hover:opacity-100 transition-opacity">03.</span>
                   <div>
                     <strong className="text-white block mb-2 tracking-wide uppercase text-sm">Curation Humaine</strong>
-                    <span className="text-neutral-500 text-sm leading-relaxed">Notre équipe valide l&apos;intérêt du produit. Est-ce une teinte universelle ? Une formule clean ? Une marque désirable ? Si le produit est "cheap", il est écarté.</span>
+                    <span className="text-neutral-500 text-sm leading-relaxed">Notre équipe valide chaque correspondance. Est-ce exactement le même parfum, la même concentration, la même contenance ? Un dérivé ou un flanker n&apos;est jamais compté comme l&apos;original.</span>
                   </div>
                 </li>
               </ul>
@@ -205,7 +205,7 @@ export default function AboutPage() {
                     </li>
                     <li className="flex items-center gap-4 group">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />
-                      <span className="group-hover:text-white transition-colors">Les teintes invendables (fond de teint orange, rouge à lèvre improbable...).</span>
+                      <span className="group-hover:text-white transition-colors">Les prix barrés fantaisistes qui n&apos;ont jamais été pratiqués (notre historique les démasque).</span>
                     </li>
                     <li className="flex items-center gap-4 group">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#9b1515] group-hover:scale-150 transition-transform" />

@@ -324,7 +324,7 @@ export default function SignUpPage() {
                 className="mt-0.5 w-4 h-4 rounded border-white/10 bg-white/5 text-[#d4a855] focus:ring-[#d4a855] focus:ring-offset-0 focus:ring-offset-black cursor-pointer"
               />
               <label htmlFor="newsletter" className="text-xs text-neutral-500 leading-relaxed cursor-pointer">
-                <span className="text-[#d4a855]">✨</span> Je souhaite recevoir la newsletter avec les meilleurs deals beauté
+                <span className="text-[#d4a855]">✨</span> Je souhaite recevoir la newsletter avec les meilleurs prix parfums
               </label>
             </div>
 

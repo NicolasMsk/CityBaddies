@@ -12,6 +12,9 @@ Ce que le site fait :
 ## Pages principales
 
 - [Tous les parfums comparés](https://citybaddies.com/produits) : liste des parfums suivis, avec meilleur prix actuel
+- [Marques](https://citybaddies.com/marques) : une page par maison (Chanel, Dior, Guerlain…) avec les prix actuels de chaque parfum
+- [Sephora vs Nocibé vs Marionnaud](https://citybaddies.com/sephora-vs-nocibe-vs-marionnaud) : quelle enseigne est la moins chère — victoires et écarts recalculés à chaque relevé
+- [Parfums à moins de 50 €](https://citybaddies.com/parfums-moins-de-50-euros) : liste vivante des parfums de marque sous 50 € (formats ≥ 20 ml)
 - [Méthodologie](https://citybaddies.com/methodologie) : comment les prix sont relevés, archivés et comparés
 - [Guides d'achat](https://citybaddies.com/guides) : comparatifs et conseils parfums
 - [Codes promo](https://citybaddies.com/codes-promo) : codes vérifiés par enseigne

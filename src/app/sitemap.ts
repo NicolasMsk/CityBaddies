@@ -53,6 +53,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    // Pages contenu data-driven : chiffres recalculés à chaque relevé
+    {
+      url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
+      lastModified: dataDate,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/parfums-moins-de-50-euros`,
+      lastModified: dataDate,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
     {
       url: `${BASE_URL}/about`,
       lastModified: editorialDate,

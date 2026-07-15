@@ -18,11 +18,12 @@ export default function Footer() {
       { label: 'Tous les produits', href: '/produits' },
       { label: 'Par marque', href: '/marques' },
       { label: 'Guides d\'achat', href: '/guides' },
-      { label: 'Tendances', href: '/produits?hotOnly=true' },
+      { label: 'Le match des enseignes', href: '/sephora-vs-nocibe-vs-marionnaud' },
       { label: 'Par catégorie', href: '/categories' },
     ],
     'Parfums': [
       { label: 'Tous les parfums', href: '/categories/parfums' },
+      { label: 'À moins de 50 €', href: '/parfums-moins-de-50-euros' },
       { label: 'Eau de parfum', href: '/produits?category=parfums&subcategory=eau-de-parfum' },
       { label: 'Eau de toilette', href: '/produits?category=parfums&subcategory=eau-de-toilette' },
       { label: 'Coffrets', href: '/produits?category=parfums&subcategory=coffrets-parfums' },

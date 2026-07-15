@@ -108,42 +108,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  // --- SEO Landing Pages Premium : /deals?category=slug&brand=X ---
-  // Top marques par catégorie (minimum 3 deals actifs)
-  const brandCategoryData = await prisma.deal.findMany({
-    where: { status: 'ACTIVE' },
-    select: {
-      product: {
-        select: {
-          brand: true,
-          category: { select: { slug: true } },
-        },
-      },
+  // --- Pages marques : /marques + /marques/[slug] ---
+  // Remplacent les anciennes URLs à query-string /produits?category=…&brand=…
+  // (URL propre, contenu éditorial + prix temps réel, canonical dédié).
+  const activeBrands = await prisma.brand.findMany({
+    where: {
+      products: { some: { deals: { some: { status: 'ACTIVE', type: 'tracked' } } } },
     },
+    select: { slug: true, updatedAt: true },
+    orderBy: { name: 'asc' },
   });
 
-  const brandCategoryCounts: Record<string, number> = {};
-  for (const d of brandCategoryData) {
-    if (d.product.brand && d.product.category?.slug) {
-      const key = `${d.product.category.slug}|${d.product.brand}`;
-      brandCategoryCounts[key] = (brandCategoryCounts[key] || 0) + 1;
-    }
-  }
-
-  // Garder les combos avec 3+ deals, top 50
-  const dealsBrandPages: MetadataRoute.Sitemap = Object.entries(brandCategoryCounts)
-    .filter(([, count]) => count >= 3)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 50)
-    .map(([key]) => {
-      const [categorySlug, brand] = key.split('|');
-      return {
-        url: `${BASE_URL}/produits?category=${categorySlug}&brand=${encodeURIComponent(brand)}`,
-        lastModified: dataDate,
-        changeFrequency: 'daily' as const,
-        priority: 0.7,
-      };
-    });
+  const brandPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/marques`,
+      lastModified: dataDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    ...activeBrands.map((b) => ({
+      url: `${BASE_URL}/marques/${b.slug}`,
+      lastModified: dataDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    })),
+  ];
 
   // Récupérer les produits avec des deals actifs (pages produit)
   const activeProducts = await prisma.product.findMany({
@@ -211,7 +200,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticPages,
     ...categoryPages,
     ...dealsCategoryPages,   // /produits?category=parfums (indexable landing pages)
-    ...dealsBrandPages,       // /produits?category=parfums&brand=Guerlain (premium)
+    ...brandPages,            // /marques + /marques/chanel, dior, etc.
     ...productPages,
     ...guidePages,
     ...promoCodePages,        // /codes-promo + /codes-promo/sephora, nocibe, etc.

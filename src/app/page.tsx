@@ -392,7 +392,9 @@ export default async function HomePage() {
               {topBrands.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={`/produits?search=${encodeURIComponent(brand.name)}`}
+                  // Page marque dédiée (édito + prix temps réel) — bien meilleur
+                  // maillage interne qu'une URL de recherche.
+                  href={`/marques/${brand.slug}`}
                   className="group"
                 >
                   {brand.logoUrl ? (

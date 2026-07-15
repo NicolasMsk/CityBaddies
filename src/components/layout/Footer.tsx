@@ -16,6 +16,7 @@ export default function Footer() {
   const footerLinks = {
     'Explorer': [
       { label: 'Tous les produits', href: '/produits' },
+      { label: 'Par marque', href: '/marques' },
       { label: 'Guides d\'achat', href: '/guides' },
       { label: 'Tendances', href: '/produits?hotOnly=true' },
       { label: 'Par catégorie', href: '/categories' },

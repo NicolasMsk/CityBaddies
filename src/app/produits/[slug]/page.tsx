@@ -431,59 +431,68 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
           {bestDeal && (
             <section className="mb-12 sm:mb-16 md:mb-24">
               <figure className="relative border border-[#d4a855]/25 bg-gradient-to-b from-[#d4a855]/[0.05] to-transparent p-6 sm:p-8 md:p-10">
+                {/* Langage d'acheteuse, pas de jargon méthodo ("relevé", "écart max") :
+                    elle se demande « c'est où le moins cher, et ailleurs c'est combien ? » */}
                 <span className="absolute -top-3 left-6 sm:left-8 bg-[#0a0a0a] px-3 text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4a855]">
-                  Le relevé
+                  Où l&apos;acheter au meilleur prix
                 </span>
 
-                {/* Phrase réponse-directe — prix en Bodoni italique or */}
+                {/* Phrase réponse-directe — simple, citable, prix en Bodoni or */}
                 <p className="text-base sm:text-lg text-neutral-200 font-light leading-relaxed max-w-3xl">
-                  Le meilleur prix de {fullName}{bestSizeLabel ? ` en ${bestSizeLabel}` : ''} est{' '}
+                  Le meilleur prix de {fullName} est{' '}
                   <span className="font-serif italic text-[#d4a855] text-lg sm:text-xl whitespace-nowrap">{bestDeal.dealPrice.toFixed(2).replace('.', ',')} €</span>{' '}
                   chez <span className="text-white">{bestDeal.merchant.name}</span>
-                  {bestSeenAt ? `, relevé le ${bestSeenAt}` : ''}.{' '}
+                  {bestSizeLabel ? ` (flacon de ${bestSizeLabel})` : ''}
+                  {bestSeenAt ? `, prix vérifié le ${bestSeenAt}` : ''}.{' '}
                   {merchantCount > 1 && maxSpreadRow && maxSpreadRow.spread > 0 ? (
-                    <>À taille égale, l&apos;écart entre enseignes atteint{' '}
+                    <>Le même flacon peut coûter jusqu&apos;à{' '}
                     <span className="font-serif italic text-[#d4a855] whitespace-nowrap">{maxSpreadRow.spread.toFixed(2).replace('.', ',')} €</span>{' '}
-                    sur le {maxSpreadRow.label}.</>
+                    de plus dans une autre enseigne — mieux vaut comparer avant d&apos;acheter.</>
                   ) : null}
                 </p>
 
-                {/* Comparatif par taille — lignes aérées, prix en serif */}
+                {/* Par format : le moins cher vs le prix d'ailleurs (barré, comme en boutique) */}
                 {sizeRows.length > 1 && (
                   <div className="mt-8 overflow-x-auto">
-                    <div className="min-w-[440px]">
-                      <div className="grid grid-cols-[1fr_1.3fr_1.1fr_1fr] gap-x-4 pb-3 border-b border-white/10 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">
-                        <span>Taille</span>
-                        <span>Meilleur prix</span>
-                        <span>Enseigne</span>
-                        <span className="text-right">Écart max</span>
+                    <div className="min-w-[400px]">
+                      <div className="grid grid-cols-[0.7fr_1.6fr_1fr] gap-x-4 pb-3 border-b border-white/10 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">
+                        <span>Flacon</span>
+                        <span>Le moins cher</span>
+                        <span className="text-right">Ailleurs</span>
                       </div>
                       <div className="divide-y divide-white/5">
-                        {sizeRows.map(row => (
-                          <div key={row.label} className="grid grid-cols-[1fr_1.3fr_1.1fr_1fr] gap-x-4 items-baseline py-3.5 sm:py-4">
-                            <span className="text-sm font-light text-neutral-400">{row.label}</span>
-                            <span className="font-serif text-base sm:text-lg text-white">
-                              <span className="italic">{row.best.dealPrice.toFixed(2).replace('.', ',')} €</span>
-                            </span>
-                            <span className="text-sm font-light text-neutral-400">{row.best.merchant.name}</span>
-                            <span className="text-right">
-                              {row.spread > 0 ? (
-                                <span className="font-serif italic text-sm sm:text-base text-[#d4a855]">+{row.spread.toFixed(2).replace('.', ',')} €</span>
-                              ) : (
-                                <span className="text-neutral-700">—</span>
-                              )}
-                            </span>
-                          </div>
-                        ))}
+                        {sizeRows.map(row => {
+                          const maxPrice = row.best.dealPrice + row.spread;
+                          return (
+                            <div key={row.label} className="grid grid-cols-[0.7fr_1.6fr_1fr] gap-x-4 items-baseline py-3.5 sm:py-4">
+                              <span className="text-sm font-light text-neutral-300">{row.label}</span>
+                              <span className="text-sm font-light text-neutral-400">
+                                <span className="font-serif italic text-base sm:text-lg text-white">{row.best.dealPrice.toFixed(2).replace('.', ',')} €</span>
+                                {' '}chez {row.best.merchant.name}
+                              </span>
+                              <span className="text-right">
+                                {row.spread > 0 ? (
+                                  <span className="text-sm font-light text-neutral-500">
+                                    jusqu&apos;à <span className="line-through">{maxPrice.toFixed(2).replace('.', ',')} €</span>
+                                  </span>
+                                ) : row.offerCount > 1 ? (
+                                  <span className="text-[11px] font-light text-neutral-600">même prix partout</span>
+                                ) : (
+                                  <span className="text-[11px] font-light text-neutral-600">une seule enseigne</span>
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 )}
 
                 <figcaption className="mt-6 text-xs font-light italic text-neutral-500 tracking-wide">
-                  Prix relevés six fois par jour sur les fiches officielles, comparés à contenance identique.{' '}
+                  Prix vérifiés six fois par jour chez Sephora, Nocibé et Marionnaud.{' '}
                   <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">
-                    Notre méthodologie
+                    Comment on compare
                   </Link>
                 </figcaption>
               </figure>

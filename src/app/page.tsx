@@ -405,7 +405,12 @@ export default async function HomePage() {
                       alt={brand.name}
                       width={80}
                       height={32}
-                      className="h-6 md:h-8 w-auto object-contain opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300"
+                      // brightness-0 invert : les wordmarks (noirs/transparents) deviennent
+                      // des silhouettes blanches — lisibles sur fond sombre, rendu couture.
+                      // Exception 'kenzo' (boîte rouge) : affiché tel quel.
+                      className={`h-6 md:h-8 w-auto object-contain opacity-50 group-hover:opacity-100 transition-all duration-300 ${
+                        brand.slug === 'kenzo' ? '' : 'brightness-0 invert'
+                      }`}
                     />
                   ) : (
                     <span className="text-sm md:text-base font-light text-neutral-600 group-hover:text-[#d4a855] transition-colors tracking-wider uppercase">

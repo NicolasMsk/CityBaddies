@@ -48,9 +48,14 @@ async function getBrands() {
         signature: BRAND_CONTENT[b.slug]?.signature || null,
         count: b.products.length,
         fromPrice: prices.length ? Math.min(...prices) : null,
+        logoUrl: b.logoUrl,
       };
     });
 }
+
+// Logos "en boîte" (fond coloré intégré, ex. Kenzo blanc-sur-rouge) : le filtre
+// brightness-0/invert les transformerait en pavé blanc — on les affiche tels quels.
+const BOXED_LOGOS = new Set(['kenzo']);
 
 export default async function MarquesPage() {
   const brands = await getBrands();
@@ -99,14 +104,30 @@ export default async function MarquesPage() {
               <Link
                 key={b.slug}
                 href={`/marques/${b.slug}`}
-                className="group bg-[#0a0a0a] p-6 hover:bg-white/[0.04] transition-colors flex flex-col justify-between min-h-[140px]"
+                className="group bg-[#0a0a0a] p-6 hover:bg-white/[0.04] transition-colors flex flex-col justify-between min-h-[170px]"
               >
                 <div>
-                  <span className="block font-serif text-xl text-white group-hover:text-[#d4a855] transition-colors">
-                    {b.displayName}
-                  </span>
+                  {/* Logo maison en silhouette blanche (brightness-0 invert sur les
+                      wordmarks noirs/transparents) ; fallback = nom serif seul */}
+                  {b.logoUrl ? (
+                    <span className="block h-9 mb-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={b.logoUrl}
+                        alt={`Logo ${b.displayName}`}
+                        className={`h-full w-auto max-w-[150px] object-contain object-left opacity-75 group-hover:opacity-100 transition-opacity ${
+                          BOXED_LOGOS.has(b.slug) ? '' : 'brightness-0 invert'
+                        }`}
+                        loading="lazy"
+                      />
+                    </span>
+                  ) : (
+                    <span className="block font-serif text-xl text-white group-hover:text-[#d4a855] transition-colors mb-2">
+                      {b.displayName}
+                    </span>
+                  )}
                   {b.signature && (
-                    <span className="block text-neutral-500 text-xs font-light mt-2 leading-relaxed line-clamp-2">
+                    <span className="block text-neutral-500 text-xs font-light mt-1 leading-relaxed line-clamp-2">
                       {b.signature}
                     </span>
                   )}

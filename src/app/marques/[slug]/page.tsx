@@ -180,6 +180,18 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
               <span className="h-[1px] w-12 bg-[#d4a855]" />
               <span className="text-[#d4a855] text-xs font-bold tracking-[0.2em] uppercase">Maison</span>
             </div>
+            {/* Logo maison en silhouette blanche (les wordmarks Wikipédia sont
+                noirs/transparents → brightness-0 invert ; 'kenzo' = boîte rouge, tel quel) */}
+            {brand.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={brand.logoUrl}
+                alt={`Logo ${content.displayName}`}
+                className={`h-10 md:h-12 w-auto max-w-[220px] object-contain object-left mb-6 opacity-90 ${
+                  slug === 'kenzo' ? '' : 'brightness-0 invert'
+                }`}
+              />
+            )}
             <h1 className="text-4xl md:text-6xl font-serif text-white leading-tight mb-5">
               Parfums <span className="italic font-light">{content.displayName}</span>
             </h1>

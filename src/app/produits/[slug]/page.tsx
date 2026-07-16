@@ -164,6 +164,19 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     return {};
   };
 
+  // Politique de retour (recommandé "Fiches de marchand" GSC). Seule valeur
+  // VÉRIDIQUE pour les 3 enseignes : le droit de rétractation légal de 14 jours
+  // (art. L221-18 code de la conso) pour les achats en ligne. On ne déclare PAS
+  // shippingDetails : les frais de port varient par enseigne/seuil/opération et
+  // on ne les relève pas — un montant inventé serait faux.
+  const returnPolicy = {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: 'FR',
+    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays: 14,
+    returnMethod: 'https://schema.org/ReturnByMail',
+  };
+
   // Une Offer par marchand ; AggregateOffer (low/high/offerCount) dès qu'il y a ≥2 offres.
   const buildOffers = (deals: typeof product.deals) => {
     const offers = deals.map(deal => ({
@@ -176,6 +189,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
       priceValidUntil,
       availability: 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: deal.merchant.name },
+      hasMerchantReturnPolicy: returnPolicy,
     }));
     if (offers.length === 1) return offers[0];
     const prices = deals.map(d => d.dealPrice);

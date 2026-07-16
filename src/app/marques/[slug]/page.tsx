@@ -197,22 +197,24 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
             </h1>
             <p className="text-neutral-400 text-lg font-light italic mb-6">{content.signature}</p>
 
-            {/* Phrase réponse-directe — server-rendered, citable */}
-            <p className="font-mono text-xs text-neutral-400 tracking-wide border-l-2 border-[#d4a855]/40 pl-4 py-1">
+            {/* Phrase réponse-directe — server-rendered, citable.
+                Sans légère (pas de mono "technique") : gracieuse mais extractible. */}
+            <p className="text-sm font-light text-neutral-300 leading-relaxed border-l-2 border-[#d4a855]/40 pl-5 py-1.5">
               {rows.length} parfum{rows.length > 1 ? 's' : ''} {content.displayName} suivi{rows.length > 1 ? 's' : ''} —
-              meilleurs prix actuels de {fmt(minPrice)}&nbsp;€ à {fmt(maxPrice)}&nbsp;€
+              meilleurs prix actuels de <span className="font-serif italic text-[#d4a855]">{fmt(minPrice)}&nbsp;€</span> à{' '}
+              <span className="font-serif italic text-[#d4a855]">{fmt(maxPrice)}&nbsp;€</span>
               {freshLabel ? `, relevés le ${freshLabel}` : ''} chez Sephora, Nocibé et Marionnaud.
             </p>
           </div>
 
           {/* Édito */}
-          <div className="mb-14">
+          <div className="mb-16">
             <p className="text-neutral-300 font-light leading-relaxed text-base md:text-lg">{content.intro}</p>
           </div>
 
           {/* Tableau des parfums — prix temps réel, server-rendered */}
-          <section className="mb-16">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 mb-6">
+          <section className="mb-20">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 mb-8">
               Les parfums suivis — meilleur prix actuel
             </h2>
             <div className="flex flex-col divide-y divide-white/5 border-y border-white/10">
@@ -220,11 +222,11 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
                 <Link
                   key={r.slug}
                   href={`/produits/${r.slug}`}
-                  className="group flex items-center gap-4 sm:gap-6 py-4 hover:bg-white/[0.03] transition-colors px-2 -mx-2"
+                  className="group flex items-center gap-5 sm:gap-8 py-6 hover:bg-white/[0.03] transition-colors px-3 -mx-3"
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white rounded flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded flex-shrink-0 overflow-hidden flex items-center justify-center">
                     {r.image ? (
-                      <SafeImage src={r.image} alt={r.name} width={64} height={64} className="object-contain w-full h-full" />
+                      <SafeImage src={r.image} alt={r.name} width={80} height={80} className="object-contain w-full h-full" />
                     ) : (
                       <span className="font-serif text-neutral-300 text-xl">{content.displayName.charAt(0)}</span>
                     )}
@@ -233,25 +235,25 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
                     <span className="block text-white font-light text-sm sm:text-base truncate group-hover:text-[#d4a855] transition-colors">
                       {r.shortName}
                     </span>
-                    <span className="block font-mono text-[10px] text-neutral-500 mt-1">
+                    <span className="block text-[11px] font-light text-neutral-500 tracking-wide mt-1.5">
                       {r.merchantCount} enseigne{r.merchantCount > 1 ? 's' : ''}
                       {r.bestSize ? ` · dès le ${r.bestSize}` : ''}
                     </span>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span className="block text-white text-base sm:text-lg font-medium">
-                      dès {fmt(r.bestPrice)} €
+                    <span className="block font-serif text-lg sm:text-xl text-white">
+                      dès <span className="italic">{fmt(r.bestPrice)}&nbsp;€</span>
                     </span>
-                    <span className="block font-mono text-[10px] text-neutral-500 mt-0.5">
+                    <span className="block text-[11px] font-light text-neutral-500 tracking-wide mt-1">
                       chez {r.bestMerchant}
                     </span>
                   </div>
                 </Link>
               ))}
             </div>
-            <p className="font-mono text-[10px] text-neutral-600 mt-4 tracking-wide">
+            <p className="text-xs font-light italic text-neutral-500 mt-6 tracking-wide">
               Prix relevés six fois par jour, comparés à contenance identique.{' '}
-              <Link href="/methodologie" className="underline hover:text-neutral-400 transition-colors">Notre méthodologie</Link>
+              <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">Notre méthodologie</Link>
             </p>
           </section>
 

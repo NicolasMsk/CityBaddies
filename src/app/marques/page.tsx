@@ -98,51 +98,54 @@ export default async function MarquesPage() {
             </p>
           </div>
 
-          {/* Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 border border-white/10">
+          {/* Grid — cartes aérées (gap réel + padding généreux, pas de mur collé) */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {brands.map(b => (
               <Link
                 key={b.slug}
                 href={`/marques/${b.slug}`}
-                className="group bg-[#0a0a0a] p-6 hover:bg-white/[0.04] transition-colors flex flex-col justify-between min-h-[170px]"
+                className="group bg-white/[0.02] border border-white/10 hover:border-[#d4a855]/40 hover:bg-white/[0.05] transition-all duration-300 p-8 flex flex-col justify-between min-h-[200px]"
               >
                 <div>
                   {/* Logo maison en silhouette blanche (brightness-0 invert sur les
                       wordmarks noirs/transparents) ; fallback = nom serif seul */}
                   {b.logoUrl ? (
-                    <span className="block h-9 mb-4">
+                    <span className="block h-10 mb-6">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={b.logoUrl}
                         alt={`Logo ${b.displayName}`}
-                        className={`h-full w-auto max-w-[150px] object-contain object-left opacity-75 group-hover:opacity-100 transition-opacity ${
+                        className={`h-full w-auto max-w-[160px] object-contain object-left opacity-80 group-hover:opacity-100 transition-opacity ${
                           BOXED_LOGOS.has(b.slug) ? '' : 'brightness-0 invert'
                         }`}
                         loading="lazy"
                       />
                     </span>
                   ) : (
-                    <span className="block font-serif text-xl text-white group-hover:text-[#d4a855] transition-colors mb-2">
+                    <span className="block font-serif text-2xl text-white group-hover:text-[#d4a855] transition-colors mb-4">
                       {b.displayName}
                     </span>
                   )}
                   {b.signature && (
-                    <span className="block text-neutral-500 text-xs font-light mt-1 leading-relaxed line-clamp-2">
+                    <span className="block text-neutral-500 text-xs font-light leading-relaxed line-clamp-2">
                       {b.signature}
                     </span>
                   )}
                 </div>
-                <span className="block font-mono text-[10px] text-neutral-500 mt-4 tracking-wide">
+                {/* Ligne méta gracieuse : sans légère + prix en serif italique or */}
+                <span className="block text-xs font-light text-neutral-400 tracking-wide mt-6 pt-4 border-t border-white/5">
                   {b.count} parfum{b.count > 1 ? 's' : ''}
-                  {b.fromPrice != null ? ` · dès ${fmt(b.fromPrice)} €` : ''}
+                  {b.fromPrice != null && (
+                    <> · <span className="font-serif italic text-sm text-[#d4a855]">dès {fmt(b.fromPrice)} €</span></>
+                  )}
                 </span>
               </Link>
             ))}
           </div>
 
-          <p className="font-mono text-[10px] text-neutral-600 mt-6 tracking-wide">
+          <p className="text-xs font-light italic text-neutral-500 mt-8 tracking-wide">
             Prix relevés six fois par jour, comparés à contenance identique.{' '}
-            <Link href="/methodologie" className="underline hover:text-neutral-400 transition-colors">Notre méthodologie</Link>
+            <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">Notre méthodologie</Link>
           </p>
         </div>
       </div>

@@ -29,7 +29,8 @@ const CATEGORY_STYLES: Record<string, string> = {
   'soins-visage': 'text-violet-400 border-violet-400/20 bg-violet-500/10',
   'soins-corps': 'text-amber-400 border-amber-400/20 bg-amber-500/10',
   'cheveux': 'text-emerald-400 border-emerald-400/20 bg-emerald-500/10',
-  'parfums': 'text-indigo-400 border-indigo-400/20 bg-indigo-500/10',
+  // Or maison — le violet générique jurait avec la charte (site 100% parfums)
+  'parfums': 'text-[#d4a855] border-[#d4a855]/25 bg-[#d4a855]/10',
   'ongles': 'text-rose-400 border-rose-400/20 bg-rose-500/10',
   'accessoires': 'text-cyan-400 border-cyan-400/20 bg-cyan-500/10',
   'default': 'text-[#d4a855] border-[#d4a855]/20 bg-[#d4a855]/10',
@@ -48,8 +49,9 @@ async function getGuides() {
           },
         },
         orderBy: { rank: 'asc' },
-        take: 3,
+        take: 3, // vignettes seulement — le vrai compte vient de _count
       },
+      _count: { select: { products: true } },
     },
     orderBy: { publishedAt: 'desc' },
   });
@@ -108,8 +110,8 @@ export default async function GuidesPage() {
           </h1>
           
           <p className="text-lg md:text-xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed">
-            Pas de blabla, que des pépites. Nos experts analysent le marché pour dénicher 
-            la crème de la crème (littéralement).
+            Pas de blabla, que des pépites. Des classements parfums assumés,
+            adossés à nos relevés de prix — pas à des impressions.
           </p>
         </div>
       </section>
@@ -126,7 +128,7 @@ export default async function GuidesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {guides.map((guide, index) => {
               const catStyle = CATEGORY_STYLES[guide.category] || CATEGORY_STYLES['default'];
-              const productCount = guide.products.length;
+              const productCount = guide._count.products; // vrai total (products est tronqué à 3 vignettes)
               const isNew = index === 0;
 
               return (

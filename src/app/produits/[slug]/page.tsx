@@ -171,6 +171,8 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
       url: deal.productUrl || `${BASE_URL}/produits/${slug}`,
       priceCurrency: 'EUR',
       price: deal.dealPrice,
+      // validFrom = date du relevé réel (recommandé "Fiches de marchand" GSC)
+      ...(deal.lastSeenAt ? { validFrom: deal.lastSeenAt.toISOString().slice(0, 10) } : {}),
       priceValidUntil,
       availability: 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: deal.merchant.name },
@@ -308,6 +310,9 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
         return {
           '@type': 'Product',
           name: sizeLabel ? `${fullName} ${sizeLabel}` : fullName,
+          // description sur CHAQUE variante (recommandé "Fiches de marchand" GSC —
+          // celle du ProductGroup parent ne suffit pas à Google)
+          description: productBase.description,
           ...(sizeLabel ? { size: sizeLabel } : {}),
           ...gtinFields(v?.ean),
           sku: v?.id ?? product.id,

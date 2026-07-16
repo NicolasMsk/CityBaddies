@@ -212,10 +212,35 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
           </h2>
 
           {promoCodes.length === 0 ? (
-            <div className="text-center py-20 bg-white/[0.02] rounded-none border border-white/5">
-              <span className="block text-4xl font-serif text-white/20 mb-4">0</span>
-              <p className="text-neutral-400 font-light uppercase tracking-widest text-xs">Aucun code promo disponible</p>
-              <p className="text-neutral-600 text-[10px] mt-2 tracking-wide uppercase">Revenez bientôt</p>
+            /* État vide HONNÊTE — la marque, c'est « le vrai prix, pas le fake » :
+               on assume zéro code plutôt que de publier des codes morts. */
+            <div className="relative border border-[#d4a855]/25 bg-gradient-to-b from-[#d4a855]/[0.05] to-transparent p-8 sm:p-10">
+              <span className="absolute -top-3 left-8 bg-[#0a0a0a] px-3 text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4a855]">
+                Transparence
+              </span>
+              <p className="font-serif italic text-xl sm:text-2xl text-white/85 leading-snug mb-4">
+                Aucun code public vérifié en ce moment — et on préfère te le dire.
+              </p>
+              <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-2xl mb-8">
+                Les « codes {merchantName} -30% » qui traînent sur les sites de coupons sont presque
+                toujours morts ou pièges. Nous ne publions que des codes vérifiés. En attendant,
+                les vraies économies sont ailleurs : compare les prix relevés six fois par jour,
+                et lis les leviers ci-dessous.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/produits"
+                  className="px-6 py-3 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-neutral-200 transition-colors"
+                >
+                  Comparer les prix
+                </Link>
+                <Link
+                  href="/sephora-vs-nocibe-vs-marionnaud"
+                  className="px-6 py-3 border border-white/20 text-white text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-white/5 transition-colors"
+                >
+                  Le match des enseignes
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">

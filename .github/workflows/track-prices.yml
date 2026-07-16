@@ -72,3 +72,12 @@ jobs:
           github.event.inputs.merchant == '' ||
           github.event.inputs.merchant == matrix.merchant
         run: npx tsx src/scripts/enrich.ts ${{ matrix.merchant }} --limit 15
+
+      # Sync codes promo : les codes vus sur les fiches produit alimentent
+      # /codes-promo (auto-expiration dès qu'ils disparaissent des fiches).
+      # Le sync est GLOBAL (tous marchands) → une seule exécution par run,
+      # arbitrairement rattachée au job marionnaud (le plus rapide, sans Akamai).
+      - name: Sync codes promo
+        continue-on-error: true
+        if: matrix.merchant == 'marionnaud'
+        run: npx tsx src/scripts/sync-promo-codes.ts

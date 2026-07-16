@@ -409,50 +409,6 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                 priceHistory={serializedPriceHistory}
               />
 
-              {/* ── Le relevé (server-rendered, citable par les moteurs IA) ──
-                   Phrase réponse-directe + comparatif express par taille : c'est le
-                   contenu que Google/ChatGPT/Perplexity peuvent extraire et citer,
-                   présent dans le HTML initial contrairement au comparateur interactif. */}
-              {bestDeal && (
-                <section className="mt-6 sm:mt-8 border-t border-white/10 pt-5 sm:pt-6">
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-3 sm:mb-4">
-                    Le relevé
-                  </h2>
-                  <p className="text-sm text-neutral-300 font-light leading-relaxed">
-                    Le meilleur prix de {fullName}{bestSizeLabel ? ` en ${bestSizeLabel}` : ''} est{' '}
-                    <strong className="font-medium text-white">{bestDeal.dealPrice.toFixed(2).replace('.', ',')} € chez {bestDeal.merchant.name}</strong>
-                    {bestSeenAt ? `, relevé le ${bestSeenAt}` : ''}.{' '}
-                    {merchantCount > 1 && maxSpreadRow && maxSpreadRow.spread > 0
-                      ? `À taille égale, l'écart entre enseignes atteint ${maxSpreadRow.spread.toFixed(2).replace('.', ',')} € sur le ${maxSpreadRow.label}.`
-                      : ''}
-                  </p>
-                  {sizeRows.length > 1 && (
-                    <div className="mt-4 overflow-x-auto">
-                      <table className="w-full text-left font-mono text-[11px] sm:text-xs">
-                        <thead>
-                          <tr className="text-neutral-600 uppercase tracking-widest text-[9px]">
-                            <th className="py-1.5 pr-4 font-medium">Taille</th>
-                            <th className="py-1.5 pr-4 font-medium">Meilleur prix</th>
-                            <th className="py-1.5 pr-4 font-medium">Enseigne</th>
-                            <th className="py-1.5 font-medium">Écart max</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-neutral-400">
-                          {sizeRows.map(row => (
-                            <tr key={row.label} className="border-t border-white/5">
-                              <td className="py-1.5 pr-4">{row.label}</td>
-                              <td className="py-1.5 pr-4 text-white">{row.best.dealPrice.toFixed(2).replace('.', ',')} €</td>
-                              <td className="py-1.5 pr-4">{row.best.merchant.name}</td>
-                              <td className="py-1.5">{row.spread > 0 ? `${row.spread.toFixed(2).replace('.', ',')} €` : '—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              )}
-
               {/* Category tag */}
               <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-white/10">
                 <Link href={`/produits?category=${product.category?.slug}`} className="hover:text-white transition-colors">
@@ -468,6 +424,72 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
+          {/* ── Le relevé (server-rendered, citable par les moteurs IA) ──
+               Phrase réponse-directe + comparatif par taille, en PLEINE LARGEUR :
+               sorti de la colonne pricing (trop chargée) et habillé en encadré
+               couture — c'est LE contenu que Google/ChatGPT/Perplexity extraient. */}
+          {bestDeal && (
+            <section className="mb-12 sm:mb-16 md:mb-24">
+              <figure className="relative border border-[#d4a855]/25 bg-gradient-to-b from-[#d4a855]/[0.05] to-transparent p-6 sm:p-8 md:p-10">
+                <span className="absolute -top-3 left-6 sm:left-8 bg-[#0a0a0a] px-3 text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4a855]">
+                  Le relevé
+                </span>
+
+                {/* Phrase réponse-directe — prix en Bodoni italique or */}
+                <p className="text-base sm:text-lg text-neutral-200 font-light leading-relaxed max-w-3xl">
+                  Le meilleur prix de {fullName}{bestSizeLabel ? ` en ${bestSizeLabel}` : ''} est{' '}
+                  <span className="font-serif italic text-[#d4a855] text-lg sm:text-xl whitespace-nowrap">{bestDeal.dealPrice.toFixed(2).replace('.', ',')} €</span>{' '}
+                  chez <span className="text-white">{bestDeal.merchant.name}</span>
+                  {bestSeenAt ? `, relevé le ${bestSeenAt}` : ''}.{' '}
+                  {merchantCount > 1 && maxSpreadRow && maxSpreadRow.spread > 0 ? (
+                    <>À taille égale, l&apos;écart entre enseignes atteint{' '}
+                    <span className="font-serif italic text-[#d4a855] whitespace-nowrap">{maxSpreadRow.spread.toFixed(2).replace('.', ',')} €</span>{' '}
+                    sur le {maxSpreadRow.label}.</>
+                  ) : null}
+                </p>
+
+                {/* Comparatif par taille — lignes aérées, prix en serif */}
+                {sizeRows.length > 1 && (
+                  <div className="mt-8 overflow-x-auto">
+                    <div className="min-w-[440px]">
+                      <div className="grid grid-cols-[1fr_1.3fr_1.1fr_1fr] gap-x-4 pb-3 border-b border-white/10 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">
+                        <span>Taille</span>
+                        <span>Meilleur prix</span>
+                        <span>Enseigne</span>
+                        <span className="text-right">Écart max</span>
+                      </div>
+                      <div className="divide-y divide-white/5">
+                        {sizeRows.map(row => (
+                          <div key={row.label} className="grid grid-cols-[1fr_1.3fr_1.1fr_1fr] gap-x-4 items-baseline py-3.5 sm:py-4">
+                            <span className="text-sm font-light text-neutral-400">{row.label}</span>
+                            <span className="font-serif text-base sm:text-lg text-white">
+                              <span className="italic">{row.best.dealPrice.toFixed(2).replace('.', ',')} €</span>
+                            </span>
+                            <span className="text-sm font-light text-neutral-400">{row.best.merchant.name}</span>
+                            <span className="text-right">
+                              {row.spread > 0 ? (
+                                <span className="font-serif italic text-sm sm:text-base text-[#d4a855]">+{row.spread.toFixed(2).replace('.', ',')} €</span>
+                              ) : (
+                                <span className="text-neutral-700">—</span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <figcaption className="mt-6 text-xs font-light italic text-neutral-500 tracking-wide">
+                  Prix relevés six fois par jour sur les fiches officielles, comparés à contenance identique.{' '}
+                  <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">
+                    Notre méthodologie
+                  </Link>
+                </figcaption>
+              </figure>
+            </section>
+          )}
+
           {/* ── Details Grid ── */}
           <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-24 mb-12 sm:mb-16 md:mb-24">
             {/* Left Column: Analysis & Description */}
@@ -475,8 +497,8 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               {/* ── Why Good Deal (AI analysis) ── */}
               {bestDeal.whyGoodDeal && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
-                    Notre analyse
+                  <h2 className="font-serif text-xl sm:text-2xl text-white mb-4 sm:mb-6">
+                    Notre <span className="italic font-light text-white/70">analyse</span>
                   </h2>
                   <div
                     className="text-neutral-300 font-light text-sm leading-loose prose prose-invert prose-sm max-w-none"
@@ -488,8 +510,8 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               {/* ── Product Description ── */}
               {(product.seoDescription || product.description) && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
-                    Description
+                  <h2 className="font-serif text-xl sm:text-2xl text-white mb-4 sm:mb-6">
+                    Le <span className="italic font-light text-white/70">parfum</span>
                   </h2>
                   <div className="text-neutral-400 font-light text-sm leading-loose">
                     {product.seoDescription || product.description}
@@ -503,8 +525,8 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               {/* ── Ingredients ── */}
               {product.ingredients && (
                 <section>
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-500 mb-4 sm:mb-6">
-                    Ingrédients (INCI)
+                  <h2 className="font-serif text-xl sm:text-2xl text-white mb-4 sm:mb-6">
+                    Composition <span className="italic font-light text-white/70">(INCI)</span>
                   </h2>
                   <div className="text-neutral-500 font-light text-xs leading-loose">
                     {product.ingredients}

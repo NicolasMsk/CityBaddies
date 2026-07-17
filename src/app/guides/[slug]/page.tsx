@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import { ArrowLeft, ArrowRight, Calendar, BookOpen, Tag, ExternalLink, Crown, Star, Sparkles, CheckCircle2, AlertCircle, ChevronDown, Flame, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { sanitizeHtml } from '@/lib/sanitize';
+import { asArray } from '@/lib/json';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 
 // ISR : page mise en cache et régénérée toutes les 1800s (éditorial + prix des picks).
@@ -129,8 +131,8 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
 
   const relatedGuides = await getRelatedGuides(guide.category, guide.slug);
   const catStyle = CATEGORY_STYLES[guide.category] || CATEGORY_STYLES['default'];
-  const faq = (guide.faq as { question: string; answer: string }[] | null) || [];
-  const criteria = (guide.criteria as string[] | null) || [];
+  const faq = asArray<{ question: string; answer: string }>(guide.faq);
+  const criteria = asArray<string>(guide.criteria);
 
   // Schema SEO
   const articleSchema = {
@@ -227,7 +229,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
         
         {/* Intro */}
         <div className="prose prose-invert prose-lg max-w-none mb-16 first-letter:text-5xl first-letter:font-bold first-letter:text-[#d4a855] first-letter:mr-3 first-letter:float-left">
-          <div dangerouslySetInnerHTML={{ __html: guide.introduction }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(guide.introduction) }} />
         </div>
 
         {/* Le Classement */}
@@ -329,7 +331,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                        {/* Mini Review - Better readability */}
                        {item.miniReview && (
                          <div className="mb-8 text-neutral-400 leading-relaxed text-[15px] font-medium italic border-l-2 border-[#d4a855]/30 pl-6 py-1">
-                           <div dangerouslySetInnerHTML={{ __html: item.miniReview }} />
+                           <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.miniReview) }} />
                          </div>
                        )}
 

@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { sanitizeHtml } from '@/lib/sanitize';
+import { asArray } from '@/lib/json';
 import { getPromoPage, getPromoCodesByMerchantSlug, getAllPromoPages } from '@/lib/promo-queries';
 
 interface Props {
@@ -51,10 +53,11 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
   }
 
   // Cast des champs Json Prisma
-  const merchantAdvantages = page.merchantAdvantages as { icon?: string; title: string; text: string }[] | null;
-  const howToUse = page.howToUse as { step: number; title: string; description: string }[] | null;
-  const tips = page.tips as { title: string; content: string }[] | null;
-  const faq = page.faq as { question: string; answer: string }[] | null;
+  // asArray : garde anti-crash si le Json IA n'est pas un tableau (500 sinon).
+  const merchantAdvantages = asArray<{ icon?: string; title: string; text: string }>(page.merchantAdvantages);
+  const howToUse = asArray<{ step: number; title: string; description: string }>(page.howToUse);
+  const tips = asArray<{ title: string; content: string }>(page.tips);
+  const faq = asArray<{ question: string; answer: string }>(page.faq);
 
   const promoCodes = await getPromoCodesByMerchantSlug(slug);
 
@@ -196,7 +199,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
           <section className="max-w-4xl">
             <div
               className="text-xl text-neutral-400 font-light leading-relaxed prose prose-invert prose-p:text-neutral-400 prose-p:font-light max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.introduction }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.introduction) }}
             />
           </section>
         )}
@@ -361,7 +364,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
             </h2>
             <div
               className="max-w-4xl text-neutral-400 text-lg font-light leading-relaxed prose prose-invert prose-p:text-neutral-400 prose-p:font-light max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.merchantDescription }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.merchantDescription) }}
             />
           </section>
         )}
@@ -445,7 +448,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
             </h2>
              <div
                 className="prose prose-invert prose-lg max-w-4xl prose-p:text-neutral-400 prose-p:font-light prose-headings:font-thin prose-headings:tracking-wide prose-a:text-[#d4a855]"
-                dangerouslySetInnerHTML={{ __html: page.howToUseHtml }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.howToUseHtml) }}
               />
            </section>
         ))}
@@ -527,7 +530,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
                   </h3>
                   <div
                     className="text-neutral-500 font-light leading-relaxed text-sm group-hover:text-neutral-400 transition-colors prose prose-invert prose-sm prose-p:text-neutral-500 max-w-none"
-                    dangerouslySetInnerHTML={{ __html: page.shippingInfo }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.shippingInfo) }}
                   />
                 </div>
               )}
@@ -538,7 +541,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
                   </h3>
                   <div
                     className="text-neutral-500 font-light leading-relaxed text-sm group-hover:text-neutral-400 transition-colors prose prose-invert prose-sm prose-p:text-neutral-500 max-w-none"
-                    dangerouslySetInnerHTML={{ __html: page.returnPolicy }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.returnPolicy) }}
                   />
                 </div>
               )}
@@ -549,7 +552,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
                   </h3>
                   <div
                     className="text-neutral-500 font-light leading-relaxed text-sm group-hover:text-neutral-400 transition-colors prose prose-invert prose-sm prose-p:text-neutral-500 max-w-none"
-                    dangerouslySetInnerHTML={{ __html: page.loyaltyProgram }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.loyaltyProgram) }}
                   />
                 </div>
               )}
@@ -591,7 +594,7 @@ export default async function PromoCodeMerchantPage({ params }: Props) {
           <section className="max-w-4xl mx-auto text-center py-12 border-t border-white/5">
             <div
               className="text-xl md:text-2xl font-light italic text-neutral-400 leading-relaxed prose prose-invert prose-p:text-neutral-400 prose-p:font-light prose-p:italic max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.conclusion }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.conclusion) }}
             />
           </section>
         )}

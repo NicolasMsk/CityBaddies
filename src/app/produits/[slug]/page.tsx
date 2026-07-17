@@ -8,6 +8,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import ProductPricing from '@/components/deals/ProductPricing';
 import ProductImageCarousel from '@/components/deals/ProductImageCarousel';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 // Force dynamic
 // ISR : page mise en cache et régénérée toutes les 600s (prix relevés ~6x/jour).
@@ -119,7 +120,11 @@ async function getProductData(slug: string) {
         },
       },
       priceHistory: {
-        orderBy: { date: 'asc' },
+        // Borne : les 1000 relevés les + récents (croissance sinon illimitée →
+        // payload envoyé au client qui gonfle indéfiniment). Récupérés desc puis
+        // remis en ordre chronologique à la sérialisation.
+        orderBy: { date: 'desc' },
+        take: 1000,
       },
     },
   });
@@ -356,8 +361,9 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     };
   }
 
-  // Serialized price history for chart
-  const serializedPriceHistory = product.priceHistory.map(ph => ({
+  // Serialized price history for chart — remis en ordre chronologique
+  // (la requête récupère les plus récents en desc, cf. take:1000).
+  const serializedPriceHistory = [...product.priceHistory].reverse().map(ph => ({
     ...ph,
     date: ph.date.toISOString(),
   }));
@@ -530,7 +536,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                   </h2>
                   <div
                     className="text-neutral-300 font-light text-sm leading-loose prose prose-invert prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: bestDeal.whyGoodDeal }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(bestDeal.whyGoodDeal) }}
                   />
                 </section>
               )}

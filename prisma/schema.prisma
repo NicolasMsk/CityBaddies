@@ -323,6 +323,7 @@ model Deal {
   @@index([status, pricePerUnit])          // Deals par statut triés par prix/unité
   @@index([productId, status])             // Deals d'un produit par statut
   @@index([status, lastSeenAt])            // Deals par statut et dernière vue
+  @@index([status, type, dealPrice])       // Filtre le + fréquent (ACTIVE+tracked) trié par prix (marques, sitemap, syncs)
   @@unique([variantId, merchantId])        // Un seul deal par variante+marchand (upsert scraping)
 }
 

@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ExternalLink, ChevronDown, Tag, Info } from 'lucide-react';
-import PriceChart from './PriceChart';
 import type { PriceHistory } from '@/types';
+
+// Recharts (~100 kb + D3) sorti du bundle de CHAQUE fiche produit : chargé à la
+// demande, uniquement quand l'historique est réellement affiché (≥2 relevés).
+// ssr:false car le graphe est purement client (et évite un flash au montage).
+const PriceChart = dynamic(() => import('./PriceChart'), {
+  ssr: false,
+  loading: () => <div className="h-[260px] rounded-3xl bg-white/[0.02] animate-pulse" />,
+});
 
 // ── Types ──────────────────────────────────────────────────────────
 interface VariantData {
@@ -37,6 +45,25 @@ function releveLabel(iso?: string | null): string {
   if (h < 24) return `relevé il y a ${h} h`;
   const d = Math.floor(h / 24);
   return d === 1 ? 'relevé hier' : `relevé il y a ${d} j`;
+}
+
+/**
+ * Libellé de fraîcheur RELATIF — rendu client-only.
+ * Le HTML est figé par l'ISR (ex. "il y a 3 h" gelé pendant 10 min) : recalculer
+ * `Date.now()` au montage divergerait du HTML serveur → mismatch d'hydratation.
+ * On ne rend donc rien tant que le composant n'est pas monté (SSR + 1er rendu
+ * client identiques = vides), puis on affiche l'heure réelle côté client.
+ */
+function ReleveLabel({ iso, isFirst }: { iso?: string | null; isFirst: boolean }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const label = mounted ? releveLabel(iso) : '';
+  if (!label) return null;
+  return (
+    <span className={`font-mono text-[9px] sm:text-[10px] tracking-wide ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
+      {label}
+    </span>
+  );
 }
 
 interface ProductPricingProps {
@@ -281,11 +308,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                       +{diffFromBest.toFixed(2)} € vs meilleur prix
                     </span>
                   )}
-                  {releveLabel(mp.lastSeenAt) && (
-                    <span className={`font-mono text-[9px] sm:text-[10px] tracking-wide ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
-                      {releveLabel(mp.lastSeenAt)}
-                    </span>
-                  )}
+                  <ReleveLabel iso={mp.lastSeenAt} isFirst={isFirst} />
                   {mp.promoCode && (
                     <div className={`flex items-center gap-1.5 sm:gap-2 ${isFirst ? 'text-amber-700' : 'text-[#d4a855]'}`}>
                       <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />

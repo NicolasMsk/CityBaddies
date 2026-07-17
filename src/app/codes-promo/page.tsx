@@ -5,21 +5,23 @@ import { getAllPromoPages, stripHtml } from '@/lib/promo-queries';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
-// Mois courant dans le title — jamais de date codée en dur (un title « Février »
-// affiché en juillet ruine la crédibilité fraîcheur en SERP).
-const moisCourant = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date());
-const moisTitre = moisCourant.charAt(0).toUpperCase() + moisCourant.slice(1);
-
-export const metadata: Metadata = {
-  title: `Codes Promo Parfumeries — ${moisTitre} | City Baddies`,
-  description: 'Tous les codes promo valides chez Sephora, Nocibé et Marionnaud pour payer ton parfum moins cher. Codes vérifiés régulièrement.',
-  alternates: { canonical: `${BASE_URL}/codes-promo` },
-  openGraph: {
-    title: 'Codes Promo Parfumeries — City Baddies',
-    description: 'Tous les codes promo Sephora, Nocibé et Marionnaud valides du moment',
-    url: `${BASE_URL}/codes-promo`,
-  },
-};
+// ⚠️ Le mois DOIT être calculé dans generateMetadata (évalué à chaque
+// (re)génération ISR), PAS en const de module : une const top-level est figée
+// au démarrage du process → « Février 2026 » resterait affiché en juillet.
+export function generateMetadata(): Metadata {
+  const mois = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date());
+  const moisTitre = mois.charAt(0).toUpperCase() + mois.slice(1);
+  return {
+    title: `Codes Promo Parfumeries — ${moisTitre} | City Baddies`,
+    description: 'Tous les codes promo valides chez Sephora, Nocibé et Marionnaud pour payer ton parfum moins cher. Codes vérifiés régulièrement.',
+    alternates: { canonical: `${BASE_URL}/codes-promo` },
+    openGraph: {
+      title: 'Codes Promo Parfumeries — City Baddies',
+      description: 'Tous les codes promo Sephora, Nocibé et Marionnaud valides du moment',
+      url: `${BASE_URL}/codes-promo`,
+    },
+  };
+}
 
 // ISR : page mise en cache et régénérée toutes les 1800s (codes synchronisés ~6x/jour).
 // Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).

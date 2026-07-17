@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { calculatePricePerUnit, findOrCreateVariant } from '@/lib/utils/volume';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 /**
  * POST /api/admin/deals
  * Crée un nouveau deal manuellement
  */
 export async function POST(request: Request) {
+  // Création de contenu arbitraire : réservée aux admins (était public).
+  const guard = await requireAdmin();
+  if ('error' in guard) return guard.error;
   try {
     const body = await request.json();
     

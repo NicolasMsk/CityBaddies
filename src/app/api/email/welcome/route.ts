@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendWelcomeEmail } from '@/lib/email';
+import { rateLimit, clientIp, tooMany } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Endpoint public (appelé après signup) qui envoie un email à une adresse
+    // arbitraire → rate-limit pour empêcher le spam via notre domaine.
+    if (!rateLimit(`welcome:${clientIp(request)}`, 3, 60_000)) return tooMany();
+
     const body = await request.json();
     const { email, username } = body;
 

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET() {
+  // Route exposait emails users + abonnés newsletter sans aucun contrôle (fuite RGPD).
+  const guard = await requireAdmin();
+  if ('error' in guard) return guard.error;
   try {
     // Dates pour les calculs
     const now = new Date();

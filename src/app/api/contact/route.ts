@@ -1,30 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resend, emailConfig } from '@/lib/email/resend';
 import { getContactConfirmEmailHtml, getContactConfirmEmailText } from '@/lib/email/templates/contact-confirm';
+import { rateLimit, clientIp, tooMany } from '@/lib/rate-limit';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Échappe le HTML des champs interpolés dans l'email admin (anti-injection HTML/phishing).
+const esc = (s: string) =>
+  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export async function POST(request: NextRequest) {
   try {
+    if (!rateLimit(`contact:${clientIp(request)}`, 3, 60_000)) return tooMany();
+
     const { name, email, subject, message } = await request.json();
 
-    if (!name || !email || !message) {
+    if (!name || !email || !message || typeof email !== 'string' || !EMAIL_RE.test(email)) {
       return NextResponse.json(
-        { error: 'Champs manquants' },
+        { error: 'Champs manquants ou email invalide' },
         { status: 400 }
       );
     }
+    if (String(message).length > 5000 || String(name).length > 200) {
+      return NextResponse.json({ error: 'Message trop long' }, { status: 400 });
+    }
 
-    // 1. Envoi à l'admin (toi)
+    // 1. Envoi à l'admin (toi) — champs échappés avant interpolation HTML
     const adminEmail = await resend.emails.send({
       from: emailConfig.from,
       to: 'citybaddies068@gmail.com', // Boîte mail du site
       replyTo: email, // Pour pouvoir répondre directement à l'utilisateur
-      subject: `[Contact] ${subject || 'Nouveau message'}`,
+      subject: `[Contact] ${esc(subject || 'Nouveau message').slice(0, 120)}`,
       html: `
         <h2>Nouveau message de contact</h2>
-        <p><strong>De:</strong> ${name} (${email})</p>
-        <p><strong>Sujet:</strong> ${subject}</p>
+        <p><strong>De:</strong> ${esc(name)} (${esc(email)})</p>
+        <p><strong>Sujet:</strong> ${esc(subject || '')}</p>
         <hr />
-        <p>${message.replace(/\n/g, '<br/>')}</p>
+        <p>${esc(message).replace(/\n/g, '<br/>')}</p>
       `,
     });
 

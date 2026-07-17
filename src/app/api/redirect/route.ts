@@ -6,20 +6,43 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url');
-  
+
   if (!url) {
     return NextResponse.json({ error: 'URL manquante' }, { status: 400 });
   }
 
   // Décoder l'URL
   const decodedUrl = decodeURIComponent(url);
-  
-  // Vérifier que c'est une URL valide
+
+  // ── Sécurité : ce endpoint ne doit rediriger QUE vers les marchands suivis ──
+  // Sans ça : open redirect (phishing sous la marque) + XSS via scheme
+  // javascript: (new URL('javascript:…') est "valide"). On impose http/https
+  // ET un domaine marchand whitelisté ; l'URL est ensuite échappée avant injection.
+  const ALLOWED_HOSTS = ['sephora.fr', 'nocibe.fr', 'marionnaud.fr'];
+  let parsed: URL;
   try {
-    new URL(decodedUrl);
+    parsed = new URL(decodedUrl);
   } catch {
     return NextResponse.json({ error: 'URL invalide' }, { status: 400 });
   }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return NextResponse.json({ error: 'Schéma non autorisé' }, { status: 400 });
+  }
+  const host = parsed.hostname.toLowerCase();
+  const allowed = ALLOWED_HOSTS.some((d) => host === d || host.endsWith('.' + d));
+  if (!allowed) {
+    return NextResponse.json({ error: 'Domaine non autorisé' }, { status: 400 });
+  }
+
+  // Échappements avant injection dans le HTML (attribut href) et dans le JS.
+  const safeUrl = parsed.href;
+  const htmlAttr = safeUrl
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/'/g, '&#39;');
+  const jsString = JSON.stringify(safeUrl); // guillemets inclus, échappé pour le contexte JS
 
   // Retourner une page HTML qui redirige avec JavaScript (contourne Cloudflare)
   const html = `
@@ -165,13 +188,13 @@ export async function GET(request: NextRequest) {
     <p>Nous vous connectons au marchand en toute sécurité.</p>
 
     <div class="footer">
-      <p>Si la page ne s'affiche pas, <a href="${decodedUrl}">cliquez ici</a></p>
+      <p>Si la page ne s'affiche pas, <a href="${htmlAttr}">cliquez ici</a></p>
     </div>
   </div>
 
   <script>
     setTimeout(function() {
-      window.location.replace("${decodedUrl}");
+      window.location.replace(${jsString});
     }, 800);
   </script>
 </body>

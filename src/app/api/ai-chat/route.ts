@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import prisma from '@/lib/prisma';
+import { rateLimit, clientIp, tooMany } from '@/lib/rate-limit';
 
 // Lazy initialization pour éviter l'erreur au build time
 let openai: OpenAI | null = null;
@@ -300,19 +301,30 @@ async function executeSearchDeals(params: {
 
 export async function POST(request: NextRequest) {
   try {
+    // Anti denial-of-wallet : endpoint public appelant gpt-4o. On borne le débit
+    // par IP et la taille des entrées, sinon une boucle génère une facture OpenAI
+    // illimitée + permet d'utiliser notre clé comme LLM-proxy gratuit.
+    if (!rateLimit(`ai-chat:${clientIp(request)}`, 8, 60_000)) return tooMany();
+
     const { message, history }: ChatRequest = await request.json();
 
-    if (!message) {
+    if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message requis' }, { status: 400 });
     }
+    if (message.length > 1000) {
+      return NextResponse.json({ error: 'Message trop long' }, { status: 400 });
+    }
+
+    // Historique borné : 10 derniers tours, 2000 caractères par message, rôles validés.
+    const safeHistory = (Array.isArray(history) ? history : [])
+      .slice(-10)
+      .filter((m) => (m?.role === 'user' || m?.role === 'assistant') && typeof m?.content === 'string')
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content.slice(0, 2000) }));
 
     // Construire l'historique des messages pour OpenAI
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       { role: 'system', content: SYSTEM_PROMPT },
-      ...history.map((msg) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-      })),
+      ...safeHistory,
       { role: 'user', content: message },
     ];
 

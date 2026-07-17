@@ -2,17 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resend, emailConfig } from '@/lib/email/resend';
 import { getNewsletterConfirmEmailHtml, getNewsletterConfirmEmailText } from '@/lib/email/templates/newsletter-confirm';
+import { rateLimit, clientIp, tooMany } from '@/lib/rate-limit';
+
+// Validation email raisonnable (l'ancien `includes('@')` laissait passer n'importe quoi).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(request: NextRequest) {
   try {
+    // Anti-abus : chaque appel déclenche 2 envois Resend (victime + admin) et
+    // écrit en base. Sans limite → mail-bombing de tiers + explosion du quota.
+    if (!rateLimit(`newsletter:${clientIp(request)}`, 3, 60_000)) return tooMany();
+
     const { email, source = 'website' } = await request.json();
 
-    if (!email || !email.includes('@')) {
+    if (!email || typeof email !== 'string' || !EMAIL_RE.test(email) || email.length > 254) {
       return NextResponse.json(
         { error: 'Email invalide' },
         { status: 400 }
       );
     }
+    // `source` est fourni par le client → borné et neutralisé (interpolé dans l'email admin).
+    const safeSource = String(source).replace(/[<>]/g, '').slice(0, 60);
 
     // Vérifier si déjà inscrit
     const existing = await prisma.newsletterSubscription.findUnique({
@@ -44,7 +54,7 @@ export async function POST(request: NextRequest) {
       await prisma.newsletterSubscription.create({
         data: {
           email: email.toLowerCase(),
-          source,
+          source: safeSource,
           isConfirmed: true,
           confirmedAt: new Date(),
         },
@@ -73,7 +83,7 @@ export async function POST(request: NextRequest) {
       html: `
         <h2>Nouvelle inscription à la newsletter</h2>
         <p><strong>Email :</strong> ${email}</p>
-        <p><strong>Source :</strong> ${source}</p>
+        <p><strong>Source :</strong> ${safeSource}</p>
         <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR')}</p>
       `,
     });

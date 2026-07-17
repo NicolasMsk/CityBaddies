@@ -81,3 +81,13 @@ jobs:
         continue-on-error: true
         if: matrix.merchant == 'marionnaud'
         run: npx tsx src/scripts/sync-promo-codes.ts
+
+      # Expiration des offres fantômes : passe EXPIRED les deals non revus depuis
+      # >3 j (parfum retiré d'une enseigne, blocage Akamai durable…). Global →
+      # une seule exécution par run. Réversible (le tracker les réactive si la
+      # fiche réapparaît). GARDE-FOU : sur un run où TOUS les marchands ont été
+      # bloqués, ne pas expirer en masse — le seuil 3 j absorbe déjà 18 crons ratés.
+      - name: Expire stale deals
+        continue-on-error: true
+        if: matrix.merchant == 'marionnaud'
+        run: npx tsx src/scripts/expire-stale-deals.ts

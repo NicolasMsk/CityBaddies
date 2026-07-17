@@ -6,18 +6,20 @@ import { fullProductName } from '@/lib/seo-config';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 900s (liste recalculée à la revalidation).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 900;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
-  title: 'Parfums de marque à moins de 50 € : la liste vérifiée',
+  title: 'Parfum femme à moins de 50 € : la liste vérifiée',
   description:
-    'Quels grands parfums (Chanel, Guerlain, Kenzo, Chloé…) trouve-t-on réellement sous 50 € ? Liste mise à jour à chaque relevé de prix, formats de 20 ml et plus uniquement.',
+    'Quels grands parfums femme (Chanel, Guerlain, Kenzo, Chloé…) trouve-t-on réellement sous 50 € ? Liste mise à jour à chaque relevé de prix, formats de 20 ml et plus uniquement.',
   alternates: { canonical: `${BASE_URL}/parfums-moins-de-50-euros` },
   openGraph: {
-    title: 'Parfums de marque à moins de 50 € : la liste vérifiée',
-    description: 'La liste vivante des vrais parfums sous 50 €, prix relevés 6 fois par jour.',
+    title: 'Parfum femme à moins de 50 € : la liste vérifiée',
+    description: 'La liste vivante des vrais parfums femme sous 50 €, prix relevés 6 fois par jour.',
     url: `${BASE_URL}/parfums-moins-de-50-euros`,
     type: 'article',
   },

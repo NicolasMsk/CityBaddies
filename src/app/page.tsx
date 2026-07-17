@@ -11,22 +11,26 @@ import JsonLd from '@/components/seo/JsonLd';
 import type { Metadata } from 'next';
 
 // Force dynamic - pas de pré-rendu au build
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 600s (prix relevés ~6x/jour).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 600;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
+// Positionnement assumé : parfums FEMME uniquement (stratégie mono-catégorie,
+// cohérente avec la marque) — le title/desc portent la requête « parfum femme ».
 export const metadata: Metadata = {
-  title: "City Baddies Parfums | Comparateur Prix Parfums — Sephora, Nocibé, Marionnaud",
-  description: "Comparez les prix de vos parfums préférés entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
+  title: "City Baddies | Comparateur Prix Parfum Femme — Sephora, Nocibé, Marionnaud",
+  description: "Comparez les prix de vos parfums femme préférés entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
   keywords: [
     "comparateur prix parfum",
-    "parfum pas cher",
+    "parfum femme pas cher",
+    "prix parfum femme",
     "promo parfum sephora",
     "parfum nocibé promo",
     "parfum marionnaud soldes",
     "eau de parfum prix",
     "eau de toilette promo",
-    "fragrance luxe pas cher",
     "historique prix parfum",
   ],
   alternates: {
@@ -317,13 +321,16 @@ export default async function HomePage() {
 
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
+           {/* LCP de la home : quality 80 suffit largement pour une photo de fond
+               assombrie par le dégradé — quality 100 doublait le poids pour rien. */}
            <Image
             src="/images/hero-bg-premium.png" // User requested baddies image
             alt="City Baddies Squad"
             fill
+            sizes="100vw"
             className="object-cover object-top"
             priority
-            quality={100}
+            quality={80}
           />
            {/* Sophisticated Gradient - Dark at bottom for text readability */}
            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent via-50%" />

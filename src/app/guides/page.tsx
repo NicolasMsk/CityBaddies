@@ -7,7 +7,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 1800s (éditorial).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 1800;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

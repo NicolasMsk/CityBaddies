@@ -6,7 +6,14 @@ import { ArrowRight, Star } from 'lucide-react';
 import DealCard from '@/components/deals/DealCard';
 import { Deal } from '@/types';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 900s (compteurs de deals).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 900;
+// generateStaticParams vide = opt-in ISR à la demande (Next 16) :
+// sans lui, la route resterait 100% dynamique malgré revalidate.
+export async function generateStaticParams() {
+  return [];
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

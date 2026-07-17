@@ -8,7 +8,14 @@ import { BRAND_CONTENT, fallbackBrandContent } from '@/lib/brand-content';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 600s (prix relevés ~6x/jour).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 600;
+// generateStaticParams vide = opt-in ISR à la demande (Next 16) :
+// sans lui, la route resterait 100% dynamique malgré revalidate.
+export async function generateStaticParams() {
+  return [];
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

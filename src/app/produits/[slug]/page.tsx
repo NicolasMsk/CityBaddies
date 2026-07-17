@@ -10,7 +10,14 @@ import ProductImageCarousel from '@/components/deals/ProductImageCarousel';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 
 // Force dynamic
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 600s (prix relevés ~6x/jour).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 600;
+// generateStaticParams vide = opt-in ISR à la demande (Next 16) :
+// sans lui, la route resterait 100% dynamique malgré revalidate.
+export async function generateStaticParams() {
+  return [];
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
@@ -409,8 +416,9 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                 priceHistory={serializedPriceHistory}
               />
 
-              {/* Category tag */}
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-white/10">
+              {/* Category tag + lien vers la page maison (maillage interne :
+                  chaque fiche irrigue sa page /marques/[slug]) */}
+              <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-white/10">
                 <Link href={`/produits?category=${product.category?.slug}`} className="hover:text-white transition-colors">
                   {categoryName}
                 </Link>
@@ -418,6 +426,17 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                   <>
                     <span className="text-neutral-700">/</span>
                     <span>{product.subcategory}</span>
+                  </>
+                )}
+                {product.brandRef?.slug && (
+                  <>
+                    <span className="text-neutral-700">/</span>
+                    <Link
+                      href={`/marques/${product.brandRef.slug}`}
+                      className="text-[#d4a855]/80 hover:text-[#d4a855] transition-colors"
+                    >
+                      Tous les parfums {brandName} →
+                    </Link>
                   </>
                 )}
               </div>

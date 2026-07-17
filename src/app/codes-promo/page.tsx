@@ -21,7 +21,9 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 1800s (codes synchronisés ~6x/jour).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 1800;
 
 export default async function CodesPromoPage() {
   const promoPages = await getAllPromoPages();

@@ -3,7 +3,9 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 3600s (stats globales).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 3600;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

@@ -6,7 +6,9 @@ import { fullProductName } from '@/lib/seo-config';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
 
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 900s (stats recalculées à la revalidation).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 900;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

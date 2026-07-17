@@ -5,7 +5,9 @@ import type { Metadata } from 'next';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 // Force dynamic - pas de pré-rendu au build
-export const dynamic = 'force-dynamic';
+// ISR : page mise en cache et régénérée toutes les 1800s (quasi statique).
+// Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
+export const revalidate = 1800;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 

@@ -302,8 +302,15 @@ async function main() {
   console.log(`erreurs         : ${summary.errors}`);
 
   await prisma.$disconnect();
-  // Succès si au moins 1 deal écrit, ou s'il n'y avait rien à faire (dry-run / 0 fiche).
-  process.exit(summary.written > 0 || summary.processed === 0 || dryRun ? 0 : 1);
+  // Un blocage Akamai (fréquent sur Sephora/Nocibé) est TRANSITOIRE et attendu :
+  // la stratégie incrémentale rattrape au run suivant. Il ne doit donc PAS faire
+  // rougir le job (sinon spam d'emails d'échec pour rien). On sort en 0 si le run
+  // a été bloqué. Seule une vraie panne d'extraction (0 offre écrite ALORS que
+  // rien n'était bloqué) reste un échec légitime à signaler.
+  const wasBlocked = merchants.some((m) => (blockEvents[m] || 0) >= MAX_BLOCK_EVENTS);
+  process.exit(
+    summary.written > 0 || summary.processed === 0 || dryRun || wasBlocked ? 0 : 1,
+  );
 }
 
 /**

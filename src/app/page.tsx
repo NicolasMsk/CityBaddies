@@ -873,10 +873,13 @@ export default async function HomePage() {
       {/* Visual Interlude - Baddies 5 */}
       <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
         <div className="relative aspect-[4/5] sm:aspect-[16/8] md:aspect-[21/9] w-full overflow-hidden rounded-2xl border border-white/10 group">
-           <img 
-              src="/images/baddies_5.png" 
-              alt="City Baddies Mood" 
-              className="w-full h-full object-cover"
+           {/* next/image : sert un webp optimisé (~150 Ko) au lieu du PNG 2,5 Mo brut */}
+           <Image
+              src="/images/baddies_5.png"
+              alt="City Baddies Mood"
+              fill
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              className="object-cover"
            />
            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl z-20 pointer-events-none" />
         </div>
@@ -977,10 +980,12 @@ export default async function HomePage() {
       <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-0 mt-32">
         {/* Ratio ajusté pour mobile (4/5 portrait) et desktop (2/1 paysage) */}
         <div className="relative aspect-[4/5] sm:aspect-[16/9] md:aspect-[2/1] w-full overflow-hidden rounded-2xl border border-white/5">
-           <img 
-              src="/images/baddies_2.png" 
-              alt="Community Mood" 
-              className="w-full h-full object-cover"
+           <Image
+              src="/images/baddies_2.png"
+              alt="Community Mood"
+              fill
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              className="object-cover"
            />
         </div>
       </div>

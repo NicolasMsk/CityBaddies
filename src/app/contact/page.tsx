@@ -47,7 +47,7 @@ export default function ContactPage() {
         <div className="max-w-md w-full relative z-10">
           <div className="bg-[#0a0a0a] border border-white/5 p-12 text-center shadow-2xl">
             <CheckCircle className="w-12 h-12 text-[#d4a855] mx-auto mb-8 animate-fade-in" />
-            <h1 className="text-2xl font-light uppercase tracking-widest text-white mb-4">Message envoyé !</h1>
+            <h2 className="text-2xl font-light uppercase tracking-widest text-white mb-4">Message envoyé !</h2>
             <p className="text-neutral-500 font-light mb-10 text-sm leading-relaxed">
               Merci de nous avoir contacté, {formData.name}.<br />
               Nous avons bien reçu ton message et nous te répondrons sous 24-48h à <span className="text-white">{formData.email}</span>.

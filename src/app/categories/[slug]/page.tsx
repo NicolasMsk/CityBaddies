@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowRight, Star } from 'lucide-react';
 import DealCard from '@/components/deals/DealCard';
@@ -242,10 +243,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#0a0a0a] z-10" />
           
           {headerImage ? (
-            <img 
-              src={headerImage} 
+            <Image
+              src={headerImage}
               alt={content?.heroTitle || category.name}
-              className="absolute inset-0 w-full h-full object-cover object-[center_25%]"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-[center_25%]"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-900" />

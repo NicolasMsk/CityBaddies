@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Sparkles, Shield, Users, Star } from 'lucide-react';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 import type { Metadata } from 'next';
@@ -103,10 +104,12 @@ export default function AboutPage() {
             <div className="relative order-1 md:order-2 group">
               <div className="absolute inset-0 bg-gradient-to-br from-[#d4a855] to-[#9b1515] opacity-20 blur-2xl rounded-full group-hover:opacity-30 transition-opacity duration-700" />
               <div className="relative aspect-square rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
-                 <img 
-                    src="/images/baddies_3.png" 
-                    alt="City Baddies Private Club" 
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                 <Image
+                    src="/images/baddies_3.png"
+                    alt="City Baddies Private Club"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 600px"
+                    className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                  />
                  <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center justify-end">
                     <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#d4a855] mb-2">Club Privé</div>

@@ -271,19 +271,30 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   }));
 
   // Priorité des marchands pour les images : Sephora → Marionnaud → Nocibé
-  const MERCHANT_IMAGE_PRIORITY: Record<string, number> = {
-    'cmluymd990000trhkr60e37nd': 0, // Sephora
-    'cmluya9ag0000trz04a2fx00m': 1, // Marionnaud
-    'cmluyeypq0000trwstrwoiqaz': 2, // Nocibé
+  // Nocibé EN PREMIER : c'est le seul CDN qui sert les robots (200). Marionnaud
+  // et Sephora (Akamai) renvoient 403 à Googlebot/crawlers → leurs images ne
+  // s'indexent pas et le champ `image` du schéma n'est pas validé. En priorisant
+  // Nocibé, le visuel principal (carrousel + image[0] du schéma) devient
+  // chargeable par les bots dès qu'une image Nocibé existe. (Affichage identique
+  // pour les vraies visiteuses : packshots sur fond blanc.)
+  // Priorité par HÔTE de l'URL (fiable), pas par merchantId (souvent vide) :
+  // Nocibé sert les robots (200) ; Marionnaud/Sephora renvoient 403 à Googlebot.
+  // On met donc les images Nocibé en tête → le visuel principal (carrousel +
+  // image[0] du schéma + Google Images) est chargeable par les bots dès qu'une
+  // image Nocibé existe. Rendu identique pour les visiteuses (packshots).
+  const imgBotRank = (url: string): number => {
+    if (/nocibe\./i.test(url)) return 0;      // accessible aux bots
+    if (/marionnaud\./i.test(url)) return 1;
+    if (/sephora\./i.test(url)) return 2;
+    return 3;
   };
 
   // Serialize product images for the carousel (HD quality + original pour fallback)
-  // Tri : d'abord par priorité marchand, puis par position au sein du même marchand
   const productImages: { url: string; originalUrl: string; alt: string | null; type: string }[] = [...product.images]
     .sort((a, b) => {
-      const prioA = a.merchantId ? (MERCHANT_IMAGE_PRIORITY[a.merchantId] ?? 99) : 99;
-      const prioB = b.merchantId ? (MERCHANT_IMAGE_PRIORITY[b.merchantId] ?? 99) : 99;
-      if (prioA !== prioB) return prioA - prioB;
+      const rA = imgBotRank(a.url);
+      const rB = imgBotRank(b.url);
+      if (rA !== rB) return rA - rB;
       return a.position - b.position;
     })
     .map(img => ({

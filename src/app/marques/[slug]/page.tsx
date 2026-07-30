@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const content = BRAND_CONTENT[slug] || fallbackBrandContent(brand.name);
   const n = brand.products.length;
   const title = `Parfums ${content.displayName} : prix comparés Sephora, Nocibé, Marionnaud`;
-  const description = `${n} parfum${n > 1 ? 's' : ''} ${content.displayName} suivi${n > 1 ? 's' : ''} : prix relevés 6 fois par jour chez Sephora, Nocibé et Marionnaud, comparés à taille égale, avec historique. ${content.signature}`;
+  const description = `${n} parfum${n > 1 ? 's' : ''} ${content.displayName} suivi${n > 1 ? 's' : ''} : prix relevés 6 fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines, comparés à taille égale, avec historique. ${content.signature}`;
 
   return {
     title,
@@ -222,7 +222,7 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
               {rows.length} parfum{rows.length > 1 ? 's' : ''} {content.displayName} suivi{rows.length > 1 ? 's' : ''} —
               meilleurs prix actuels de <span className="font-serif italic text-[#d4a855]">{fmt(minPrice)}&nbsp;€</span> à{' '}
               <span className="font-serif italic text-[#d4a855]">{fmt(maxPrice)}&nbsp;€</span>
-              {freshLabel ? `, relevés le ${freshLabel}` : ''} chez Sephora, Nocibé et Marionnaud.
+              {freshLabel ? `, relevés le ${freshLabel}` : ''} chez Sephora, Nocibé, Marionnaud et My-Origines.
             </p>
           </div>
 

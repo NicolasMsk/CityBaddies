@@ -20,7 +20,7 @@ on:
         required: true
         default: "nocibe"
         type: choice
-        options: ["nocibe", "marionnaud"]
+        options: ["nocibe", "marionnaud", "my-origines"]
       dry_run:
         description: "Simulation (n'écrit rien)"
         required: false

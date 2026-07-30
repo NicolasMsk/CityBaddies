@@ -8,7 +8,8 @@ import { fullProductName } from '@/lib/seo-config';
 export const revalidate = 3600;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
-const MERCHANT_LABEL: Record<string, string> = { sephora: 'Sephora', nocibe: 'Nocibé', marionnaud: 'Marionnaud' };
+const MERCHANT_LABEL: Record<string, string> = { sephora: 'Sephora', nocibe: 'Nocibé', marionnaud: 'Marionnaud', 'my-origines': 'My-Origines' };
+const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 
 function moisAnnee(d = new Date()) {
   const s = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(d);
@@ -19,7 +20,7 @@ export function generateMetadata(): Metadata {
   const mois = moisAnnee();
   return {
     title: `Observatoire des prix parfums — ${mois} | City Baddies`,
-    description: `L'étude mensuelle des prix parfums en France : quelle enseigne est la moins chère, l'écart moyen entre Sephora, Nocibé et Marionnaud, les plus fortes baisses et les prix barrés non conformes. Données ${mois}.`,
+    description: `L'étude mensuelle des prix parfums en France : quelle enseigne est la moins chère, l'écart moyen entre Sephora, Nocibé, Marionnaud et My-Origines, les plus fortes baisses et les prix barrés non conformes. Données ${mois}.`,
     alternates: { canonical: `${BASE_URL}/observatoire-des-prix` },
     openGraph: {
       title: `Observatoire des prix parfums — ${mois}`,
@@ -53,7 +54,9 @@ async function getObservatoire() {
     if (!byPV.has(k)) byPV.set(k, []);
     byPV.get(k)!.push(d);
   }
-  const wins: Record<string, number> = { sephora: 0, nocibe: 0, marionnaud: 0 };
+  // Toutes les enseignes présentes dans les deals (dynamique : 3, 4, ou +).
+  const wins: Record<string, number> = {};
+  for (const d of deals) if (d.merchant?.slug) wins[d.merchant.slug] ??= 0;
   let comparisons = 0, gapSum = 0;
   const gaps: { name: string; slug: string; size: string; min: number; max: number; gap: number; cheapest: string }[] = [];
   for (const ds of byPV.values()) {
@@ -67,8 +70,8 @@ async function getObservatoire() {
     const d0 = ds[0];
     gaps.push({ name: fullProductName(d0.product.brand, d0.product.name), slug: d0.product.slug, size: `${d0.variant!.volumeValue} ${d0.variant!.volumeUnit}`, min: s[0][1], max: s[s.length - 1][1], gap: s[s.length - 1][1] - s[0][1], cheapest: s[0][0] });
   }
-  const ranking = (['nocibe', 'sephora', 'marionnaud'] as const)
-    .map(slug => ({ slug, label: MERCHANT_LABEL[slug], wins: wins[slug] ?? 0, pct: comparisons ? Math.round((wins[slug] ?? 0) / comparisons * 100) : 0 }))
+  const ranking = Object.keys(wins)
+    .map(slug => ({ slug, label: merchantLabel(slug), wins: wins[slug], pct: comparisons ? Math.round(wins[slug] / comparisons * 100) : 0 }))
     .sort((a, b) => b.wins - a.wins);
   gaps.sort((a, b) => b.gap - a.gap);
   const seenG = new Set<string>();
@@ -144,7 +147,7 @@ export default async function ObservatoirePage() {
   const datasetSchema = {
     '@context': 'https://schema.org', '@type': 'Dataset',
     name: `Observatoire des prix parfums City Baddies — ${mois}`,
-    description: `Relevés de prix parfums (Sephora, Nocibé, Marionnaud) : ${o.comparisons} comparaisons à taille égale, écart moyen ${fmt(o.avgGap)} €, ${o.releves} relevés archivés. Mis à jour six fois par jour.`,
+    description: `Relevés de prix parfums (Sephora, Nocibé, Marionnaud, My-Origines) : ${o.comparisons} comparaisons à taille égale, écart moyen ${fmt(o.avgGap)} €, ${o.releves} relevés archivés. Mis à jour six fois par jour.`,
     url: `${BASE_URL}/observatoire-des-prix`,
     creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     dateModified: o.freshest?.toISOString(),
@@ -184,7 +187,7 @@ export default async function ObservatoirePage() {
               <span className="block text-3xl md:text-5xl italic font-light text-white/70 mt-3">Parfums — {mois}</span>
             </h1>
             <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
-              Chaque mois, ce que révèlent nos relevés de prix sur Sephora, Nocibé et Marionnaud :
+              Chaque mois, ce que révèlent nos relevés de prix sur Sephora, Nocibé, Marionnaud et My-Origines :
               qui est vraiment la moins chère, de combien, et quelles «&nbsp;promos&nbsp;» n&apos;en sont pas.
             </p>
           </div>
@@ -290,7 +293,7 @@ export default async function ObservatoirePage() {
                       <tr key={`${g.slug}-${g.size}`}>
                         <th scope="row" className="py-3.5 font-light"><Link href={`/produits/${g.slug}`} className="text-white hover:text-[#d4a855] transition-colors">{g.name}</Link></th>
                         <td className="py-3.5 text-sm font-light text-neutral-400 whitespace-nowrap">{g.size}</td>
-                        <td className="py-3.5 text-right text-sm font-light text-neutral-400 whitespace-nowrap">{fmt(g.min)} € · {MERCHANT_LABEL[g.cheapest] ?? g.cheapest}</td>
+                        <td className="py-3.5 text-right text-sm font-light text-neutral-400 whitespace-nowrap">{fmt(g.min)} € · {merchantLabel(g.cheapest)}</td>
                         <td className="py-3.5 text-right"><span className="font-serif italic text-[#d4a855] whitespace-nowrap">+{fmt(g.gap)} €</span></td>
                       </tr>
                     ))}
@@ -305,7 +308,7 @@ export default async function ObservatoirePage() {
             <h2 className="font-serif text-2xl text-white mb-4">Comment lire cet observatoire</h2>
             <p>
               Toutes les données viennent de nos relevés automatisés, six fois par jour, sur les fiches produit officielles
-              de Sephora, Nocibé et Marionnaud, comparées <strong className="text-white font-medium">à contenance identique</strong>.
+              de Sephora, Nocibé, Marionnaud et My-Origines, comparées <strong className="text-white font-medium">à contenance identique</strong>.
               Les baisses sont mesurées sur 30 jours glissants. La colonne «&nbsp;jamais relevé au-dessus de&nbsp;» reflète notre
               fenêtre d&apos;observation, pas l&apos;historique complet du produit. Rien n&apos;est estimé ni extrapolé.{' '}
               <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-white transition-colors">Méthodologie détaillée</Link>.

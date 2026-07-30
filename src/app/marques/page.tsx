@@ -13,11 +13,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 export const metadata: Metadata = {
   title: 'Toutes les marques de parfum comparées',
   description:
-    'Toutes les maisons de parfum suivies par City Baddies : Chanel, Dior, Guerlain, Lancôme, YSL… Prix relevés 6 fois par jour chez Sephora, Nocibé et Marionnaud.',
+    'Toutes les maisons de parfum suivies par City Baddies : Chanel, Dior, Guerlain, Lancôme, YSL… Prix relevés 6 fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines.',
   alternates: { canonical: `${BASE_URL}/marques` },
   openGraph: {
     title: 'Toutes les marques de parfum comparées | City Baddies',
-    description: 'Prix relevés 6 fois par jour chez Sephora, Nocibé et Marionnaud, maison par maison.',
+    description: 'Prix relevés 6 fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines, maison par maison.',
     url: `${BASE_URL}/marques`,
     type: 'website',
   },
@@ -96,7 +96,7 @@ export default async function MarquesPage() {
             </h1>
             <p className="text-neutral-400 font-light text-lg max-w-2xl">
               {brands.length} maisons suivies. Pour chacune : les parfums comparés, le meilleur prix actuel
-              chez Sephora, Nocibé et Marionnaud, et l&apos;historique des relevés.
+              chez Sephora, Nocibé, Marionnaud et My-Origines, et l&apos;historique des relevés.
             </p>
           </div>
 

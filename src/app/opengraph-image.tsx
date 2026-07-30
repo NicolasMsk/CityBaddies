@@ -120,9 +120,9 @@ export default async function Image() {
                 color: 'white',
               }}
             >
-              <div style={{ fontSize: 48, fontWeight: 300 }}>3</div>
-              <div style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                Sephora · Nocibé · Marionnaud
+              <div style={{ fontSize: 48, fontWeight: 300 }}>4</div>
+              <div style={{ fontSize: 13, color: '#666', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                Sephora · Nocibé · Marionnaud · My-Origines
               </div>
             </div>
           </div>

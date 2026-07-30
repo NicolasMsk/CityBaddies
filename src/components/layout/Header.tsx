@@ -223,7 +223,7 @@ export default function Header() {
                     «&nbsp;Le vrai prix,<br />pas le fake.&nbsp;»
                   </p>
                   <p className="font-mono text-[10px] text-neutral-500 leading-relaxed tracking-wide">
-                    Prix relevés 6×/jour chez Sephora, Nocibé et Marionnaud — chaque contenance, avec historique.
+                    Prix relevés 6×/jour chez Sephora, Nocibé, Marionnaud et My-Origines — chaque contenance, avec historique.
                   </p>
                 </div>
                 <Link

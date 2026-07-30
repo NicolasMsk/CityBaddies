@@ -54,15 +54,15 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     const categoryName = CATEGORY_SEO_NAMES[category] || category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ');
     if (brand) {
       title = `${brand} ${categoryName} — Comparer les Prix`;
-      description = `Comparez les prix ${brand} en ${categoryName.toLowerCase()} entre Sephora, Nocibé et Marionnaud. Trouvez le meilleur prix garanti.`;
+      description = `Comparez les prix ${brand} en ${categoryName.toLowerCase()} entre Sephora, Nocibé, Marionnaud et My-Origines. Trouvez le meilleur prix garanti.`;
     } else {
       title = `${categoryName} — Comparateur de Prix`;
-      description = `Comparez les prix ${categoryName.toLowerCase()} entre Sephora, Nocibé et Marionnaud. Offres vérifiées quotidiennement.`;
+      description = `Comparez les prix ${categoryName.toLowerCase()} entre Sephora, Nocibé, Marionnaud et My-Origines. Offres vérifiées quotidiennement.`;
     }
   } else {
     // ⚠️ Recentré parfums, et 3 enseignes uniquement (Notino n'est pas suivi).
     title = 'Tous les Parfums | Comparateur de Prix';
-    description = 'Comparez les prix des parfums entre Sephora, Nocibé et Marionnaud. Chaque contenance, prix relevés six fois par jour, avec historique.';
+    description = 'Comparez les prix des parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Chaque contenance, prix relevés six fois par jour, avec historique.';
   }
 
   if (page > 1) {
@@ -355,7 +355,7 @@ export default async function ProduitsPage({ searchParams }: PageProps) {
           <div className="text-neutral-400 font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
             {/* 3 enseignes suivies — Notino n'a jamais été relevé, ne pas le citer */}
             <p className="mb-4">
-              Comparez les prix entre <span className="text-white">Sephora, Nocibé et Marionnaud</span>.
+              Comparez les prix entre <span className="text-white">Sephora, Nocibé, Marionnaud et My-Origines</span>.
             </p>
             <p className="text-base text-neutral-500">
               Chaque contenance est relevée six fois par jour, avec historique. On te dit si c&apos;est vraiment une bonne affaire.

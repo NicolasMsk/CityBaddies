@@ -6,14 +6,14 @@ export const SEO_CONFIG = {
   siteUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com',
   
   // Description par défaut
-  defaultDescription: 'Comparez les prix de vos parfums entre Sephora, Nocibé et Marionnaud. Eau de parfum, eau de toilette, coffrets — historique des prix et vraies promos.',
+  defaultDescription: 'Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Eau de parfum, eau de toilette, coffrets — historique des prix et vraies promos.',
 
   // Mots-clés principaux
   primaryKeywords: [
     'comparateur prix parfum',
     'parfum pas cher',
     'eau de parfum promo',
-    'parfum sephora nocibé marionnaud',
+    'parfum sephora nocibé marionnaud my-origines',
     'fragrance luxe promotion',
   ],
   
@@ -30,7 +30,7 @@ export const SEO_CONFIG = {
   },
   
   // Enseignes partenaires
-  partners: ['Sephora', 'Nocibé', 'Marionnaud'],
+  partners: ['Sephora', 'Nocibé', 'Marionnaud', 'My-Origines'],
   
   // Couleurs de la marque (pour OG images, etc.)
   brandColors: {
@@ -49,7 +49,7 @@ export function generateTitle(pageTitle?: string): string {
 // Générateur de description avec mots-clés
 export function generateDescription(customDesc: string, includeKeywords = true): string {
   if (!includeKeywords) return customDesc;
-  return `${customDesc} Sephora, Nocibé, Marionnaud — City Baddies Parfums.`;
+  return `${customDesc} Sephora, Nocibé, Marionnaud, My-Origines — City Baddies Parfums.`;
 }
 
 /**
@@ -74,7 +74,7 @@ export const organizationSchema = {
   name: SEO_CONFIG.siteName,
   url: SEO_CONFIG.siteUrl,
   logo: `${SEO_CONFIG.siteUrl}/images/logo.png`,
-  description: "Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud. Historique des prix, analyse des promos et alertes prix sur vos fragrances préférées.",
+  description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, analyse des promos et alertes prix sur vos fragrances préférées.",
   email: SEO_CONFIG.contact.email,
   sameAs: Object.values(SEO_CONFIG.social).filter(Boolean),
   contactPoint: {

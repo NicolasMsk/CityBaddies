@@ -39,8 +39,8 @@
 import 'dotenv/config';
 import prisma from '../lib/prisma';
 
-type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora';
-const ALL_MERCHANTS: MerchantSlug[] = ['marionnaud', 'nocibe', 'sephora'];
+type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines';
+const ALL_MERCHANTS: MerchantSlug[] = ['marionnaud', 'nocibe', 'sephora', 'my-origines'];
 
 // UA desktop pour l'API Marionnaud (pas d'Akamai — fonctionne depuis toute IP).
 const DESKTOP_UA =
@@ -58,7 +58,19 @@ const NOCIBE_HEADERS = {
 
 const NOCIBE_THROTTLE_MS = 8000; // Akamai rate-limite → espacer les fiches Nocibé.
 const MARIONNAUD_THROTTLE_MS = 700; // API polie mais on reste correct.
+const MY_ORIGINES_THROTTLE_MS = 800; // Pas de WAF observé — poli.
 const FETCH_TIMEOUT_MS = 20000;
+
+// My-Origines : la recherche est rendue en JS ; l'endpoint SFCC Search-UpdateGrid
+// renvoie la grille de résultats en HTML. Les EAN ne sont PAS indexés par la
+// recherche mais figurent sur la fiche produit (dataLayer) → on cherche par
+// texte (marque+nom) puis on VÉRIFIE l'EAN sur chaque fiche candidate.
+const MY_ORIGINES_HEADERS = {
+  'User-Agent': MOBILE_UA,
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'fr-FR,fr;q=0.9',
+};
+const MY_ORIGINES_SEARCH = 'https://www.my-origines.com/on/demandware.store/Sites-MyOrigines_FR-Site/fr_FR/Search-UpdateGrid';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -278,6 +290,52 @@ async function resolveNocibeByEan(
   return { productUrl, searchUrl };
 }
 
+// ─── MY-ORIGINES (recherche texte + vérif EAN) ────────────────────────────────
+
+/** EAN-13 (préfixe 3) présents dans le HTML brut d'une fiche My-Origines. */
+function extractMyOriginesEans(html: string): string[] {
+  return [...new Set(html.match(/\b3\d{12}\b/g) ?? [])];
+}
+
+/** Liens fiche produit d'une grille de résultats : /fr/<slug>-<sku>.html (sku avec ≥1 chiffre). */
+function myOriginesProductLinks(html: string): string[] {
+  const raw = html.match(/\/fr\/[a-z0-9-]+-[0-9A-Za-z]*[0-9][0-9A-Za-z]*\.html/gi) ?? [];
+  const bad = /\/(delivery|store|find-a-store|declaration|return|marques|offres|bons-plans|search)/i;
+  return [...new Set(raw)].filter((u) => !bad.test(u));
+}
+
+/**
+ * Résout un parfum chez My-Origines à partir de ses EAN connus (best-effort).
+ * Recherche par TEXTE (marque + nom) → grille de candidats → on ouvre chaque
+ * fiche et on VÉRIFIE qu'un EAN connu y figure (un EAN identifie un produit+taille
+ * de façon unique → match infaillible). Retourne null si aucun match sûr.
+ */
+async function resolveMyOriginesBySearch(
+  eans: string[],
+  productName: string,
+): Promise<{ productUrl: string; searchUrl: string } | null> {
+  const eanSet = new Set(eans);
+  const searchUrl = `${MY_ORIGINES_SEARCH}?q=${encodeURIComponent(productName)}`;
+  const s = await safeFetch(searchUrl, MY_ORIGINES_HEADERS);
+  if (!s.text) return null;
+
+  const candidates = myOriginesProductLinks(s.text).slice(0, 8);
+  if (candidates.length === 0) return null;
+
+  for (const rel of candidates) {
+    await delay(MY_ORIGINES_THROTTLE_MS);
+    const url = `https://www.my-origines.com${rel}`;
+    const page = await safeFetch(url, MY_ORIGINES_HEADERS);
+    if (!page.text) continue;
+    const pageEans = extractMyOriginesEans(page.text);
+    if (pageEans.some((e) => eanSet.has(e))) {
+      return { productUrl: url, searchUrl };
+    }
+  }
+  console.warn(`[resolve] – ${productName} | aucune fiche My-Origines ne porte un EAN connu — non résolu`);
+  return null;
+}
+
 // ─── CHARGEMENT / EAN SOURCE ──────────────────────────────────────────────────
 
 interface QueueGroup {
@@ -322,6 +380,7 @@ async function upsertQueueLink(
   merchantSlug: MerchantSlug,
   productUrl: string,
   searchUrl: string,
+  method = 'ean-bridge',
 ): Promise<void> {
   await prisma.scrapingQueue.upsert({
     where: { productName_merchantSlug: { productName, merchantSlug } },
@@ -330,7 +389,7 @@ async function upsertQueueLink(
       searchUrl,
       verified: true,
       confidence: 1,
-      method: 'ean-bridge',
+      method,
       status: 'pending',
       retryCount: 0,
       errorMessage: null,
@@ -342,7 +401,7 @@ async function upsertQueueLink(
       searchUrl,
       verified: true,
       confidence: 1,
-      method: 'ean-bridge',
+      method,
       status: 'pending',
     },
   });
@@ -476,16 +535,69 @@ async function runNocibe(groups: Map<string, QueueGroup>, limit: number, dryRun:
   }
 }
 
+/**
+ * My-Origines : parfums SANS my-origines mais AVEC un marchand source d'EAN
+ * (nocibe ou marionnaud). EAN pris dans ProductVariant, sinon lu chez le peer.
+ * Recherche texte + vérification EAN sur fiche (voir resolveMyOriginesBySearch).
+ */
+async function runMyOrigines(groups: Map<string, QueueGroup>, limit: number, dryRun: boolean, summary: Summary) {
+  const targets = [...groups.values()].filter(
+    (g) => !g.merchants.has('my-origines') && (g.merchants.has('nocibe') || g.merchants.has('marionnaud')),
+  );
+  console.log(`\n=== Cible MY-ORIGINES (recherche + vérif EAN) ===`);
+  console.log(`Parfums sans My-Origines mais avec une source d'EAN (candidats) : ${targets.length}`);
+
+  let count = 0;
+  for (const g of targets) {
+    if (count >= limit) break;
+    count++;
+    summary.processed++;
+
+    // EAN : d'abord ProductVariant, sinon peer (API Marionnaud, puis fiche Nocibé).
+    let eans = await storedEans(g.productName);
+    if (eans.length === 0 && g.merchants.has('marionnaud')) {
+      await delay(MARIONNAUD_THROTTLE_MS);
+      const ean = await fetchMarionnaudEanFromUrl(g.merchants.get('marionnaud')!.productUrl);
+      if (ean) eans = [ean];
+    }
+    if (eans.length === 0 && g.merchants.has('nocibe')) {
+      await delay(NOCIBE_THROTTLE_MS);
+      const fetched = await fetchNocibeEans(g.merchants.get('nocibe')!.productUrl);
+      if (fetched) eans = fetched;
+    }
+    if (eans.length === 0) {
+      console.log(`[resolve] – ${g.productName} | aucun EAN disponible — non résolu`);
+      summary.unresolved++;
+      continue;
+    }
+
+    const match = await resolveMyOriginesBySearch(eans, g.productName);
+    if (!match) {
+      summary.unresolved++;
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`[DRY] ${g.productName} -> my-origines ${match.productUrl}`);
+    } else {
+      await upsertQueueLink(g.productName, 'my-origines', match.productUrl, match.searchUrl, 'search-ean-verified');
+      console.log(`[resolve] ✓ ${g.productName} → ${match.productUrl}`);
+    }
+    summary.resolved++;
+    await delay(MY_ORIGINES_THROTTLE_MS);
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const targetIdx = args.indexOf('--target');
-  const target = (targetIdx >= 0 ? args[targetIdx + 1] : 'marionnaud') as 'marionnaud' | 'nocibe';
+  const target = (targetIdx >= 0 ? args[targetIdx + 1] : 'marionnaud') as 'marionnaud' | 'nocibe' | 'my-origines';
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : Infinity;
   const dryRun = args.includes('--dry-run');
 
-  if (target !== 'marionnaud' && target !== 'nocibe') {
-    console.error(`Cible inconnue: ${target} (attendu: marionnaud|nocibe)`);
+  if (target !== 'marionnaud' && target !== 'nocibe' && target !== 'my-origines') {
+    console.error(`Cible inconnue: ${target} (attendu: marionnaud|nocibe|my-origines)`);
     process.exit(1);
   }
 
@@ -495,7 +607,8 @@ async function main() {
   const summary: Summary = { processed: 0, resolved: 0, unresolved: 0, errors: 0 };
 
   if (target === 'marionnaud') await runMarionnaud(groups, limit, dryRun, summary);
-  else await runNocibe(groups, limit, dryRun, summary);
+  else if (target === 'nocibe') await runNocibe(groups, limit, dryRun, summary);
+  else await runMyOrigines(groups, limit, dryRun, summary);
 
   console.log('\n=== Résumé ===');
   console.log(`parfums traités : ${summary.processed}`);

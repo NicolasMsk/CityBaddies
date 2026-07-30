@@ -63,7 +63,7 @@ export default function Footer() {
             <p className="text-neutral-400 font-light text-sm leading-relaxed max-w-sm">
               LE VRAI PRIX, PAS LE FAKE. <br/>
               <span className="text-neutral-600 block mt-2">
-                Comparateur de prix parfums entre Sephora, Nocibé et Marionnaud.
+                Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines.
                 Chaque contenance, avec historique.
               </span>
             </p>

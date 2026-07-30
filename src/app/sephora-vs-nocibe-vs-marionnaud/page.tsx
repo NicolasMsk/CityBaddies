@@ -15,7 +15,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 export const metadata: Metadata = {
   title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
   description:
-    "Comparaison réelle des prix parfums entre Sephora, Nocibé et Marionnaud : victoires par enseigne, écarts constatés à taille égale, mis à jour à chaque relevé (6 fois par jour).",
+    "Comparaison réelle des prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines : victoires par enseigne, écarts constatés à taille égale, mis à jour à chaque relevé (6 fois par jour).",
   alternates: { canonical: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
   openGraph: {
     title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
@@ -64,7 +64,9 @@ const MERCHANT_LABEL: Record<string, string> = {
   sephora: 'Sephora',
   nocibe: 'Nocibé',
   marionnaud: 'Marionnaud',
+  'my-origines': 'My-Origines',
 };
+const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 
 async function getMatchData() {
   const deals = await prisma.deal.findMany({
@@ -85,7 +87,8 @@ async function getMatchData() {
     byPV.get(k)!.push(d);
   }
 
-  const wins: Record<string, number> = { sephora: 0, nocibe: 0, marionnaud: 0 };
+  const wins: Record<string, number> = {};
+  for (const d of deals) if (d.merchant?.slug) wins[d.merchant.slug] ??= 0;
   let ties = 0;
   let comparisons = 0;
   let gapSum = 0;
@@ -148,8 +151,8 @@ export default async function EnseignesMatchPage() {
   const dateFmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const freshLabel = freshest ? dateFmt.format(freshest) : null;
 
-  const ranking = (['nocibe', 'sephora', 'marionnaud'] as const)
-    .map(slug => ({ slug, label: MERCHANT_LABEL[slug], wins: wins[slug] ?? 0 }))
+  const ranking = Object.keys(wins)
+    .map(slug => ({ slug, label: merchantLabel(slug), wins: wins[slug] }))
     .sort((a, b) => b.wins - a.wins);
   const leader = ranking[0];
   const winShare = comparisons ? Math.round((leader.wins / comparisons) * 100) : 0;
@@ -167,7 +170,7 @@ export default async function EnseignesMatchPage() {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
-    description: `Comparaison de prix parfums en continu entre les trois enseignes, sur ${comparisons} comparaisons à taille égale.`,
+    description: `Comparaison de prix parfums en continu entre les enseignes suivies, sur ${comparisons} comparaisons à taille égale.`,
     author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     dateModified: freshest?.toISOString(),
@@ -180,7 +183,7 @@ export default async function EnseignesMatchPage() {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: 'Comparaison de prix parfums — Sephora vs Nocibé vs Marionnaud',
-    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé et Marionnaud. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
+    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé, Marionnaud et My-Origines. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
     url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
     creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     dateModified: freshest?.toISOString(),
@@ -219,8 +222,8 @@ export default async function EnseignesMatchPage() {
             </h1>
             <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
               Tout le monde a un avis. Nous, on a les relevés. Même flacon, même contenance,
-              trois enseignes — et on refait les comptes six fois par jour, pour que tu n&apos;aies
-              jamais à croire quelqu&apos;un sur parole. Pas même nous.
+              quatre enseignes — Sephora, Nocibé, Marionnaud et le discounter My-Origines — et on refait les
+              comptes six fois par jour, pour que tu n&apos;aies jamais à croire quelqu&apos;un sur parole. Pas même nous.
             </p>
           </div>
 
@@ -238,8 +241,9 @@ export default async function EnseignesMatchPage() {
             <figcaption className="text-neutral-300 font-light leading-relaxed">
               {freshLabel ? `Au ${freshLabel}` : 'Actuellement'}, sur{' '}
               <strong className="text-white font-medium">{comparisons} comparaisons à taille égale</strong> portant sur {products} parfums,{' '}
-              {leader.label} affiche le prix le plus bas {leader.wins} fois, contre {ranking[1].wins} pour {ranking[1].label} et{' '}
-              {ranking[2].wins} pour {ranking[2].label}{ties > 0 ? ` (${ties} égalité${ties > 1 ? 's' : ''})` : ''}.
+              {leader.label} affiche le prix le plus bas {leader.wins} fois, contre{' '}
+              {ranking.slice(1).map((m, i, arr) => `${m.wins} pour ${m.label}`).reduce((acc, cur, i, arr) => i === 0 ? cur : i === arr.length - 1 ? `${acc} et ${cur}` : `${acc}, ${cur}`, '')}
+              {ties > 0 ? ` (${ties} égalité${ties > 1 ? 's' : ''})` : ''}.
               Entre la moins chère et la plus chère, l&apos;écart moyen est de{' '}
               <strong className="text-white font-medium">{fmt(avgGap)}&nbsp;€ par flacon</strong> — le prix d&apos;un deuxième parfum
               qui part en fumée si tu pousses la mauvaise porte.
@@ -307,7 +311,7 @@ export default async function EnseignesMatchPage() {
                       <span className="block font-mono text-[10px] text-neutral-500 mt-1.5">{g.size}</span>
                       <div className="mt-3 space-y-1">
                         <span className="block text-sm text-white font-light">
-                          {fmt(g.min)}&nbsp;€ <span className="text-neutral-500 text-xs">chez {MERCHANT_LABEL[g.cheapest] ?? g.cheapest}</span>
+                          {fmt(g.min)}&nbsp;€ <span className="text-neutral-500 text-xs">chez {merchantLabel(g.cheapest)}</span>
                         </span>
                         <span className="block text-xs text-neutral-500 line-through">{fmt(g.max)}&nbsp;€ ailleurs</span>
                       </div>
@@ -320,7 +324,7 @@ export default async function EnseignesMatchPage() {
               ))}
             </div>
             <p className="font-mono text-[10px] text-neutral-600 mt-4 tracking-wide">
-              Chiffres recalculés à chaque relevé — clique sur un flacon pour voir les trois prix et l&apos;historique.
+              Chiffres recalculés à chaque relevé — clique sur un flacon pour voir tous les prix et l&apos;historique.
             </p>
           </section>
 
@@ -337,12 +341,13 @@ export default async function EnseignesMatchPage() {
             <div>
               <h2 className="font-serif text-2xl text-white mb-4">Pourquoi le classement bouge en permanence</h2>
               <p>
-                Les trois enseignes ne jouent pas le même jeu. <strong className="text-white font-medium">Sephora</strong> (LVMH)
+                Les enseignes ne jouent pas le même jeu. <strong className="text-white font-medium">Sephora</strong> (LVMH)
                 mise sur les exclusivités et des offres ciblées ; <strong className="text-white font-medium">Nocibé</strong> (groupe
                 Douglas) dégaine des promos quasi permanentes sur les grandes marques ;{' '}
                 <strong className="text-white font-medium">Marionnaud</strong> (A.S. Watson) fonctionne par vagues de coupons
-                et d&apos;offres fidélité. Résultat : ton parfum peut changer d&apos;enseigne gagnante d&apos;une semaine à
-                l&apos;autre. Un verdict figé ne vaut rien — le nôtre se réécrit tout seul.
+                et d&apos;offres fidélité ; et <strong className="text-white font-medium">My-Origines</strong>, pure-player
+                discount, casse les prix au quotidien sur son catalogue. Résultat : ton parfum peut changer d&apos;enseigne
+                gagnante d&apos;une semaine à l&apos;autre. Un verdict figé ne vaut rien — le nôtre se réécrit tout seul.
               </p>
             </div>
             <div>
@@ -350,7 +355,7 @@ export default async function EnseignesMatchPage() {
               <p>
                 Une enseigne peut écraser le classement général et rester plus chère sur <em>ton</em> parfum à toi.
                 Les écarts se jouent flacon par flacon, taille par taille. Le bon réflexe n&apos;est pas de jurer
-                fidélité à une enseigne — c&apos;est d&apos;ouvrir la fiche du parfum que tu veux et de regarder les trois
+                fidélité à une enseigne — c&apos;est d&apos;ouvrir la fiche du parfum que tu veux et de regarder tous les
                 prix du jour, avec la date du relevé. Trente secondes qui valent parfois un billet de cent.
               </p>
             </div>

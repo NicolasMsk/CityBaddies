@@ -13,11 +13,11 @@ export function generateMetadata(): Metadata {
   const moisTitre = mois.charAt(0).toUpperCase() + mois.slice(1);
   return {
     title: `Codes Promo Parfumeries — ${moisTitre} | City Baddies`,
-    description: 'Tous les codes promo valides chez Sephora, Nocibé et Marionnaud pour payer ton parfum moins cher. Codes vérifiés régulièrement.',
+    description: 'Tous les codes promo valides chez Sephora, Nocibé, Marionnaud et My-Origines pour payer ton parfum moins cher. Codes vérifiés régulièrement.',
     alternates: { canonical: `${BASE_URL}/codes-promo` },
     openGraph: {
       title: 'Codes Promo Parfumeries — City Baddies',
-      description: 'Tous les codes promo Sephora, Nocibé et Marionnaud valides du moment',
+      description: 'Tous les codes promo Sephora, Nocibé, Marionnaud et My-Origines valides du moment',
       url: `${BASE_URL}/codes-promo`,
     },
   };

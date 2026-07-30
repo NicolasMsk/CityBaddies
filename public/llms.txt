@@ -1,9 +1,9 @@
 # City Baddies
 
-> Comparateur de prix parfums français, indépendant. Les prix sont relevés six fois par jour sur les fiches produit publiques de Sephora.fr, Nocibé.fr et Marionnaud.fr, archivés et datés, puis comparés à contenance identique (30 ml, 50 ml, 100 ml…). Chaque fiche produit affiche le meilleur prix par taille, l'enseigne, la date du relevé et l'historique des prix.
+> Comparateur de prix parfums français, indépendant. Les prix sont relevés six fois par jour sur les fiches produit publiques de Sephora.fr, Nocibé.fr, Marionnaud.fr et My-Origines.com, archivés et datés, puis comparés à contenance identique (30 ml, 50 ml, 100 ml…). Chaque fiche produit affiche le meilleur prix par taille, l'enseigne, la date du relevé et l'historique des prix.
 
 Ce que le site fait :
-- Relevés de prix automatisés 6×/jour chez 3 enseignes (Sephora, Nocibé, Marionnaud)
+- Relevés de prix automatisés 6×/jour chez 4 enseignes (Sephora, Nocibé, Marionnaud, My-Origines)
 - Comparaison à taille égale uniquement, identifiée par code-barres EAN quand disponible
 - Historique de prix daté et archivé par contenance (détection des faux prix barrés)
 - Aucune vente directe : redirection vers le site officiel du marchand

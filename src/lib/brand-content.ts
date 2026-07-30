@@ -31,7 +31,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter les parfums Chanel au meilleur prix ?',
         answer:
-          "Chanel encadre strictement ses prix, mais des écarts existent entre Sephora, Nocibé et Marionnaud selon les contenances et les périodes. Nos relevés, effectués six fois par jour à taille égale, affichent sur chaque fiche l'enseigne la moins chère du moment et la date exacte du relevé.",
+          "Chanel encadre strictement ses prix, mais des écarts existent entre Sephora, Nocibé, Marionnaud et My-Origines selon les contenances et les périodes. Nos relevés, effectués six fois par jour à taille égale, affichent sur chaque fiche l'enseigne la moins chère du moment et la date exacte du relevé.",
       },
       {
         question: 'Quel est le parfum le plus iconique de Chanel ?',
@@ -54,7 +54,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où trouver les parfums Dior les moins chers ?',
         answer:
-          "Les prix Dior varient entre Sephora, Nocibé et Marionnaud selon les contenances. Nos relevés six fois par jour comparent chaque taille séparément et affichent l'enseigne la moins chère avec la date du relevé — c'est le seul moyen fiable de repérer un vrai écart.",
+          "Les prix Dior varient entre Sephora, Nocibé, Marionnaud et My-Origines selon les contenances. Nos relevés six fois par jour comparent chaque taille séparément et affichent l'enseigne la moins chère avec la date du relevé — c'est le seul moyen fiable de repérer un vrai écart.",
       },
       {
         question: "J'adore ou Miss Dior : lequel choisir ?",
@@ -71,13 +71,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'guerlain': {
     displayName: 'Guerlain',
     intro:
-      "Maison fondée en 1828, Guerlain est la plus ancienne grande maison de parfum française encore en activité. Shalimar, créé en 1925 par Jacques Guerlain, a défini le genre oriental tout entier ; La Petite Robe Noire l'a réinventé en gourmand espiègle en 2012, et Mon Guerlain porte la signature de la lavande de Provence. Peu de catalogues traversent ainsi un siècle en restant désirables. Côté prix, Guerlain pratique une distribution sélective classique : les écarts entre Sephora, Nocibé et Marionnaud existent, se déplacent selon les contenances, et nos relevés quotidiens les rendent visibles noir sur blanc.",
+      "Maison fondée en 1828, Guerlain est la plus ancienne grande maison de parfum française encore en activité. Shalimar, créé en 1925 par Jacques Guerlain, a défini le genre oriental tout entier ; La Petite Robe Noire l'a réinventé en gourmand espiègle en 2012, et Mon Guerlain porte la signature de la lavande de Provence. Peu de catalogues traversent ainsi un siècle en restant désirables. Côté prix, Guerlain pratique une distribution sélective classique : les écarts entre Sephora, Nocibé, Marionnaud et My-Origines existent, se déplacent selon les contenances, et nos relevés quotidiens les rendent visibles noir sur blanc.",
     signature: "Deux siècles de parfumerie française : l'oriental inventé, le gourmand réinventé.",
     faq: [
       {
         question: 'Où acheter les parfums Guerlain au meilleur prix ?',
         answer:
-          "Selon nos relevés effectués six fois par jour, l'enseigne la moins chère change selon le parfum et la contenance. Chaque fiche affiche le classement du moment entre Sephora, Nocibé et Marionnaud, avec la date exacte du relevé.",
+          "Selon nos relevés effectués six fois par jour, l'enseigne la moins chère change selon le parfum et la contenance. Chaque fiche affiche le classement du moment entre Sephora, Nocibé, Marionnaud et My-Origines, avec la date exacte du relevé.",
       },
       {
         question: 'Quel est le parfum emblématique de Guerlain ?',
@@ -100,7 +100,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter La Vie Est Belle au meilleur prix ?',
         answer:
-          "C'est l'un des parfums où les écarts entre enseignes sont les plus fréquents selon nos relevés. La fiche produit affiche six fois par jour le meilleur prix par contenance entre Sephora, Nocibé et Marionnaud, avec la date du relevé et l'historique complet.",
+          "C'est l'un des parfums où les écarts entre enseignes sont les plus fréquents selon nos relevés. La fiche produit affiche six fois par jour le meilleur prix par contenance entre Sephora, Nocibé, Marionnaud et My-Origines, avec la date du relevé et l'historique complet.",
       },
       {
         question: 'Les parfums Lancôme sont-ils souvent en promotion ?',
@@ -117,13 +117,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'yves-saint-laurent': {
     displayName: 'Yves Saint Laurent',
     intro:
-      "Maison fondée en 1961 par Yves Saint Laurent et Pierre Bergé, YSL Beauté a toujours cultivé une parfumerie de caractère. Libre, lancé en 2019 avec son accord lavande-fleur d'oranger, s'est imposé comme l'un des grands succès féminins de la décennie ; Mon Paris joue la carte du chypre fruité vertigineux. La marque, distribuée par L'Oréal Luxe, est très présente dans les opérations des enseignes : selon nos relevés, les prix YSL bougent souvent, et les écarts entre Sephora, Nocibé et Marionnaud sur une même contenance méritent systématiquement vérification avant achat.",
+      "Maison fondée en 1961 par Yves Saint Laurent et Pierre Bergé, YSL Beauté a toujours cultivé une parfumerie de caractère. Libre, lancé en 2019 avec son accord lavande-fleur d'oranger, s'est imposé comme l'un des grands succès féminins de la décennie ; Mon Paris joue la carte du chypre fruité vertigineux. La marque, distribuée par L'Oréal Luxe, est très présente dans les opérations des enseignes : selon nos relevés, les prix YSL bougent souvent, et les écarts entre Sephora, Nocibé, Marionnaud et My-Origines sur une même contenance méritent systématiquement vérification avant achat.",
     signature: 'Le caractère couture : lavande audacieuse, chypre moderne, prix en mouvement permanent.',
     faq: [
       {
         question: 'Où acheter Libre d’YSL au meilleur prix ?',
         answer:
-          "Libre fait partie des parfums les plus scrutés de nos relevés : les trois enseignes s'alignent rarement. La fiche produit compare chaque contenance six fois par jour et signale l'enseigne la moins chère avec la date du relevé.",
+          "Libre fait partie des parfums les plus scrutés de nos relevés : les quatre enseignes s'alignent rarement. La fiche produit compare chaque contenance six fois par jour et signale l'enseigne la moins chère avec la date du relevé.",
       },
       {
         question: 'Quel parfum YSL choisir entre Libre et Mon Paris ?',
@@ -146,7 +146,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Sì d’Armani au meilleur prix ?',
         answer:
-          "Les prix de Sì varient fréquemment entre Sephora, Nocibé et Marionnaud. Notre fiche produit relève chaque contenance six fois par jour et affiche l'enseigne la moins chère du moment, avec la date exacte du relevé et l'historique.",
+          "Les prix de Sì varient fréquemment entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche produit relève chaque contenance six fois par jour et affiche l'enseigne la moins chère du moment, avec la date exacte du relevé et l'historique.",
       },
       {
         question: 'Quelle est la différence entre les versions de Sì ?',
@@ -163,13 +163,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'rabanne': {
     displayName: 'Rabanne',
     intro:
-      "Paco Rabanne, l'enfant terrible de la couture des années 1960, a transmis son goût de la provocation à sa parfumerie — rebaptisée simplement Rabanne en 2023. Olympéa, lancée en 2015 avec son accord vanille salée, et Fame, son flacon-robot lancé en 2022, figurent parmi les parfums féminins les plus dynamiques du marché français. Distribuée par le groupe Puig, la marque est très active en enseigne : les prix bougent souvent, les écarts entre Sephora, Nocibé et Marionnaud sont fréquents, et nos relevés quotidiens en gardent la trace complète.",
+      "Paco Rabanne, l'enfant terrible de la couture des années 1960, a transmis son goût de la provocation à sa parfumerie — rebaptisée simplement Rabanne en 2023. Olympéa, lancée en 2015 avec son accord vanille salée, et Fame, son flacon-robot lancé en 2022, figurent parmi les parfums féminins les plus dynamiques du marché français. Distribuée par le groupe Puig, la marque est très active en enseigne : les prix bougent souvent, les écarts entre Sephora, Nocibé, Marionnaud et My-Origines sont fréquents, et nos relevés quotidiens en gardent la trace complète.",
     signature: 'La provocation devenue best-seller : métal, vanille salée et prix très disputés entre enseignes.',
     faq: [
       {
         question: 'Où acheter Olympéa ou Fame au meilleur prix ?',
         answer:
-          "Les parfums Rabanne comptent parmi les plus disputés entre enseignes selon nos relevés. Chaque fiche compare les prix par contenance six fois par jour entre Sephora, Nocibé et Marionnaud et signale le meilleur prix daté.",
+          "Les parfums Rabanne comptent parmi les plus disputés entre enseignes selon nos relevés. Chaque fiche compare les prix par contenance six fois par jour entre Sephora, Nocibé, Marionnaud et My-Origines et signale le meilleur prix daté.",
       },
       {
         question: 'Fame ou Olympéa : lequel choisir ?',
@@ -192,7 +192,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Alien ou Angel au meilleur prix ?',
         answer:
-          "Les prix varient entre Sephora, Nocibé et Marionnaud, et les recharges changent l'équation du prix au millilitre. Nos fiches relèvent chaque format six fois par jour et affichent le meilleur prix daté par contenance.",
+          "Les prix varient entre Sephora, Nocibé, Marionnaud et My-Origines, et les recharges changent l'équation du prix au millilitre. Nos fiches relèvent chaque format six fois par jour et affichent le meilleur prix daté par contenance.",
       },
       {
         question: 'Les flacons Mugler sont-ils vraiment rechargeables ?',
@@ -215,7 +215,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter L’Interdit au meilleur prix ?',
         answer:
-          "Les prix de L'Interdit s'écartent régulièrement entre Sephora, Nocibé et Marionnaud selon la contenance. La fiche produit affiche le classement du moment, relevé six fois par jour, avec la date exacte.",
+          "Les prix de L'Interdit s'écartent régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines selon la contenance. La fiche produit affiche le classement du moment, relevé six fois par jour, avec la date exacte.",
       },
       {
         question: 'Quelle est l’histoire de L’Interdit ?',
@@ -238,7 +238,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Twilly d’Hermès au meilleur prix ?',
         answer:
-          "Hermès tient fermement ses prix, mais des écarts ponctuels apparaissent entre Sephora, Nocibé et Marionnaud. Nos relevés six fois par jour les détectent dès qu'ils se produisent, contenance par contenance.",
+          "Hermès tient fermement ses prix, mais des écarts ponctuels apparaissent entre Sephora, Nocibé, Marionnaud et My-Origines. Nos relevés six fois par jour les détectent dès qu'ils se produisent, contenance par contenance.",
       },
       {
         question: 'Pourquoi les parfums Hermès sont-ils rarement en promo ?',
@@ -261,7 +261,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Good Girl au meilleur prix ?',
         answer:
-          "Good Girl est l'une des références où nos relevés observent le plus de mouvements de prix. La fiche produit compare Sephora, Nocibé et Marionnaud six fois par jour, contenance par contenance, avec la date de chaque relevé.",
+          "Good Girl est l'une des références où nos relevés observent le plus de mouvements de prix. La fiche produit compare Sephora, Nocibé, Marionnaud et My-Origines six fois par jour, contenance par contenance, avec la date de chaque relevé.",
       },
       {
         question: 'Pourquoi le flacon de Good Girl est-il un escarpin ?',
@@ -278,13 +278,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'dolce-gabbana': {
     displayName: 'Dolce & Gabbana',
     intro:
-      "Le duo milanais fondé en 1985 a mis la Méditerranée en flacon. Light Blue, lancé en 2001 avec sa pomme verte, son cèdre et son citron de Sicile, reste l'un des parfums frais les plus vendus au monde plus de vingt ans après sa création — un cas d'école de longévité commerciale. La parfumerie D&G est largement distribuée en France et régulièrement animée en enseigne : les écarts de prix entre Sephora, Nocibé et Marionnaud sur une même contenance sont courants, et nos relevés quotidiens permettent d'acheter au bon moment.",
+      "Le duo milanais fondé en 1985 a mis la Méditerranée en flacon. Light Blue, lancé en 2001 avec sa pomme verte, son cèdre et son citron de Sicile, reste l'un des parfums frais les plus vendus au monde plus de vingt ans après sa création — un cas d'école de longévité commerciale. La parfumerie D&G est largement distribuée en France et régulièrement animée en enseigne : les écarts de prix entre Sephora, Nocibé, Marionnaud et My-Origines sur une même contenance sont courants, et nos relevés quotidiens permettent d'acheter au bon moment.",
     signature: 'La Méditerranée en flacon : fraîcheur sicilienne intemporelle, prix régulièrement animés.',
     faq: [
       {
         question: 'Où acheter Light Blue au meilleur prix ?',
         answer:
-          "Light Blue fait l'objet d'opérations fréquentes en enseigne. Notre fiche relève les prix six fois par jour chez Sephora, Nocibé et Marionnaud et affiche le meilleur prix daté par contenance, avec l'historique complet.",
+          "Light Blue fait l'objet d'opérations fréquentes en enseigne. Notre fiche relève les prix six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines et affiche le meilleur prix daté par contenance, avec l'historique complet.",
       },
       {
         question: 'Pourquoi Light Blue reste-t-il si populaire ?',
@@ -307,7 +307,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Chloé Eau de Parfum au meilleur prix ?',
         answer:
-          "Les prix varient régulièrement entre Sephora, Nocibé et Marionnaud. Notre fiche compare chaque contenance six fois par jour et signale l'enseigne la moins chère du moment, avec la date exacte du relevé.",
+          "Les prix varient régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche compare chaque contenance six fois par jour et signale l'enseigne la moins chère du moment, avec la date exacte du relevé.",
       },
       {
         question: 'À quoi ressemble le parfum Chloé ?',
@@ -324,7 +324,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'valentino': {
     displayName: 'Valentino',
     intro:
-      "La maison romaine fondée en 1960 par Valentino Garavani a relancé sa parfumerie avec un succès éclatant : Born in Roma, décliné depuis 2019 en plusieurs interprétations, mêle streetwear et haute couture — vanille moderne, jasmin, bois ambrés. Voce Viva complète la gamme sur un registre plus lumineux. Distribuée par L'Oréal Luxe, la parfumerie Valentino est jeune, dynamique et très animée en enseigne : selon nos relevés, les écarts de prix entre Sephora, Nocibé et Marionnaud y sont plus fréquents que la moyenne.",
+      "La maison romaine fondée en 1960 par Valentino Garavani a relancé sa parfumerie avec un succès éclatant : Born in Roma, décliné depuis 2019 en plusieurs interprétations, mêle streetwear et haute couture — vanille moderne, jasmin, bois ambrés. Voce Viva complète la gamme sur un registre plus lumineux. Distribuée par L'Oréal Luxe, la parfumerie Valentino est jeune, dynamique et très animée en enseigne : selon nos relevés, les écarts de prix entre Sephora, Nocibé, Marionnaud et My-Origines y sont plus fréquents que la moyenne.",
     signature: 'Rome entre couture et streetwear : vanille contemporaine, clous dorés, prix très animés.',
     faq: [
       {
@@ -353,7 +353,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Scandal au meilleur prix ?',
         answer:
-          "Scandal fait partie des références les plus animées en enseigne. Notre fiche relève les prix de chaque contenance six fois par jour chez Sephora, Nocibé et Marionnaud et affiche le meilleur prix avec sa date de relevé.",
+          "Scandal fait partie des références les plus animées en enseigne. Notre fiche relève les prix de chaque contenance six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines et affiche le meilleur prix avec sa date de relevé.",
       },
       {
         question: 'À quoi ressemble Scandal ?',
@@ -376,7 +376,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Flower by Kenzo au meilleur prix ?',
         answer:
-          "Les prix varient entre Sephora, Nocibé et Marionnaud selon les contenances et les périodes. Notre fiche affiche le meilleur prix relevé six fois par jour, avec la date exacte et l'historique complet.",
+          "Les prix varient entre Sephora, Nocibé, Marionnaud et My-Origines selon les contenances et les périodes. Notre fiche affiche le meilleur prix relevé six fois par jour, avec la date exacte et l'historique complet.",
       },
       {
         question: 'Quelle est la signature olfactive de Flower by Kenzo ?',
@@ -399,7 +399,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter For Her au meilleur prix ?',
         answer:
-          "Les prix de For Her s'écartent régulièrement entre Sephora, Nocibé et Marionnaud. La fiche produit compare chaque contenance six fois par jour et signale le meilleur prix daté.",
+          "Les prix de For Her s'écartent régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. La fiche produit compare chaque contenance six fois par jour et signale le meilleur prix daté.",
       },
       {
         question: 'Pourquoi For Her est-il si culte ?',
@@ -416,13 +416,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'nina-ricci': {
     displayName: 'Nina Ricci',
     intro:
-      "Maison de couture parisienne fondée en 1932, Nina Ricci a toujours parlé aux jeunes filles romantiques — de L'Air du Temps (1948) et ses colombes à Nina (2006) et sa pomme rouge scintillante. C'est cette pomme d'amour gourmande, entre citron caramélisé et praline, qui porte aujourd'hui la parfumerie de la maison auprès d'une nouvelle génération. Distribuée par Puig dans les trois enseignes que nous suivons, la gamme Nina connaît des animations régulières et des écarts de prix fréquents, visibles dans nos relevés quotidiens.",
+      "Maison de couture parisienne fondée en 1932, Nina Ricci a toujours parlé aux jeunes filles romantiques — de L'Air du Temps (1948) et ses colombes à Nina (2006) et sa pomme rouge scintillante. C'est cette pomme d'amour gourmande, entre citron caramélisé et praline, qui porte aujourd'hui la parfumerie de la maison auprès d'une nouvelle génération. Distribuée par Puig dans les quatre enseignes que nous suivons, la gamme Nina connaît des animations régulières et des écarts de prix fréquents, visibles dans nos relevés quotidiens.",
     signature: 'Le romantisme parisien : la pomme d’amour en flacon, gourmande et espiègle.',
     faq: [
       {
         question: 'Où acheter Nina au meilleur prix ?',
         answer:
-          "Les prix de Nina varient régulièrement entre Sephora, Nocibé et Marionnaud. Notre fiche relève chaque contenance six fois par jour et affiche le meilleur prix avec la date exacte du relevé.",
+          "Les prix de Nina varient régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche relève chaque contenance six fois par jour et affiche le meilleur prix avec la date exacte du relevé.",
       },
       {
         question: 'À quoi ressemble le parfum Nina ?',
@@ -445,7 +445,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Paradoxe au meilleur prix ?',
         answer:
-          "Paradoxe étant une gamme récente et très soutenue, ses prix bougent régulièrement entre Sephora, Nocibé et Marionnaud. Notre fiche compare chaque contenance six fois par jour avec la date de chaque relevé.",
+          "Paradoxe étant une gamme récente et très soutenue, ses prix bougent régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche compare chaque contenance six fois par jour avec la date de chaque relevé.",
       },
       {
         question: 'Quelle est la signature de Paradoxe ?',
@@ -491,7 +491,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Burberry Her au meilleur prix ?',
         answer:
-          "Les prix de Her bougent régulièrement entre Sephora, Nocibé et Marionnaud. Notre fiche compare chaque contenance six fois par jour et affiche le meilleur prix avec la date exacte du relevé.",
+          "Les prix de Her bougent régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche compare chaque contenance six fois par jour et affiche le meilleur prix avec la date exacte du relevé.",
       },
       {
         question: 'Quelle est la signature de Burberry Her ?',
@@ -508,13 +508,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'versace': {
     displayName: 'Versace',
     intro:
-      "Fondée à Milan en 1978 par Gianni Versace, la maison à la Méduse cultive un glamour solaire que sa parfumerie traduit fidèlement. Bright Crystal, lancé en 2006 — grenade, pivoine, musc — reste l'un des floraux frais les plus vendus au monde, porté par son flacon serti de son bouchon de cristal rose. Une valeur sûre des enseignes françaises, régulièrement animée commercialement : les écarts de prix entre Sephora, Nocibé et Marionnaud sont fréquents et nos relevés quotidiens permettent d'acheter au creux.",
+      "Fondée à Milan en 1978 par Gianni Versace, la maison à la Méduse cultive un glamour solaire que sa parfumerie traduit fidèlement. Bright Crystal, lancé en 2006 — grenade, pivoine, musc — reste l'un des floraux frais les plus vendus au monde, porté par son flacon serti de son bouchon de cristal rose. Une valeur sûre des enseignes françaises, régulièrement animée commercialement : les écarts de prix entre Sephora, Nocibé, Marionnaud et My-Origines sont fréquents et nos relevés quotidiens permettent d'acheter au creux.",
     signature: 'Le glamour milanais solaire : grenade pétillante, Méduse dorée, fraîcheur best-seller.',
     faq: [
       {
         question: 'Où acheter Bright Crystal au meilleur prix ?',
         answer:
-          "Bright Crystal fait l'objet d'animations fréquentes. Notre fiche relève les prix de chaque contenance six fois par jour chez Sephora, Nocibé et Marionnaud et signale le meilleur prix daté.",
+          "Bright Crystal fait l'objet d'animations fréquentes. Notre fiche relève les prix de chaque contenance six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines et signale le meilleur prix daté.",
       },
       {
         question: 'À quoi ressemble Bright Crystal ?',
@@ -531,13 +531,13 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
   'viktor-rolf': {
     displayName: 'Viktor & Rolf',
     intro:
-      "Le duo néerlandais Viktor Horsting et Rolf Snoeren, maîtres de la couture conceptuelle, a frappé la parfumerie en 2005 avec Flowerbomb : une « bombe florale » — jasmin, freesia, rose, patchouli — dans un flacon grenade devenu culte. Le parfum, pensé comme une explosion de positivité, s'est installé durablement dans les meilleures ventes mondiales. Distribuée par L'Oréal Luxe, la gamme est présente dans les trois enseignes que nous suivons, avec des prix qui varient régulièrement selon les formats — nos relevés quotidiens en gardent trace.",
+      "Le duo néerlandais Viktor Horsting et Rolf Snoeren, maîtres de la couture conceptuelle, a frappé la parfumerie en 2005 avec Flowerbomb : une « bombe florale » — jasmin, freesia, rose, patchouli — dans un flacon grenade devenu culte. Le parfum, pensé comme une explosion de positivité, s'est installé durablement dans les meilleures ventes mondiales. Distribuée par L'Oréal Luxe, la gamme est présente dans les quatre enseignes que nous suivons, avec des prix qui varient régulièrement selon les formats — nos relevés quotidiens en gardent trace.",
     signature: 'La couture conceptuelle : une grenade florale culte, explosion de jasmin et de patchouli.',
     faq: [
       {
         question: 'Où acheter Flowerbomb au meilleur prix ?',
         answer:
-          "Les prix de Flowerbomb s'écartent régulièrement entre Sephora, Nocibé et Marionnaud. Notre fiche compare chaque contenance six fois par jour et affiche le meilleur prix avec sa date de relevé.",
+          "Les prix de Flowerbomb s'écartent régulièrement entre Sephora, Nocibé, Marionnaud et My-Origines. Notre fiche compare chaque contenance six fois par jour et affiche le meilleur prix avec sa date de relevé.",
       },
       {
         question: 'Pourquoi Flowerbomb est-il culte ?',
@@ -560,7 +560,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter L’Eau d’Issey au meilleur prix ?',
         answer:
-          "Les prix varient entre Sephora, Nocibé et Marionnaud selon les contenances. La fiche produit affiche le meilleur prix relevé six fois par jour, avec la date exacte et l'historique complet.",
+          "Les prix varient entre Sephora, Nocibé, Marionnaud et My-Origines selon les contenances. La fiche produit affiche le meilleur prix relevé six fois par jour, avec la date exacte et l'historique complet.",
       },
       {
         question: 'Quelle est la signature de L’Eau d’Issey ?',
@@ -606,7 +606,7 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
       {
         question: 'Où acheter Amor Amor au meilleur prix ?',
         answer:
-          "Amor Amor est régulièrement en opération dans les trois enseignes. Notre fiche relève chaque contenance six fois par jour chez Sephora, Nocibé et Marionnaud et affiche le meilleur prix avec sa date.",
+          "Amor Amor est régulièrement en opération dans les quatre enseignes. Notre fiche relève chaque contenance six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines et affiche le meilleur prix avec sa date.",
       },
       {
         question: 'À quoi ressemble Amor Amor ?',
@@ -811,13 +811,13 @@ export function fallbackBrandContent(name: string): BrandContent {
   return {
     displayName: name,
     intro:
-      `Nous suivons les parfums ${name} chez Sephora, Nocibé et Marionnaud : prix relevés six fois par jour, contenance par contenance, avec historique complet. Le tableau ci-dessous affiche le meilleur prix actuel pour chaque parfum suivi — cliquez sur une fiche pour voir la comparaison détaillée par taille et l'évolution du prix dans le temps.`,
+      `Nous suivons les parfums ${name} chez Sephora, Nocibé, Marionnaud et My-Origines : prix relevés six fois par jour, contenance par contenance, avec historique complet. Le tableau ci-dessous affiche le meilleur prix actuel pour chaque parfum suivi — cliquez sur une fiche pour voir la comparaison détaillée par taille et l'évolution du prix dans le temps.`,
     signature: 'Prix relevés six fois par jour, comparés à taille égale.',
     faq: [
       {
         question: `Où acheter les parfums ${name} au meilleur prix ?`,
         answer:
-          "Les prix varient entre Sephora, Nocibé et Marionnaud selon les contenances et les périodes. Nos relevés, effectués six fois par jour à taille égale, affichent sur chaque fiche l'enseigne la moins chère du moment et la date exacte du relevé.",
+          "Les prix varient entre Sephora, Nocibé, Marionnaud et My-Origines selon les contenances et les périodes. Nos relevés, effectués six fois par jour à taille égale, affichent sur chaque fiche l'enseigne la moins chère du moment et la date exacte du relevé.",
       },
       {
         question: `Les parfums ${name} sont-ils souvent en promotion ?`,

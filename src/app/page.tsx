@@ -20,8 +20,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 // Positionnement assumé : parfums FEMME uniquement (stratégie mono-catégorie,
 // cohérente avec la marque) — le title/desc portent la requête « parfum femme ».
 export const metadata: Metadata = {
-  title: "City Baddies | Comparateur Prix Parfum Femme — Sephora, Nocibé, Marionnaud",
-  description: "Comparez les prix de vos parfums femme préférés entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
+  title: "City Baddies | Comparateur Prix Parfum Femme — Sephora, Nocibé, Marionnaud, My-Origines",
+  description: "Comparez les prix de vos parfums femme préférés entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
   keywords: [
     "comparateur prix parfum",
     "parfum femme pas cher",
@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     "promo parfum sephora",
     "parfum nocibé promo",
     "parfum marionnaud soldes",
+    "parfum my-origines pas cher",
     "eau de parfum prix",
     "eau de toilette promo",
     "historique prix parfum",
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "City Baddies Parfums | Comparateur Prix Parfums en France",
-    description: "Comparez les prix de vos parfums entre Sephora, Nocibé et Marionnaud. Vraies promos vs fausses réductions.",
+    description: "Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Vraies promos vs fausses réductions.",
     url: BASE_URL,
     type: "website",
   },
@@ -277,7 +278,7 @@ const HOME_FAQ = [
   },
   {
     q: "Est-ce que je commande chez vous ?",
-    a: "Non, City Baddies est un comparateur et analyste indépendant. On vous redirige vers le site officiel du marchand (Sephora, Nocibé, Marionnaud) pour acheter en toute sécurité. Vous profitez de leurs garanties et SAV."
+    a: "Non, City Baddies est un comparateur et analyste indépendant. On vous redirige vers le site officiel du marchand (Sephora, Nocibé, Marionnaud, My-Origines) pour acheter en toute sécurité. Vous profitez de leurs garanties et SAV."
   },
   {
     q: "Pourquoi City Baddies est gratuit ?",
@@ -378,7 +379,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-xl border-l border-white/20 pl-6 mb-10">
-              Pas les fausses promos. <span className="text-white/60 text-base block mt-2">On compare chaque parfum entre Sephora, Nocibé et Marionnaud. Historique des prix, vraies réductions — on te dit la vérité.</span>
+              Pas les fausses promos. <span className="text-white/60 text-base block mt-2">On compare chaque parfum entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, vraies réductions — on te dit la vérité.</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -408,7 +409,7 @@ export default async function HomePage() {
         <div className="relative z-10 w-full border-t border-white/10 bg-black/30">
           <div className="max-w-[1400px] mx-auto px-6 py-3">
             <p className="font-mono text-[11px] md:text-xs text-neutral-400 tracking-wide">
-              Prix relevés six fois par jour chez {stats.merchants > 0 ? `${stats.merchants} enseignes — Sephora, Nocibé et Marionnaud` : 'Sephora, Nocibé et Marionnaud'} : {stats.products} parfums, {stats.variants} contenances suivies{stats.variantsToday > 0 ? `, ${stats.variantsToday} relevés aujourd'hui` : ''} — avec historique.
+              Prix relevés six fois par jour chez {stats.merchants > 0 ? `${stats.merchants} enseignes — Sephora, Nocibé, Marionnaud et My-Origines` : 'Sephora, Nocibé, Marionnaud et My-Origines'} : {stats.products} parfums, {stats.variants} contenances suivies{stats.variantsToday > 0 ? `, ${stats.variantsToday} relevés aujourd'hui` : ''} — avec historique.
               {dod && dodName ? (
                 <> Le {todayStr}, meilleure remise relevée : {dodName} à {dod.dealPrice.toFixed(2).replace('.', ',')} € chez {dod.merchant?.name}{dod.discountPercent > 0 ? ` (−${dod.discountPercent}%)` : ''}.</>
               ) : null}
@@ -632,7 +633,7 @@ export default async function HomePage() {
                   CODES <span className="italic font-normal text-[#d4a855]">PROMO</span>
                 </h2>
                 <p className="text-sm tracking-wide text-neutral-400 mt-6 max-w-md border-l border-white/20 pl-6 leading-relaxed">
-                  Codes promo vérifiés et testés. Économise sur ton parfum chez Sephora, Nocibé et Marionnaud.
+                  Codes promo vérifiés et testés. Économise sur ton parfum chez Sephora, Nocibé, Marionnaud et My-Origines.
                 </p>
               </div>
               <Link
@@ -946,7 +947,7 @@ export default async function HomePage() {
               <div>
                 <p className="text-neutral-400 text-lg font-light leading-relaxed">
                   Chaque matin (et cinq autres fois dans la journée), on relève les prix
-                  affichés sur les fiches produit de Sephora, Nocibé et Marionnaud.
+                  affichés sur les fiches produit de Sephora, Nocibé, Marionnaud et My-Origines.
                   Chaque relevé est daté et archivé. Tu vois le prix du jour, celui d&apos;hier,
                   et la courbe complète.
                 </p>
@@ -976,8 +977,8 @@ export default async function HomePage() {
                 </div>
 
                 <div className="bg-[#0a0a0a] p-8 md:p-10">
-                  <h4 className="text-lg font-medium text-white mb-6">Trois enseignes suivies</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <h4 className="text-lg font-medium text-white mb-6">Quatre enseignes suivies</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div className="space-y-1 border-l-2 border-[#d4a855] pl-4">
                       <p className="text-white font-medium">Sephora</p>
                       <p className="text-sm text-neutral-500">sephora.fr</p>
@@ -990,9 +991,13 @@ export default async function HomePage() {
                       <p className="text-white font-medium">Marionnaud</p>
                       <p className="text-sm text-neutral-500">marionnaud.fr</p>
                     </div>
+                    <div className="space-y-1 border-l-2 border-[#d4a855] pl-4">
+                      <p className="text-white font-medium">My-Origines</p>
+                      <p className="text-sm text-neutral-500">my-origines.com</p>
+                    </div>
                   </div>
                   <p className="text-sm text-neutral-600 font-light mt-6">
-                    City Baddies est indépendant des trois enseignes. Les prix sont ceux
+                    City Baddies est indépendant des quatre enseignes. Les prix sont ceux
                     affichés publiquement sur leurs sites au moment du relevé.
                   </p>
                 </div>

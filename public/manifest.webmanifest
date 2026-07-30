@@ -1,7 +1,7 @@
 {
   "name": "City Baddies Parfums — Comparateur de prix",
   "short_name": "City Baddies",
-  "description": "Comparez les prix des parfums entre Sephora, Nocibé et Marionnaud. Prix vérifiés chaque jour, historique des prix.",
+  "description": "Comparez les prix des parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Prix vérifiés chaque jour, historique des prix.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

@@ -76,6 +76,7 @@ const MERCHANT_LOGOS: Record<string, { src: string; w: number; h: number }> = {
   'nocibe':     { src: '/images/nocibe_logo.png',      w: 100, h: 36 },
   'sephora':    { src: '/images/sephora_logo.png',     w: 120, h: 20 },
   'marionnaud': { src: '/images/logo_marrionaud.png',  w: 130, h: 28 },
+  'my-origines':{ src: '/images/my-origines_logo.svg', w: 120, h: 54 },
   'notino':     { src: '/images/notino_logo.png',      w: 110, h: 28 },
 };
 
@@ -287,6 +288,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                               width={logoData.w}
                               height={logoData.h}
                               className="object-contain"
+                              unoptimized={logoData.src.endsWith('.svg')}
                             />
                           </div>
                         );

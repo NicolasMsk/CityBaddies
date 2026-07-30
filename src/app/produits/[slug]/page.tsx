@@ -251,6 +251,61 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   const merchantCount = new Set(product.deals.map(d => d.merchant.slug)).size;
   const maxSpreadRow = sizeRows.reduce((m, r) => (r.spread > (m?.spread ?? 0) ? r : m), null as (typeof sizeRows)[0] | null);
 
+  // ── Verdict HISTORIQUE (donnée propriétaire, non inventable par une IA) ──
+  // Sur la contenance du meilleur prix : plus bas / plus haut / nb de relevés +
+  // situation du prix actuel. C'est LA phrase citable qu'aucun concurrent n'a.
+  const bv = bestDeal?.variant;
+  const histForBest = bv
+    ? product.priceHistory.filter(h => h.volumeValue === bv.volumeValue && h.volumeUnit?.toLowerCase() === (bv.volumeUnit ?? '').toLowerCase())
+    : [];
+  const fmtEur = (n: number) => n.toFixed(2).replace('.', ',');
+  let histVerdict: { min: number; max: number; count: number; sinceLabel: string | null; position: 'bas' | 'moyen' | 'haut' } | null = null;
+  if (bestDeal && histForBest.length >= 3) {
+    const prices = histForBest.map(h => h.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const cur = bestDeal.dealPrice;
+    const oldest = histForBest.reduce((a, b) => (a.date < b.date ? a : b));
+    const position: 'bas' | 'moyen' | 'haut' =
+      cur <= min * 1.02 ? 'bas' : cur >= max * 0.98 ? 'haut' : 'moyen';
+    histVerdict = { min, max, count: histForBest.length, sinceLabel: oldest?.date ? dateFmt.format(oldest.date) : null, position };
+  }
+
+  // ── FAQ produit : questions réelles → réponses chiffrées (format que les IA
+  // extraient et citent directement dans un AI Overview). Server-rendered. ──
+  const productFaq: { question: string; answer: string }[] = [];
+  if (bestDeal) {
+    productFaq.push({
+      question: `Où acheter ${fullName} au meilleur prix ?`,
+      answer: `Le meilleur prix est de ${fmtEur(bestDeal.dealPrice)} € chez ${bestDeal.merchant.name}${bestSizeLabel ? ` (flacon de ${bestSizeLabel})` : ''}${bestSeenAt ? `, prix vérifié le ${bestSeenAt}` : ''}. City Baddies compare les prix chez Sephora, Nocibé et Marionnaud six fois par jour.`,
+    });
+    if (merchantCount > 1 && maxSpreadRow && maxSpreadRow.spread > 0) {
+      productFaq.push({
+        question: `${fullName} est-il moins cher chez Sephora, Nocibé ou Marionnaud ?`,
+        answer: `À contenance identique, ${bestDeal.merchant.name} affiche actuellement le prix le plus bas. L'écart entre enseignes atteint jusqu'à ${fmtEur(maxSpreadRow.spread)} € sur le ${maxSpreadRow.label} — d'où l'intérêt de comparer avant d'acheter.`,
+      });
+    }
+    if (histVerdict) {
+      productFaq.push({
+        question: `Le prix de ${fullName} est-il intéressant en ce moment ?`,
+        answer: histVerdict.position === 'bas'
+          ? `Oui : en ${bestSizeLabel}, ${fmtEur(bestDeal.dealPrice)} € est le prix le plus bas relevé${histVerdict.sinceLabel ? ` depuis le ${histVerdict.sinceLabel}` : ''}. Sur ${histVerdict.count} relevés, le prix a varié de ${fmtEur(histVerdict.min)} € à ${fmtEur(histVerdict.max)} €.`
+          : histVerdict.position === 'haut'
+          ? `Le prix est plutôt haut actuellement : sur ${histVerdict.count} relevés, il a varié de ${fmtEur(histVerdict.min)} € à ${fmtEur(histVerdict.max)} €. Il peut être pertinent d'attendre une baisse.`
+          : `Le prix est dans sa fourchette habituelle : sur ${histVerdict.count} relevés, il a varié de ${fmtEur(histVerdict.min)} € à ${fmtEur(histVerdict.max)} €.`,
+      });
+    }
+  }
+  const productFaqSchema = productFaq.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: productFaq.map(f => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  } : null;
+
   // Serialize deals for the client component
   const serializedDeals = product.deals.map(deal => ({
     id: deal.id,
@@ -384,6 +439,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
       {/* JSON-LD natif : présent dans le HTML initial (crawlers sans JS) */}
       <JsonLd id="breadcrumb-schema" data={breadcrumbSchema} />
       <JsonLd id="product-schema" data={productSchema} />
+      {productFaqSchema && <JsonLd id="product-faq-schema" data={productFaqSchema} />}
 
       <div className="min-h-screen bg-[#0a0a0a] py-6 sm:py-10 md:py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-12">
@@ -487,26 +543,47 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                   ) : null}
                 </p>
 
-                {/* Par format : le moins cher vs le prix d'ailleurs (barré, comme en boutique) */}
+                {/* Verdict HISTORIQUE — phrase citable chiffrée (donnée propriétaire) */}
+                {histVerdict && bestSizeLabel && (
+                  <p className="mt-4 text-sm font-light text-neutral-300 leading-relaxed max-w-3xl">
+                    {histVerdict.position === 'bas' ? (
+                      <>En {bestSizeLabel}, c&apos;est <strong className="text-white font-medium">le prix le plus bas relevé</strong>{histVerdict.sinceLabel ? ` depuis le ${histVerdict.sinceLabel}` : ''} </>
+                    ) : histVerdict.position === 'haut' ? (
+                      <>En {bestSizeLabel}, le prix est <strong className="text-white font-medium">plutôt haut</strong> en ce moment </>
+                    ) : (
+                      <>En {bestSizeLabel}, le prix se situe <strong className="text-white font-medium">dans sa fourchette habituelle</strong> </>
+                    )}
+                    (sur <strong className="text-white font-medium">{histVerdict.count} relevés</strong>, il a varié de{' '}
+                    <span className="font-serif italic text-[#d4a855]">{fmtEur(histVerdict.min)} €</span> à{' '}
+                    <span className="font-serif italic text-[#d4a855]">{fmtEur(histVerdict.max)} €</span>).
+                  </p>
+                )}
+
+                {/* Par format : vrai <table> (les IA extraient mieux les tableaux que les div) */}
                 {sizeRows.length > 1 && (
                   <div className="mt-8 overflow-x-auto">
-                    <div className="min-w-[400px]">
-                      <div className="grid grid-cols-[0.7fr_1.6fr_1fr] gap-x-4 pb-3 border-b border-white/10 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">
-                        <span>Flacon</span>
-                        <span>Le moins cher</span>
-                        <span className="text-right">Ailleurs</span>
-                      </div>
-                      <div className="divide-y divide-white/5">
+                    <table className="w-full min-w-[400px] text-left border-collapse">
+                      <caption className="sr-only">
+                        Prix de {fullName} par contenance : le moins cher et l&apos;enseigne, comparé au prix le plus élevé relevé.
+                      </caption>
+                      <thead>
+                        <tr className="border-b border-white/10 text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">
+                          <th scope="col" className="pb-3 font-bold">Flacon</th>
+                          <th scope="col" className="pb-3 font-bold">Le moins cher</th>
+                          <th scope="col" className="pb-3 font-bold text-right">Ailleurs</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
                         {sizeRows.map(row => {
                           const maxPrice = row.best.dealPrice + row.spread;
                           return (
-                            <div key={row.label} className="grid grid-cols-[0.7fr_1.6fr_1fr] gap-x-4 items-baseline py-3.5 sm:py-4">
-                              <span className="text-sm font-light text-neutral-300">{row.label}</span>
-                              <span className="text-sm font-light text-neutral-400">
+                            <tr key={row.label} className="align-baseline">
+                              <th scope="row" className="py-3.5 sm:py-4 text-sm font-light text-neutral-300">{row.label}</th>
+                              <td className="py-3.5 sm:py-4 text-sm font-light text-neutral-400">
                                 <span className="font-serif italic text-base sm:text-lg text-white">{row.best.dealPrice.toFixed(2).replace('.', ',')} €</span>
                                 {' '}chez {row.best.merchant.name}
-                              </span>
-                              <span className="text-right">
+                              </td>
+                              <td className="py-3.5 sm:py-4 text-right">
                                 {row.spread > 0 ? (
                                   <span className="text-sm font-light text-neutral-500">
                                     jusqu&apos;à <span className="line-through">{maxPrice.toFixed(2).replace('.', ',')} €</span>
@@ -516,12 +593,12 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                                 ) : (
                                   <span className="text-[11px] font-light text-neutral-600">une seule enseigne</span>
                                 )}
-                              </span>
-                            </div>
+                              </td>
+                            </tr>
                           );
                         })}
-                      </div>
-                    </div>
+                      </tbody>
+                    </table>
                   </div>
                 )}
 
@@ -580,6 +657,28 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
           </div>
+
+          {/* ── FAQ produit (visible + FAQPage schema) — question→réponse citable ── */}
+          {productFaq.length > 0 && (
+            <section className="mb-12 sm:mb-16 md:mb-24">
+              <h2 className="font-serif text-xl sm:text-2xl text-white mb-6">
+                Questions <span className="italic font-light text-white/70">fréquentes</span>
+              </h2>
+              <div className="space-y-3">
+                {productFaq.map((item, i) => (
+                  <details key={i} className="group border border-white/10 [&_summary::-webkit-details-marker]:hidden">
+                    <summary className="flex items-center justify-between p-5 cursor-pointer text-white hover:bg-white/[0.03] transition-colors">
+                      <span className="text-sm sm:text-base font-light pr-4">{item.question}</span>
+                      <span className="text-[#d4a855] text-xl font-light transition-transform duration-300 group-open:rotate-45 flex-shrink-0">+</span>
+                    </summary>
+                    <div className="px-5 pb-5 text-neutral-400 text-sm font-light leading-relaxed border-t border-white/5 pt-4">
+                      {item.answer}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* ── Back link ── */}
           <div className="pt-8 sm:pt-12 border-t border-white/10 flex justify-center">

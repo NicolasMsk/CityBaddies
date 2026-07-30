@@ -174,10 +174,30 @@ export default async function EnseignesMatchPage() {
     mainEntityOfPage: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
   };
 
+  // Dataset schema : signale aux IA que cette page EST une source de données de
+  // prix (pas un simple article). variableMeasured décrit ce qu'on mesure.
+  const datasetSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Comparaison de prix parfums — Sephora vs Nocibé vs Marionnaud',
+    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé et Marionnaud. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
+    url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
+    creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
+    dateModified: freshest?.toISOString(),
+    isAccessibleForFree: true,
+    measurementTechnique: 'Relevé automatisé des prix affichés sur les fiches produit officielles, six fois par jour, comparés à contenance identique (EAN).',
+    variableMeasured: [
+      { '@type': 'PropertyValue', name: 'Comparaisons à taille égale', value: comparisons },
+      { '@type': 'PropertyValue', name: 'Écart moyen entre enseignes (EUR)', value: Number(avgGap.toFixed(2)) },
+      { '@type': 'PropertyValue', name: 'Enseigne la moins chère le plus souvent', value: `${leader.label} (${winShare} %)` },
+    ],
+  };
+
   return (
     <>
       <JsonLd id="match-breadcrumb" data={breadcrumbSchema} />
       <JsonLd id="match-article" data={articleSchema} />
+      <JsonLd id="match-dataset" data={datasetSchema} />
       <JsonLd id="match-faq" data={faqSchema} />
 
       <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">

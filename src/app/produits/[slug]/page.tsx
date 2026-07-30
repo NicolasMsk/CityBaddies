@@ -340,6 +340,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   const imgBotRank = (url: string): number => {
     if (/nocibe\./i.test(url)) return 0;         // accessible aux bots
     if (/my-origines\.|demandware\./i.test(url)) return 0; // idem (CDN Salesforce, 200 aux bots)
+    if (/notinoimg\.|notino\./i.test(url)) return 0;       // CDN Notino, accessible aux bots
     if (/marionnaud\./i.test(url)) return 1;
     if (/sephora\./i.test(url)) return 2;
     return 3;

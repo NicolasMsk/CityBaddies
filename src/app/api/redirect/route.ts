@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   // Sans ça : open redirect (phishing sous la marque) + XSS via scheme
   // javascript: (new URL('javascript:…') est "valide"). On impose http/https
   // ET un domaine marchand whitelisté ; l'URL est ensuite échappée avant injection.
-  const ALLOWED_HOSTS = ['sephora.fr', 'nocibe.fr', 'marionnaud.fr', 'my-origines.com'];
+  const ALLOWED_HOSTS = ['sephora.fr', 'nocibe.fr', 'marionnaud.fr', 'my-origines.com', 'notino.fr'];
   let parsed: URL;
   try {
     parsed = new URL(decodedUrl);

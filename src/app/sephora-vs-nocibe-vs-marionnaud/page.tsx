@@ -65,6 +65,7 @@ const MERCHANT_LABEL: Record<string, string> = {
   nocibe: 'Nocibé',
   marionnaud: 'Marionnaud',
   'my-origines': 'My-Origines',
+  notino: 'Notino',
 };
 const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 

@@ -8,7 +8,7 @@ import { fullProductName } from '@/lib/seo-config';
 export const revalidate = 3600;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
-const MERCHANT_LABEL: Record<string, string> = { sephora: 'Sephora', nocibe: 'Nocibé', marionnaud: 'Marionnaud', 'my-origines': 'My-Origines' };
+const MERCHANT_LABEL: Record<string, string> = { sephora: 'Sephora', nocibe: 'Nocibé', marionnaud: 'Marionnaud', 'my-origines': 'My-Origines', notino: 'Notino' };
 const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 
 function moisAnnee(d = new Date()) {

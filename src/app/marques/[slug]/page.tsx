@@ -147,8 +147,20 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
       itemListElement: rows.map((r, i) => ({
         '@type': 'ListItem',
         position: i + 1,
-        name: r.name,
-        url: `${BASE_URL}/produits/${r.slug}`,
+        // item Product + offers : les IA/Google lisent le prix, pas juste le nom
+        item: {
+          '@type': 'Product',
+          name: r.name,
+          url: `${BASE_URL}/produits/${r.slug}`,
+          brand: { '@type': 'Brand', name: content.displayName },
+          offers: {
+            '@type': 'Offer',
+            price: r.bestPrice,
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock',
+            seller: { '@type': 'Organization', name: r.bestMerchant },
+          },
+        },
       })),
     },
   };

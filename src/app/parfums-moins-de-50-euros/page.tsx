@@ -133,8 +133,19 @@ export default async function Under50Page() {
     itemListElement: rows.map((r, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: `${r.name} ${r.size}`,
-      url: `${BASE_URL}/produits/${r.slug}`,
+      item: {
+        '@type': 'Product',
+        name: `${r.name} ${r.size}`,
+        url: `${BASE_URL}/produits/${r.slug}`,
+        ...(r.brand ? { brand: { '@type': 'Brand', name: r.brand } } : {}),
+        offers: {
+          '@type': 'Offer',
+          price: r.price,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+          seller: { '@type': 'Organization', name: r.merchant },
+        },
+      },
     })),
   };
 

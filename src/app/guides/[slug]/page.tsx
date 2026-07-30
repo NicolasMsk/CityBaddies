@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { asArray } from '@/lib/json';
+import JsonLd from '@/components/seo/JsonLd';
 import NewsletterSection from '@/components/layout/NewsletterSection';
 
 // ISR : page mise en cache et régénérée toutes les 1800s (éditorial + prix des picks).
@@ -160,12 +161,46 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
     })),
   } : null;
 
+  // ItemList de Product avec Review (note rédaction /5) + Offer (prix) : le
+  // palmarès du guide devient citable « noté X/5 par City Baddies, dès Y€ ».
+  const rankedSchema = guide.products.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: guide.title,
+    numberOfItems: guide.products.length,
+    itemListElement: guide.products.map((item, i) => {
+      const prod = item.deal.product;
+      const pname = prod.brandRef?.name && !prod.name.toLowerCase().startsWith(prod.brandRef.name.toLowerCase())
+        ? `${prod.brandRef.name} ${prod.name}` : prod.name;
+      const product: Record<string, unknown> = {
+        '@type': 'Product',
+        name: pname,
+        url: `${BASE_URL}/produits/${prod.slug}`,
+        ...(item.deal.imageUrl ? { image: item.deal.imageUrl } : {}),
+        offers: {
+          '@type': 'Offer',
+          price: item.deal.dealPrice,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+        },
+      };
+      if (item.rating) {
+        product.review = {
+          '@type': 'Review',
+          reviewRating: { '@type': 'Rating', ratingValue: item.rating, bestRating: 5 },
+          author: { '@type': 'Organization', name: 'City Baddies' },
+          ...(item.verdict ? { reviewBody: item.verdict } : {}),
+        };
+      }
+      return { '@type': 'ListItem', position: item.rank ?? i + 1, item: product };
+    }),
+  } : null;
+
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      {faqSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      )}
+      <JsonLd id="guide-article" data={articleSchema} />
+      {faqSchema && <JsonLd id="guide-faq" data={faqSchema} />}
+      {rankedSchema && <JsonLd id="guide-ranking" data={rankedSchema} />}
 
       {/* Hero Immersif */}
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">

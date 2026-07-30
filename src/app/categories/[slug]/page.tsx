@@ -78,23 +78,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   // Catégorie sans aucun deal actif (ex: non-parfum aujourd'hui) → noindex.
-  const activeDeals = await prisma.deal.count({
+  // + on récupère la VRAIE remise max (fini le « -70% » codé en dur, potentiellement
+  // faux → risque de superlatif non fondé pénalisant en SEO/GEO).
+  const topDeal = await prisma.deal.findFirst({
     where: { status: 'ACTIVE', discountPercent: { gt: 0 }, product: { categoryId: category.id } },
+    orderBy: { discountPercent: 'desc' },
+    select: { discountPercent: true },
   });
-  if (activeDeals === 0) {
+  if (!topDeal) {
     return {
       title: `${category.name} | City Baddies`,
       robots: { index: false, follow: false },
     };
   }
+  const maxDisc = topDeal.discountPercent;
 
   const content = CATEGORY_CONTENT[slug] || {
-    seoDescription: `Découvrez les meilleurs deals ${category.name} avec des réductions jusqu'à -70%.`,
+    seoDescription: `Comparez les prix ${category.name.toLowerCase()} entre Sephora, Nocibé et Marionnaud${maxDisc > 0 ? `, jusqu'à -${maxDisc}% en ce moment` : ''}.`,
     keywords: [`${category.name} pas cher`, `${category.name} promo`],
   };
 
   return {
-    title: `Deals ${category.name} | Promotions jusqu'à -70%`,
+    title: maxDisc >= 10 ? `${category.name} : prix comparés, jusqu'à -${maxDisc}% | City Baddies` : `${category.name} : prix comparés | City Baddies`,
     description: content.seoDescription,
     keywords: content.keywords,
     alternates: {
@@ -186,7 +191,13 @@ async function getCategoryDeals(slug: string) {
     createdAt: d.createdAt?.toISOString() || new Date().toISOString(),
   }));
 
-  return { category, deals };
+  // Date du relevé le plus récent (fraîcheur en clair — les IA privilégient le daté).
+  const freshest = rawDeals
+    .map((d: any) => d.lastSeenAt as Date | null)
+    .filter((d: Date | null): d is Date => !!d)
+    .sort((a: Date, b: Date) => b.getTime() - a.getTime())[0] ?? null;
+
+  return { category, deals, freshest };
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -198,13 +209,43 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
-  const { category, deals } = data;
+  const { category, deals, freshest } = data;
   const topDeals = deals.slice(0, 6);
   const content = CATEGORY_CONTENT[slug];
   const headerImage = CATEGORY_IMAGES[slug];
 
   // Compter les deals actifs
   const totalDeals = deals.length;
+  // Vraie remise max + date de relevé (fini le « -70% » codé en dur).
+  const maxDiscount = deals.reduce((m, d) => Math.max(m, d.discountPercent ?? 0), 0);
+  const freshLabel = freshest
+    ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(freshest)
+    : null;
+
+  // ItemList (Product + Offer) des meilleures offres — citable par les IA.
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Meilleures offres ${category.name}`,
+    numberOfItems: topDeals.length,
+    itemListElement: topDeals.map((d, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: d.product.brand && !d.product.name.toLowerCase().startsWith(String(d.product.brand).toLowerCase())
+          ? `${d.product.brand} ${d.product.name}` : d.product.name,
+        url: `${BASE_URL}/produits/${d.product.slug}`,
+        offers: {
+          '@type': 'Offer',
+          price: d.dealPrice,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+          seller: { '@type': 'Organization', name: d.merchant?.name },
+        },
+      },
+    })),
+  };
 
   // FAQPage : reflète la FAQ visible plus bas (richContent.faq) — schema natif
   // dans le HTML initial pour crawlers sans JS.
@@ -234,6 +275,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c') }} />
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c') }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema).replace(/</g, '\\u003c') }} />
       
       {/* Hero Section Immersive */}
       <div className="relative mb-20">
@@ -272,9 +314,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
               {content?.heroDescription || `Découvrez les meilleures promotions ${category.name} du moment.`}
             </p>
 
-            <div className="mt-5 flex items-center gap-2 text-white/90 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 bg-black/30 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-white/90 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 bg-black/30 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]"></span>
-               <span className="text-sm font-medium">{totalDeals} offres actives vérifiées</span>
+               <span className="text-sm font-medium">
+                 {totalDeals} offres vérifiées{maxDiscount >= 10 ? `, jusqu'à -${maxDiscount}%` : ''}
+                 {freshLabel ? ` · relevé le ${freshLabel}` : ''}
+               </span>
             </div>
           </div>
         </div>

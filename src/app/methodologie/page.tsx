@@ -46,9 +46,23 @@ export default async function MethodologiePage() {
     publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
   };
 
+  // FAQPage : la méthodo reformulée en questions (les IA citent les Q→R).
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      { q: 'À quelle fréquence City Baddies relève-t-il les prix ?', a: 'Six fois par jour, sur les fiches produit publiques de Sephora.fr, Nocibé.fr et Marionnaud.fr, chaque contenance relevée séparément.' },
+      { q: 'Les prix sont-ils datés et archivés ?', a: 'Oui : chaque relevé est horodaté et conservé, ce qui permet d\'afficher l\'évolution du prix sur plusieurs mois et de distinguer une vraie baisse d\'un prix barré marketing.' },
+      { q: 'Comment les prix sont-ils comparés entre enseignes ?', a: 'Toujours à contenance identique, identifiée par le code-barres (EAN) quand il est disponible — jamais un 30 ml contre un 100 ml.' },
+      { q: 'Montrez-vous toutes les offres ou seulement les bonnes ?', a: 'Toutes les offres relevées, y compris les moins intéressantes. City Baddies ne vend rien : l\'achat se fait sur le site officiel du marchand.' },
+      { q: 'Comment City Baddies est-il rémunéré ?', a: 'Par commission d\'affiliation, sans surcoût pour l\'acheteuse. Cela n\'influence ni l\'ordre d\'affichage (toujours du prix le plus bas au plus haut) ni les relevés.' },
+    ].map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+
   return (
     <>
       <JsonLd id="methodologie-schema" data={pageSchema} />
+      <JsonLd id="methodologie-faq" data={faqSchema} />
       <div className="min-h-screen bg-[#0a0a0a] pt-28 pb-24">
         <div className="max-w-3xl mx-auto px-6">
           {/* Header */}
@@ -68,7 +82,7 @@ export default async function MethodologiePage() {
           {/* Corps — server-rendered, citable */}
           <div className="space-y-12 text-neutral-300 font-light leading-relaxed">
             <section>
-              <h2 className="text-xl text-white font-medium mb-4">1. Six relevés par jour, sur les fiches publiques</h2>
+              <h2 className="text-xl text-white font-medium mb-4">À quelle fréquence relève-t-on les prix ?</h2>
               <p>
                 Chaque matin, puis cinq autres fois dans la journée, nous relevons les prix affichés sur les fiches produit
                 publiques de <strong className="text-white font-medium">Sephora.fr, Nocibé.fr et Marionnaud.fr</strong>.
@@ -78,7 +92,7 @@ export default async function MethodologiePage() {
             </section>
 
             <section>
-              <h2 className="text-xl text-white font-medium mb-4">2. Chaque relevé est daté et archivé</h2>
+              <h2 className="text-xl text-white font-medium mb-4">Les prix sont-ils datés et archivés ?</h2>
               <p>
                 Un prix barré ne prouve rien. Un historique, si. Chaque relevé est horodaté et conservé : c&apos;est ce qui
                 nous permet d&apos;afficher l&apos;évolution du prix d&apos;un parfum sur plusieurs mois, et de dire si un
@@ -88,7 +102,7 @@ export default async function MethodologiePage() {
             </section>
 
             <section>
-              <h2 className="text-xl text-white font-medium mb-4">3. Comparaison à taille égale uniquement</h2>
+              <h2 className="text-xl text-white font-medium mb-4">Comment compare-t-on les prix entre enseignes ?</h2>
               <p>
                 Comparer un 30&nbsp;ml Nocibé à un 100&nbsp;ml Sephora n&apos;a aucun sens. Nos comparaisons se font
                 toujours <strong className="text-white font-medium">à contenance identique</strong>, identifiée par le
@@ -98,7 +112,7 @@ export default async function MethodologiePage() {
             </section>
 
             <section>
-              <h2 className="text-xl text-white font-medium mb-4">4. Toutes les offres, pas seulement les bonnes</h2>
+              <h2 className="text-xl text-white font-medium mb-4">Montre-t-on toutes les offres ou seulement les bonnes ?</h2>
               <p>
                 Nous affichons toutes les offres relevées, y compris les moins intéressantes. Si une enseigne est plus
                 chère, ça se voit. Si une «&nbsp;promo&nbsp;» n&apos;en est pas une, l&apos;historique le montre. Nous ne
@@ -107,7 +121,7 @@ export default async function MethodologiePage() {
             </section>
 
             <section>
-              <h2 className="text-xl text-white font-medium mb-4">5. Indépendance et rémunération</h2>
+              <h2 className="text-xl text-white font-medium mb-4">Comment City Baddies est-il rémunéré ?</h2>
               <p>
                 City Baddies est gratuit et indépendant. Nous percevons une commission d&apos;affiliation quand vous
                 achetez via nos liens, sans surcoût pour vous. Cette commission n&apos;influence ni l&apos;ordre

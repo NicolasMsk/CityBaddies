@@ -302,10 +302,34 @@ const homeFaqSchema = {
 export default async function HomePage() {
   const { hotDeals, luxeDeals, latestDeals, categories, topBrands, promoPages, guides, stats } = await getHomeData();
 
+  // Exemple prix+date citable (offre la mieux remisée du jour) + date en clair.
+  const todayStr = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const dod = hotDeals[0];
+  const dodName = dod ? (dod.product.brand && !dod.product.name.toLowerCase().startsWith(String(dod.product.brand).toLowerCase()) ? `${dod.product.brand} ${dod.product.name}` : dod.product.name) : null;
+
+  // ItemList (Product + Offer) des carrousels — citable par les IA.
+  const homeItemList = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Sélection parfums du moment — City Baddies',
+    numberOfItems: [...hotDeals, ...luxeDeals].length,
+    itemListElement: [...hotDeals, ...luxeDeals].slice(0, 16).map((d, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: d.product.brand && !d.product.name.toLowerCase().startsWith(String(d.product.brand).toLowerCase()) ? `${d.product.brand} ${d.product.name}` : d.product.name,
+        url: `${BASE_URL}/produits/${d.product.slug}`,
+        offers: { '@type': 'Offer', price: d.dealPrice, priceCurrency: 'EUR', availability: 'https://schema.org/InStock', seller: { '@type': 'Organization', name: d.merchant?.name } },
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative selection:bg-[#d4a855] selection:text-black">
       {/* FAQPage : reflète la FAQ visible en bas de page (source unique HOME_FAQ) */}
       <JsonLd id="home-faq-schema" data={homeFaqSchema} />
+      <JsonLd id="home-itemlist" data={homeItemList} />
       {/* Background Base - Subtle Studio Gradient */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1a1a1a_0%,_#0a0a0a_80%)] z-0 pointer-events-none" />
       
@@ -385,6 +409,9 @@ export default async function HomePage() {
           <div className="max-w-[1400px] mx-auto px-6 py-3">
             <p className="font-mono text-[11px] md:text-xs text-neutral-400 tracking-wide">
               Prix relevés six fois par jour chez {stats.merchants > 0 ? `${stats.merchants} enseignes — Sephora, Nocibé et Marionnaud` : 'Sephora, Nocibé et Marionnaud'} : {stats.products} parfums, {stats.variants} contenances suivies{stats.variantsToday > 0 ? `, ${stats.variantsToday} relevés aujourd'hui` : ''} — avec historique.
+              {dod && dodName ? (
+                <> Le {todayStr}, meilleure remise relevée : {dodName} à {dod.dealPrice.toFixed(2).replace('.', ',')} € chez {dod.merchant?.name}{dod.discountPercent > 0 ? ` (−${dod.discountPercent}%)` : ''}.</>
+              ) : null}
             </p>
           </div>
         </div>

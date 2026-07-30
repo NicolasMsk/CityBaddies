@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import CategoryCard from '@/components/categories/CategoryCard';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
@@ -131,10 +132,14 @@ export default async function CategoriesPage() {
                 {/* Background Image */}
                 {bgImage ? (
                   <div className="absolute inset-0">
-                    <img 
-                      src={bgImage} 
+                    {/* next/image (fill) : sert un webp optimisé au lieu du PNG brut
+                        2,6 Mo — chargement fiable + corrige « image trop grosse ». */}
+                    <Image
+                      src={bgImage}
                       alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 opacity-70 group-hover:opacity-60"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 opacity-70 group-hover:opacity-60"
                     />
                     <div className="absolute inset-0 bg-neutral-900/20 group-hover:bg-neutral-900/10 transition-colors duration-500" />
                   </div>

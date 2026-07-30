@@ -71,6 +71,30 @@ export async function closeNotinoBrowser(): Promise<void> {
   }
 }
 
+/**
+ * Rend une page Notino via navigateur headless et retourne son HTML complet
+ * (DOM rendu), ou un marqueur d'échec. Utilisé par le résolveur (découverte +
+ * vérification gtin). 'BLOCKED' = challenge Cloudflare.
+ */
+export async function renderNotinoHtml(url: string): Promise<string | 'BLOCKED' | 'NOT_FOUND' | null> {
+  let page: Page | null = null;
+  try {
+    const ctx = await ensureContext();
+    page = await ctx.newPage();
+    const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
+    const status = resp?.status() ?? 0;
+    const title = await page.title();
+    if (status === 403 || status === 429 || /just a moment|attention required|checking your browser/i.test(title)) return 'BLOCKED';
+    if (status === 404 || status === 410) return 'NOT_FOUND';
+    return await page.content();
+  } catch (err) {
+    console.warn(`[notino] render ${url}:`, err instanceof Error ? err.message : err);
+    return null;
+  } finally {
+    if (page) await page.close().catch(() => {});
+  }
+}
+
 /** Récupère le JSON-LD Product d'une fiche Notino via navigateur headless. */
 export async function fetchNotinoProductPrice(url: string): Promise<PriceFetchResult> {
   let page: Page | null = null;

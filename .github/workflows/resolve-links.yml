@@ -20,7 +20,7 @@ on:
         required: true
         default: "nocibe"
         type: choice
-        options: ["nocibe", "marionnaud", "my-origines"]
+        options: ["nocibe", "marionnaud", "my-origines", "notino"]
       dry_run:
         description: "Simulation (n'écrit rien)"
         required: false
@@ -46,5 +46,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      - name: Install Chromium (Notino)
+        if: inputs.target == 'notino'
+        run: npx playwright-core install --with-deps chromium
       - name: Resolve ${{ inputs.target }}
         run: npx tsx src/scripts/resolve-links.ts --target ${{ inputs.target }} ${{ inputs.dry_run && '--dry-run' || '' }}

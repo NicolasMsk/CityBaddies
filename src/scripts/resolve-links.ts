@@ -38,9 +38,10 @@
  */
 import 'dotenv/config';
 import prisma from '../lib/prisma';
+import { renderNotinoHtml, closeNotinoBrowser } from '../lib/scraping/notino';
 
-type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines';
-const ALL_MERCHANTS: MerchantSlug[] = ['marionnaud', 'nocibe', 'sephora', 'my-origines'];
+type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines' | 'notino';
+const ALL_MERCHANTS: MerchantSlug[] = ['marionnaud', 'nocibe', 'sephora', 'my-origines', 'notino'];
 
 // UA desktop pour l'API Marionnaud (pas d'Akamai — fonctionne depuis toute IP).
 const DESKTOP_UA =
@@ -57,6 +58,7 @@ const NOCIBE_HEADERS = {
 };
 
 const NOCIBE_THROTTLE_MS = 8000; // Akamai rate-limite → espacer les fiches Nocibé.
+const NOTINO_RENDER_DELAY_MS = 6000; // Cloudflare escalade sur les rafales → rythme humain.
 const MARIONNAUD_THROTTLE_MS = 700; // API polie mais on reste correct.
 const MY_ORIGINES_THROTTLE_MS = 800; // Pas de WAF observé — poli.
 const FETCH_TIMEOUT_MS = 20000;
@@ -336,6 +338,64 @@ async function resolveMyOriginesBySearch(
   return null;
 }
 
+// ─── NOTINO (navigateur headless + vérif gtin/EAN) ────────────────────────────
+
+function notinoSlug(s: string): string {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/** URLs fiche /<marque>/<produit>/ dans une page listing Notino (exclut les rubriques). */
+function notinoProductLinks(html: string): string[] {
+  const raw = html.match(/\/[a-z0-9-]+\/[a-z0-9-]+\//g) ?? [];
+  const rubriques = /^\/(cosmetiques|parfums|marques|soin|soins|maquillage|homme|femme|enfant|nouveautes|promotions|cheveux|corps|visage|bain)\//i;
+  return [...new Set(raw)].filter((u) => !rubriques.test(u));
+}
+
+/** gtin (JSON-LD) + EAN-13 (préfixe 3) présents dans le HTML rendu d'une fiche Notino. */
+function notinoPageEans(html: string): string[] {
+  const out = new Set<string>();
+  for (const m of html.matchAll(/"gtin1[0-4]"\s*:\s*"(\d{8,14})"/g)) out.add(m[1]);
+  for (const e of html.match(/\b3\d{12}\b/g) ?? []) out.add(e);
+  return [...out];
+}
+
+/**
+ * Résout un parfum chez Notino (Cloudflare → navigateur headless). Découverte
+ * via la page listing /<marque>/<nom>/, puis VÉRIFICATION : un EAN/gtin connu
+ * doit figurer sur la fiche candidate. 'BLOCKED' si Cloudflare challenge.
+ */
+async function resolveNotino(
+  eans: string[],
+  brand: string,
+  name: string,
+): Promise<{ productUrl: string; searchUrl: string } | 'BLOCKED' | null> {
+  const eanSet = new Set(eans);
+  const brandSlug = notinoSlug(brand);
+  let core = name;
+  if (brand && core.toLowerCase().startsWith(brand.toLowerCase())) core = core.slice(brand.length);
+  core = core.replace(/eau de (parfum|toilette|cologne)/gi, '').replace(/\bintense\b/gi, '');
+  const nameSlug = notinoSlug(core);
+  if (!brandSlug || !nameSlug) return null;
+
+  const listUrl = `https://www.notino.fr/${brandSlug}/${nameSlug}/`;
+  const listing = await renderNotinoHtml(listUrl);
+  if (listing === 'BLOCKED') return 'BLOCKED';
+  if (typeof listing !== 'string') return null;
+
+  const candidates = notinoProductLinks(listing)
+    .filter((u) => u.includes(nameSlug) || u.includes(brandSlug))
+    .slice(0, 5);
+  for (const rel of candidates) {
+    await delay(NOTINO_RENDER_DELAY_MS); // rythme humain : évite l'escalade Cloudflare
+    const url = `https://www.notino.fr${rel}`;
+    const page = await renderNotinoHtml(url);
+    if (page === 'BLOCKED') return 'BLOCKED';
+    if (typeof page !== 'string') continue;
+    if (notinoPageEans(page).some((e) => eanSet.has(e))) return { productUrl: url, searchUrl: listUrl };
+  }
+  return null;
+}
+
 // ─── CHARGEMENT / EAN SOURCE ──────────────────────────────────────────────────
 
 interface QueueGroup {
@@ -588,27 +648,82 @@ async function runMyOrigines(groups: Map<string, QueueGroup>, limit: number, dry
   }
 }
 
+/**
+ * Notino (navigateur headless). Parfums SANS notino mais AVEC une source d'EAN.
+ * Cloudflare est intermittent → on tolère les blocages (compteur), un run
+ * ultérieur reprend le reliquat.
+ */
+async function runNotino(groups: Map<string, QueueGroup>, limit: number, dryRun: boolean, summary: Summary) {
+  const targets = [...groups.values()].filter(
+    (g) => !g.merchants.has('notino') && (g.merchants.has('nocibe') || g.merchants.has('marionnaud') || g.merchants.has('my-origines')),
+  );
+  console.log(`\n=== Cible NOTINO (headless + vérif gtin/EAN) ===`);
+  console.log(`Parfums sans Notino mais avec une source d'EAN (candidats) : ${targets.length}`);
+
+  let count = 0;
+  let blocked = 0;
+  for (const g of targets) {
+    if (count >= limit) break;
+    count++;
+    summary.processed++;
+
+    const eans = await storedEans(g.productName);
+    if (eans.length === 0) {
+      console.log(`[resolve] – ${g.productName} | aucun EAN disponible — non résolu`);
+      summary.unresolved++;
+      continue;
+    }
+    const prod = await prisma.product.findUnique({
+      where: { slug: canonicalSlug(g.productName) },
+      select: { brand: true, name: true },
+    });
+    if (!prod) { summary.unresolved++; continue; }
+
+    const res = await resolveNotino(eans, prod.brand || '', prod.name);
+    await delay(NOTINO_RENDER_DELAY_MS); // espacement entre produits
+    if (res === 'BLOCKED') {
+      blocked++;
+      console.warn(`[resolve] ⚠ Cloudflare a bloqué (${g.productName}) — reliquat au prochain run`);
+      if (blocked >= 6) { console.warn('[resolve] trop de blocages Cloudflare — arrêt du run Notino'); break; }
+      continue;
+    }
+    if (!res) {
+      console.log(`[resolve] – ${g.productName} | pas de fiche Notino sûre — non résolu`);
+      summary.unresolved++;
+      continue;
+    }
+    if (dryRun) {
+      console.log(`[DRY] ${g.productName} -> notino ${res.productUrl}`);
+    } else {
+      await upsertQueueLink(g.productName, 'notino', res.productUrl, res.searchUrl, 'headless-gtin-verified');
+      console.log(`[resolve] ✓ ${g.productName} → ${res.productUrl}`);
+    }
+    summary.resolved++;
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const targetIdx = args.indexOf('--target');
-  const target = (targetIdx >= 0 ? args[targetIdx + 1] : 'marionnaud') as 'marionnaud' | 'nocibe' | 'my-origines';
+  const target = (targetIdx >= 0 ? args[targetIdx + 1] : 'marionnaud') as 'marionnaud' | 'nocibe' | 'my-origines' | 'notino';
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : Infinity;
   const dryRun = args.includes('--dry-run');
 
-  if (target !== 'marionnaud' && target !== 'nocibe' && target !== 'my-origines') {
-    console.error(`Cible inconnue: ${target} (attendu: marionnaud|nocibe|my-origines)`);
+  if (!['marionnaud', 'nocibe', 'my-origines', 'notino'].includes(target)) {
+    console.error(`Cible inconnue: ${target} (attendu: marionnaud|nocibe|my-origines|notino)`);
     process.exit(1);
   }
 
-  console.log(`Résolveur de liens (pont EAN) — cible: ${target}${dryRun ? ' (DRY RUN)' : ''}, limit=${limit}`);
+  console.log(`Résolveur de liens — cible: ${target}${dryRun ? ' (DRY RUN)' : ''}, limit=${limit}`);
 
   const groups = await loadGroups();
   const summary: Summary = { processed: 0, resolved: 0, unresolved: 0, errors: 0 };
 
   if (target === 'marionnaud') await runMarionnaud(groups, limit, dryRun, summary);
   else if (target === 'nocibe') await runNocibe(groups, limit, dryRun, summary);
-  else await runMyOrigines(groups, limit, dryRun, summary);
+  else if (target === 'my-origines') await runMyOrigines(groups, limit, dryRun, summary);
+  else await runNotino(groups, limit, dryRun, summary);
 
   console.log('\n=== Résumé ===');
   console.log(`parfums traités : ${summary.processed}`);
@@ -616,11 +731,13 @@ async function main() {
   console.log(`non résolus     : ${summary.unresolved}`);
   console.log(`erreurs         : ${summary.errors}`);
 
+  await closeNotinoBrowser();
   await prisma.$disconnect();
 }
 
 main().catch(async (err) => {
   console.error('Erreur fatale:', err);
+  await closeNotinoBrowser();
   await prisma.$disconnect();
   process.exit(1);
 });

@@ -27,6 +27,7 @@ import {
   fetchMarionnaudProductPrice,
   fetchNocibeProductPrice,
   fetchSephoraProductPrice,
+  fetchMyOriginesProductPrice,
   warmupSession,
   ProductPrice,
   PriceFetchResult,
@@ -35,12 +36,13 @@ import {
 import { findOrCreateBrand } from '../lib/brands';
 import { findOrCreateVariant, calculatePricePerUnit, parseVolume } from '../lib/utils/volume';
 
-type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora';
+type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines';
 
 const MERCHANT_INFO: Record<MerchantSlug, { name: string; website: string }> = {
   sephora: { name: 'Sephora', website: 'https://www.sephora.fr' },
   nocibe: { name: 'Nocibé', website: 'https://www.nocibe.fr' },
   marionnaud: { name: 'Marionnaud', website: 'https://www.marionnaud.fr' },
+  'my-origines': { name: 'My-Origines', website: 'https://www.my-origines.com' },
 };
 
 // Espacement minimum entre 2 fetches d'un même marchand (ms). Akamai (nocibe /
@@ -50,6 +52,8 @@ const THROTTLE_MS: Record<MerchantSlug, number> = {
   marionnaud: 1500,
   nocibe: 10000,
   sephora: 12000,
+  // My-Origines : pas de WAF observé — poli comme Marionnaud.
+  'my-origines': 1500,
 };
 // Jitter aléatoire ajouté au throttle (0..JITTER_MS) — motif moins mécanique.
 const JITTER_MS = 4000;
@@ -72,6 +76,7 @@ const FETCHERS: Record<MerchantSlug, (url: string) => Promise<PriceFetchResult>>
   marionnaud: fetchMarionnaudProductPrice,
   nocibe: fetchNocibeProductPrice,
   sephora: fetchSephoraProductPrice,
+  'my-origines': fetchMyOriginesProductPrice,
 };
 
 const PARFUMS_CATEGORY = { slug: 'parfums', name: 'Parfums', icon: 'Gem', description: 'Parfums femme, homme...' };
@@ -100,6 +105,9 @@ function isProductUrl(merchant: MerchantSlug, url: string): boolean {
       return /\/fr\/p\/\d+/i.test(url);
     case 'sephora':
       return /\/p\/.*-P\d+\.html/i.test(url) || /\/p\//i.test(url);
+    case 'my-origines':
+      // Fiche = /fr/<slug>-<sku>.html (ex: /fr/libre-81413585.html).
+      return /\/fr\/[a-z0-9-]+-[0-9A-Za-z]+\.html(?:[?#]|$)/i.test(url);
     default:
       return false;
   }
@@ -127,11 +135,11 @@ async function main() {
   const staleCutoff = new Date(Date.now() - staleHours * 3600_000);
 
   if (merchantArg && !MERCHANT_INFO[merchantArg]) {
-    console.error(`Marchand inconnu: ${merchantArg} (attendu: marionnaud|nocibe|sephora)`);
+    console.error(`Marchand inconnu: ${merchantArg} (attendu: marionnaud|nocibe|sephora|my-origines)`);
     process.exit(1);
   }
 
-  const merchants: MerchantSlug[] = merchantArg ? [merchantArg] : ['marionnaud', 'nocibe', 'sephora'];
+  const merchants: MerchantSlug[] = merchantArg ? [merchantArg] : ['marionnaud', 'nocibe', 'sephora', 'my-origines'];
   console.log(`Price tracker — marchands: ${merchants.join(', ')}${dryRun ? ' (DRY RUN)' : ''}, limit=${limit}`);
 
   // Charger les fiches vérifiées à fiche-produit, par marchand.

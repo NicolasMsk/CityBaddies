@@ -22,11 +22,11 @@ on:
   workflow_dispatch:
     inputs:
       merchant:
-        description: "Marchand (vide = les 3)"
+        description: "Marchand (vide = tous)"
         required: false
         default: ""
         type: choice
-        options: ["", "nocibe", "marionnaud", "sephora"]
+        options: ["", "nocibe", "marionnaud", "sephora", "my-origines"]
 
 concurrency:
   group: track-prices
@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        merchant: [nocibe, marionnaud, sephora]
+        merchant: [nocibe, marionnaud, sephora, my-origines]
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DIRECT_URL }}

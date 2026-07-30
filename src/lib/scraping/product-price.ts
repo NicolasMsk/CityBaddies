@@ -678,3 +678,133 @@ export async function fetchSephoraProductPrice(url: string): Promise<PriceFetchR
     return null;
   }
 }
+
+// ─── MY-ORIGINES ─────────────────────────────────────────────────────────────
+
+const MY_ORIGINES_ORIGIN = 'https://www.my-origines.com';
+
+/**
+ * Contenance d'une offre My-Origines. Le `name` de l'offre encode la taille en
+ * FIN de chaîne, SANS unité : "Libre 30" = 30 ml, "Libre 150" = 150 ml.
+ * On tente d'abord une unité explicite (au cas où), sinon on prend le DERNIER
+ * nombre du name et on l'interprète en millilitres (parfums : 5–200 ml).
+ */
+function parseMyOriginesVolume(offerName: string | undefined): string | undefined {
+  if (!offerName) return undefined;
+  const explicit = parseVolumeString(offerName);
+  if (explicit) return explicit;
+  const nums = offerName.match(/\d+(?:[.,]\d+)?/g);
+  if (!nums || !nums.length) return undefined;
+  return nums[nums.length - 1].replace(',', '.') + 'ml';
+}
+
+/** sku My-Origines depuis l'URL /fr/<slug>-<sku>.html (ex: ...-81413585.html). */
+function myOriginesSkuFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/-([0-9A-Za-z]+)\.html(?:[?#]|$)/i);
+  return m ? m[1] : null;
+}
+
+/**
+ * Parse une fiche produit My-Origines (Salesforce Commerce). VÉRIFIÉ LIVE 2026-07.
+ * Fonction PURE (testable sur fixture HTML) : ne fait pas de réseau.
+ *
+ * La fiche embarque un `<script type="application/ld+json">` `@type=Product` :
+ *  - marque      : brand.name ("Yves St Laurent")
+ *  - nom         : name ("Libre")
+ *  - image       : image
+ *  - contenances : offers (AggregateOffer) → offers[] avec, par taille :
+ *      `name` ("Libre 30" → 30 ml), `price`, `priceCurrency`, `availability`,
+ *      `url`, `sku`. Le sku de l'URL désigne la variante affichée.
+ *
+ * ⚠️ Pas de prix barré exploitable dans le ld+json (le dataLayer expose un
+ * `discountfree_tax` au sens ambigu → volontairement NON capté pour ne pas
+ * fabriquer de fausse promo). originalPrice = prix de vente.
+ *
+ * @returns ProductPrice si trouvé, null si pas de ld+json Product / prix invalide.
+ */
+export function parseMyOriginesProduct(html: string, url?: string): ProductPrice | null {
+  const $ = cheerio.load(html);
+  const products: any[] = [];
+  $('script[type="application/ld+json"]').each((_, el) => {
+    let parsed: unknown;
+    try { parsed = JSON.parse($(el).html() || ''); } catch { return; }
+    for (const it of Array.isArray(parsed) ? parsed : [parsed]) {
+      const types = ([] as unknown[]).concat((it as any)?.['@type'] ?? []);
+      if (it && types.includes('Product')) products.push(it);
+    }
+  });
+  if (products.length === 0) return null;
+  const ld = products[0];
+
+  const brand = (typeof ld.brand === 'object' ? ld.brand?.name : ld.brand)?.toString().trim() || undefined;
+  const name = typeof ld.name === 'string' ? ld.name.trim() : undefined;
+  let imageUrl: string | undefined;
+  const img = Array.isArray(ld.image) ? ld.image[0] : ld.image;
+  if (typeof img === 'string' && !isJunkImage(img)) imageUrl = toAbsolute(img, MY_ORIGINES_ORIGIN);
+
+  // Liste des offres : AggregateOffer.offers[] (cas normal) ou offers direct.
+  const agg = ld.offers && !Array.isArray(ld.offers) ? ld.offers : undefined;
+  const offerArr: any[] = Array.isArray(agg?.offers)
+    ? agg.offers
+    : Array.isArray(ld.offers)
+      ? ld.offers
+      : agg
+        ? [agg]
+        : [];
+
+  const collected: VariantPrice[] = [];
+  for (const o of offerArr) {
+    if (o?.availability && /OutOfStock/i.test(String(o.availability))) continue;
+    const priceNum = typeof o?.price === 'number' ? o.price : parseFloat(o?.price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) continue;
+    const vol = parseMyOriginesVolume(o?.name);
+    if (!vol) continue;
+    collected.push({
+      volume: vol,
+      currentPrice: priceNum,
+      url: typeof o?.url === 'string' ? toAbsolute(o.url, MY_ORIGINES_ORIGIN) : undefined,
+    });
+  }
+  const variants = sanitizeVariants(collected);
+
+  // Variante affichée = celle dont le sku est dans l'URL ; sinon repli sur la
+  // 1re variante valide, sinon lowPrice de l'AggregateOffer.
+  const sku = myOriginesSkuFromUrl(url);
+  const selected = sku ? offerArr.find((o) => String(o?.sku) === sku) : undefined;
+  let currentPrice = selected
+    ? typeof selected.price === 'number' ? selected.price : parseFloat(selected.price)
+    : NaN;
+  let volume = selected ? parseMyOriginesVolume(selected.name) : undefined;
+  if (!(Number.isFinite(currentPrice) && currentPrice > 0)) {
+    if (variants && variants.length) {
+      currentPrice = variants[0].currentPrice;
+      volume = variants[0].volume;
+    } else {
+      const lp = parseFloat(agg?.lowPrice);
+      if (Number.isFinite(lp) && lp > 0) currentPrice = lp;
+    }
+  }
+  if (!(Number.isFinite(currentPrice) && currentPrice > 0)) return null;
+
+  return { name, brand, currentPrice, originalPrice: currentPrice, volume, imageUrl, variants };
+}
+
+/**
+ * Fiche produit My-Origines (ex-Origines Parfums). Pas de WAF (VÉRIFIÉ 2026-07 :
+ * 200 sur n'importe quel UA) → pas de blocage attendu. UA mobile par cohérence.
+ */
+export async function fetchMyOriginesProductPrice(url: string): Promise<PriceFetchResult> {
+  const outcome = await fetchHtml(url, { ...MOBILE_HEADERS, Referer: 'https://www.my-origines.com/' });
+  if (!outcome.html) return classifyFailure(outcome);
+  const html = outcome.html;
+  if (looksBlocked(html)) return 'BLOCKED';
+  try {
+    const result = parseMyOriginesProduct(html, url);
+    if (!result) console.warn(`[product-price][my-origines] extraction échouée ${url}`);
+    return result;
+  } catch (err) {
+    console.warn(`[product-price][my-origines] parsing ${url}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}

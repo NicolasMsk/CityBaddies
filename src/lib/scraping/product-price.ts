@@ -808,3 +808,62 @@ export async function fetchMyOriginesProductPrice(url: string): Promise<PriceFet
     return null;
   }
 }
+
+// ─── NOTINO ──────────────────────────────────────────────────────────────────
+
+const NOTINO_ORIGIN = 'https://www.notino.fr';
+
+/**
+ * Parse le JSON-LD `Product` d'une fiche Notino (Cloudflare → chargé via un
+ * navigateur headless, voir src/lib/scraping/notino.ts). Fonction PURE, testable.
+ *
+ * Structure (VÉRIFIÉ LIVE 2026-07) : `@type=Product` avec `gtin13` (top-level),
+ * `brand.name`, `name`, `image[]`, et `offers` = ARRAY d'Offer, chacun :
+ *   `name` ("Guess Seductive 125 ml" → taille en fin), `price`, `priceCurrency`,
+ *   `availability`, `sku`, `url` (relative /brand/prod/p-<id>/).
+ * Pas de prix barré exposé → originalPrice = prix de vente.
+ *
+ * @param ld  l'objet JSON-LD Product (déjà parsé)
+ * @returns ProductPrice, ou null si prix/offres invalides.
+ */
+export function parseNotinoProduct(ld: any): ProductPrice | null {
+  if (!ld || !([] as unknown[]).concat(ld['@type'] ?? []).includes('Product')) return null;
+
+  const brand = (typeof ld.brand === 'object' ? ld.brand?.name : ld.brand)?.toString().trim() || undefined;
+  const name = typeof ld.name === 'string' ? ld.name.trim() : undefined;
+  let imageUrl: string | undefined;
+  const img = Array.isArray(ld.image) ? ld.image[0] : ld.image;
+  if (typeof img === 'string' && !isJunkImage(img)) imageUrl = toAbsolute(img, NOTINO_ORIGIN);
+
+  const gtin = (ld.gtin13 || ld.gtin || '').toString().replace(/\D/g, '') || undefined;
+  const offerArr: any[] = Array.isArray(ld.offers) ? ld.offers : ld.offers ? [ld.offers] : [];
+
+  const collected: VariantPrice[] = [];
+  for (const o of offerArr) {
+    if (o?.availability && /OutOfStock/i.test(String(o.availability))) continue;
+    const priceNum = typeof o?.price === 'number' ? o.price : parseFloat(o?.price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) continue;
+    const vol = parseLastVolume(o?.name) ?? parseVolumeString(o?.name);
+    if (!vol) continue;
+    collected.push({
+      volume: vol,
+      currentPrice: priceNum,
+      // gtin13 est top-level (variante par défaut) : on ne le rattache que s'il
+      // n'y a qu'une contenance, pour éviter un mauvais mapping taille↔EAN.
+      ean: offerArr.length === 1 && gtin && gtin.length >= 8 ? gtin : undefined,
+      url: typeof o?.url === 'string' ? toAbsolute(o.url, NOTINO_ORIGIN) : undefined,
+    });
+  }
+  const variants = sanitizeVariants(collected);
+  if (!variants || variants.length === 0) return null;
+
+  return {
+    name,
+    brand,
+    currentPrice: variants[0].currentPrice,
+    originalPrice: variants[0].currentPrice,
+    volume: variants[0].volume,
+    imageUrl,
+    variants,
+  };
+}

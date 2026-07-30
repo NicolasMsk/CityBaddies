@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { parseMyOriginesProduct } from './product-price';
+import { parseMyOriginesProduct, parseNotinoProduct } from './product-price';
 
 const libreHtml = readFileSync(
   fileURLToPath(new URL('./__fixtures__/my-origines-libre.html', import.meta.url)),
@@ -96,5 +96,58 @@ describe('parseMyOriginesProduct — cas limites', () => {
     });
     const p = parseMyOriginesProduct(html);
     expect(p!.variants![0].volume).toBe('30ml');
+  });
+});
+
+describe('parseNotinoProduct — JSON-LD réel + cas limites', () => {
+  // JSON-LD capturé en live sur notino.fr (offers = ARRAY, gtin13 top-level).
+  const guessLd = {
+    '@type': 'Product',
+    sku: 'GUSSWMW_DBOR10',
+    gtin13: '85715323101',
+    name: 'Guess Seductive',
+    brand: { '@type': 'Brand', name: 'Guess' },
+    image: ['https://cdn.notinoimg.com/order_2k/guess/85715323101_01-o/seductive___240325.jpg'],
+    offers: [
+      { '@type': 'Offer', name: 'Guess Seductive 125 ml', availability: 'https://schema.org/InStock', price: 5, priceCurrency: 'EUR', sku: 'GUSSWMW_DBOR10', url: '/guess/seductive-spray-corporel-parfume/p-16234475/' },
+    ],
+  };
+
+  it('extrait marque, nom, image, prix et contenance', () => {
+    const p = parseNotinoProduct(guessLd);
+    expect(p).not.toBeNull();
+    expect(p!.brand).toBe('Guess');
+    expect(p!.name).toBe('Guess Seductive');
+    expect(p!.currentPrice).toBe(5);
+    expect(p!.volume).toBe('125ml');
+    expect(p!.imageUrl).toContain('notinoimg.com');
+    expect(p!.variants![0].url).toBe('https://www.notino.fr/guess/seductive-spray-corporel-parfume/p-16234475/');
+    // gtin13 rattaché à la variante (contenance unique)
+    expect(p!.variants![0].ean).toBe('85715323101');
+  });
+
+  it('gère plusieurs contenances (offers array) et écarte les ruptures', () => {
+    const ld = {
+      '@type': 'Product',
+      name: 'Libre',
+      brand: { name: 'Yves Saint Laurent' },
+      gtin13: '3614272648418',
+      offers: [
+        { '@type': 'Offer', name: 'Libre Eau de Parfum 30 ml', price: 79, availability: 'https://schema.org/InStock' },
+        { '@type': 'Offer', name: 'Libre Eau de Parfum 50 ml', price: 105, availability: 'https://schema.org/InStock' },
+        { '@type': 'Offer', name: 'Libre Eau de Parfum 90 ml', price: 140, availability: 'https://schema.org/OutOfStock' },
+      ],
+    };
+    const p = parseNotinoProduct(ld);
+    expect(p!.variants!.map((v) => v.volume)).toEqual(['30ml', '50ml']);
+    // multi-contenances → gtin top-level NON rattaché (évite mauvais mapping)
+    expect(p!.variants!.every((v) => v.ean === undefined)).toBe(true);
+    expect(p!.currentPrice).toBe(79);
+  });
+
+  it('retourne null si pas de Product ou pas d’offre exploitable', () => {
+    expect(parseNotinoProduct(null)).toBeNull();
+    expect(parseNotinoProduct({ '@type': 'BreadcrumbList' })).toBeNull();
+    expect(parseNotinoProduct({ '@type': 'Product', name: 'X', offers: [] })).toBeNull();
   });
 });

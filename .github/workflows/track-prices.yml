@@ -26,7 +26,7 @@ on:
         required: false
         default: ""
         type: choice
-        options: ["", "nocibe", "marionnaud", "sephora", "my-origines"]
+        options: ["", "nocibe", "marionnaud", "sephora", "my-origines", "notino"]
 
 concurrency:
   group: track-prices
@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        merchant: [nocibe, marionnaud, sephora, my-origines]
+        merchant: [nocibe, marionnaud, sephora, my-origines, notino]
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
@@ -52,6 +52,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      # Notino est chargé via Chromium headless (Cloudflare) — installer le binaire
+      # + ses dépendances système. Uniquement pour ce marchand (les autres = HTTP).
+      - name: Install Chromium (Notino)
+        if: matrix.merchant == 'notino'
+        run: npx playwright-core install --with-deps chromium
       - name: Track ${{ matrix.merchant }}
         if: >-
           github.event_name != 'workflow_dispatch' ||

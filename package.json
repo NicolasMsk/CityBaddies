@@ -23,6 +23,7 @@
     "googleapis": "^171.2.0",
     "isomorphic-dompurify": "^3.18.0",
     "lucide-react": "^0.555.0",
+    "playwright-core": "^1.62.0",
     "next": "^16.0.10",
     "openai": "^6.10.0",
     "prisma": "^6.19.2",

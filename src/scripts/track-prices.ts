@@ -33,16 +33,18 @@ import {
   PriceFetchResult,
   VariantPrice,
 } from '../lib/scraping/product-price';
+import { fetchNotinoProductPrice, closeNotinoBrowser } from '../lib/scraping/notino';
 import { findOrCreateBrand } from '../lib/brands';
 import { findOrCreateVariant, calculatePricePerUnit, parseVolume } from '../lib/utils/volume';
 
-type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines';
+type MerchantSlug = 'marionnaud' | 'nocibe' | 'sephora' | 'my-origines' | 'notino';
 
 const MERCHANT_INFO: Record<MerchantSlug, { name: string; website: string }> = {
   sephora: { name: 'Sephora', website: 'https://www.sephora.fr' },
   nocibe: { name: 'Nocibé', website: 'https://www.nocibe.fr' },
   marionnaud: { name: 'Marionnaud', website: 'https://www.marionnaud.fr' },
   'my-origines': { name: 'My-Origines', website: 'https://www.my-origines.com' },
+  notino: { name: 'Notino', website: 'https://www.notino.fr' },
 };
 
 // Espacement minimum entre 2 fetches d'un même marchand (ms). Akamai (nocibe /
@@ -54,6 +56,8 @@ const THROTTLE_MS: Record<MerchantSlug, number> = {
   sephora: 12000,
   // My-Origines : pas de WAF observé — poli comme Marionnaud.
   'my-origines': 1500,
+  // Notino : navigateur headless (déjà lent ~3-5s/page) + on reste poli face à Cloudflare.
+  notino: 2500,
 };
 // Jitter aléatoire ajouté au throttle (0..JITTER_MS) — motif moins mécanique.
 const JITTER_MS = 4000;
@@ -77,6 +81,7 @@ const FETCHERS: Record<MerchantSlug, (url: string) => Promise<PriceFetchResult>>
   nocibe: fetchNocibeProductPrice,
   sephora: fetchSephoraProductPrice,
   'my-origines': fetchMyOriginesProductPrice,
+  notino: fetchNotinoProductPrice,
 };
 
 const PARFUMS_CATEGORY = { slug: 'parfums', name: 'Parfums', icon: 'Gem', description: 'Parfums femme, homme...' };
@@ -108,6 +113,9 @@ function isProductUrl(merchant: MerchantSlug, url: string): boolean {
     case 'my-origines':
       // Fiche = /fr/<slug>-<sku>.html (ex: /fr/libre-81413585.html).
       return /\/fr\/[a-z0-9-]+-[0-9A-Za-z]+\.html(?:[?#]|$)/i.test(url);
+    case 'notino':
+      // Fiche = /<marque>/<produit-slug>/ (ex: /yves-saint-laurent/libre/).
+      return /^https?:\/\/(www\.)?notino\.fr\/[a-z0-9-]+\/[a-z0-9-]+\/?/i.test(url);
     default:
       return false;
   }
@@ -139,7 +147,7 @@ async function main() {
     process.exit(1);
   }
 
-  const merchants: MerchantSlug[] = merchantArg ? [merchantArg] : ['marionnaud', 'nocibe', 'sephora', 'my-origines'];
+  const merchants: MerchantSlug[] = merchantArg ? [merchantArg] : ['marionnaud', 'nocibe', 'sephora', 'my-origines', 'notino'];
   console.log(`Price tracker — marchands: ${merchants.join(', ')}${dryRun ? ' (DRY RUN)' : ''}, limit=${limit}`);
 
   // Charger les fiches vérifiées à fiche-produit, par marchand.
@@ -222,7 +230,9 @@ async function main() {
     summary.processed++;
 
     // Warmup de session (cookies Akamai) au 1er fetch du marchand.
-    if (!warmedUp.has(merchant)) {
+    // Notino : chargé via navigateur headless → pas de warmup HTTP (la home est
+    // challengée par Cloudflare et le warmup fetch serait inutile).
+    if (!warmedUp.has(merchant) && merchant !== 'notino') {
       warmedUp.add(merchant);
       await warmupSession(MERCHANT_INFO[merchant].website, merchant !== 'marionnaud');
       await delay(2000);
@@ -309,6 +319,8 @@ async function main() {
   console.log(`URLs ignorées   : ${summary.skipped}`);
   console.log(`erreurs         : ${summary.errors}`);
 
+  // Libère le navigateur headless Notino s'il a été lancé (sinon le process pend).
+  await closeNotinoBrowser();
   await prisma.$disconnect();
   // Un blocage Akamai (fréquent sur Sephora/Nocibé) est TRANSITOIRE et attendu :
   // la stratégie incrémentale rattrape au run suivant. Il ne doit donc PAS faire

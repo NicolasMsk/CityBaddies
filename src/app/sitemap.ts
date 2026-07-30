@@ -55,6 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // Pages contenu data-driven : chiffres recalculés à chaque relevé
     {
+      url: `${BASE_URL}/observatoire-des-prix`,
+      lastModified: dataDate,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
       lastModified: dataDate,
       changeFrequency: 'daily',

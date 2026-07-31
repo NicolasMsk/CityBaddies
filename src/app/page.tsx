@@ -75,123 +75,80 @@ async function getHomeData() {
   today.setHours(0, 0, 0, 0);
 
   // Récupération séquentielle pour éviter les doublons entre sections
-  // 1. D'abord les hotDeals (Sélection Virale)
-  const hotDeals = await prisma.deal.findMany({
-    where: {
-      status: 'ACTIVE',
-      discountPercent: { gt: 0 }, // fil "bons plans" = vraies promos uniquement (les variantes non-promo ont discount 0)
-    },
-    distinct: ['productId'],
-    include: {
-      merchant: true,
-      product: {
-        include: {
-          category: true,
-          images: { orderBy: { position: 'asc' }, take: 5 },
-        },
-      },
-    },
-    orderBy: [
-      { discountPercent: 'desc' },
-      { score: 'desc' },
-    ],
-    take: 8,
+  // ── Sélection SCALABLE & VARIÉE des vitrines (tous les marchands remontent) ──
+  // Problème historique : les carrousels filtraient sur discountPercent > 0, ce
+  // qui EXCLUAIT structurellement les discounters (My-Origines, Notino) — ils
+  // n'ont pas de prix barré, donc discountPercent = 0. Résultat : toujours les
+  // 3 mêmes enseignes.
+  // Nouveau critère « bon plan » = vraie remise OU meilleur prix du produit
+  // (le hook honnête des discounters). Puis ÉQUILIBRAGE par marchand en
+  // round-robin → aucun marchand ne monopolise la vitrine et les nouveaux
+  // marchands apparaissent d'eux-mêmes (rien de codé en dur).
+  const activeLite = await prisma.deal.findMany({
+    where: { status: 'ACTIVE' },
+    select: { id: true, productId: true, merchantId: true, dealPrice: true, discountPercent: true, score: true, brandTier: true },
   });
-  
-  const hotDealIds = hotDeals.map(d => d.id);
-  
-  // 2. Ensuite les luxeDeals (Archives de Luxe) - en excluant les hotDeals
-  const luxeDeals = await prisma.deal.findMany({
-    where: {
-      status: 'ACTIVE',
-      discountPercent: { gt: 0 },
-      brandTier: 1,
-      id: { notIn: hotDealIds },
-    },
-    distinct: ['productId'],
-    include: {
-      merchant: true,
-      product: {
-        include: {
-          category: true,
-          images: { orderBy: { position: 'asc' }, take: 5 },
-        },
-      },
-    },
-    orderBy: [
-      { discountPercent: 'desc' },
-      { score: 'desc' },
-    ],
-    take: 8,
-  });
-  
-  const luxeDealIds = luxeDeals.map(d => d.id);
-  const excludedIds = [...hotDealIds, ...luxeDealIds];
-  
-  // 3. Derniers deals (Derniers Ajouts) - en excluant hotDeals ET luxeDeals
-  const latestDeals = await (async () => {
-    // Récupérer tous les marchands actifs
-    const merchants = await prisma.merchant.findMany({
-      where: {
-        deals: {
-          some: {
-            status: 'ACTIVE',
-            discountPercent: { gt: 0 },
-            id: { notIn: excludedIds },
-          },
-        },
-      },
-    });
-    
-    const totalDeals = 10;
-    const dealsPerMerchant = Math.ceil(totalDeals / Math.max(merchants.length, 1));
-    
-    // Récupérer les derniers deals de chaque marchand
-    const dealsByMerchant = await Promise.all(
-      merchants.map(merchant =>
-        prisma.deal.findMany({
-          where: {
-            status: 'ACTIVE',
-            discountPercent: { gt: 0 },
-            merchantId: merchant.id,
-            id: { notIn: excludedIds },
-          },
-          distinct: ['productId'],
-          include: {
-            merchant: true,
-            product: {
-              include: {
-                category: true,
-                images: { orderBy: { position: 'asc' }, take: 5 },
-              },
-            },
-          },
-          orderBy: [
-            { discountPercent: 'desc' },
-            { createdAt: 'desc' },
-          ],
-          take: dealsPerMerchant,
-        })
-      )
-    );
-    
-    // Mélanger en alternance (round-robin) + dédupliquer par productId
-    const mixedDeals: any[] = [];
-    const seenProductIds = new Set<string>();
-    const maxLength = Math.max(...dealsByMerchant.map(d => d.length));
-    
-    for (let i = 0; i < maxLength; i++) {
-      for (const merchantDeals of dealsByMerchant) {
-        const deal = merchantDeals[i];
-        if (deal && mixedDeals.length < totalDeals && !seenProductIds.has(deal.productId)) {
-          seenProductIds.add(deal.productId);
-          mixedDeals.push(deal);
-        }
+  type Lite = (typeof activeLite)[number];
+
+  const minByProduct = new Map<string, number>();
+  for (const d of activeLite) {
+    const m = minByProduct.get(d.productId);
+    if (m === undefined || d.dealPrice < m) minByProduct.set(d.productId, d.dealPrice);
+  }
+  const isShowcase = (d: Lite) =>
+    d.discountPercent > 0 || d.dealPrice <= (minByProduct.get(d.productId) ?? Infinity) + 0.001;
+
+  // Round-robin par marchand sur un pool trié (meilleure remise, puis score, puis
+  // prix), dédup par produit, en excluant certains produits déjà pris.
+  const pickDiverse = (pool: Lite[], count: number, exclude: Set<string>): Lite[] => {
+    const byMerchant = new Map<string, Lite[]>();
+    for (const d of pool) {
+      if (exclude.has(d.productId)) continue;
+      (byMerchant.get(d.merchantId) ?? byMerchant.set(d.merchantId, []).get(d.merchantId)!).push(d);
+    }
+    for (const arr of byMerchant.values())
+      arr.sort((a, b) => (b.discountPercent - a.discountPercent) || ((b.score ?? 0) - (a.score ?? 0)) || (a.dealPrice - b.dealPrice));
+    const groups = [...byMerchant.values()];
+    const picked: Lite[] = [];
+    const seen = new Set<string>();
+    const maxLen = groups.reduce((m, g) => Math.max(m, g.length), 0);
+    for (let i = 0; i < maxLen && picked.length < count; i++) {
+      for (const g of groups) {
+        const d = g[i];
+        if (d && picked.length < count && !seen.has(d.productId)) { seen.add(d.productId); picked.push(d); }
       }
     }
-    
-    return mixedDeals;
-  })();
+    return picked;
+  };
+
+  const showcase = activeLite.filter(isShowcase);
+  const used = new Set<string>();
+  const hotPick = pickDiverse(showcase, 8, used);
+  hotPick.forEach(d => used.add(d.productId));
+  // « Archives de Luxe » : brandTier 1 (si un jour peuplé) OU proxy prix — les
+  // flacons chers = maisons premium. Évite une section morte (aucun tier 1 en base)
+  // tout en restant varié par marchand.
+  const luxePool = showcase.filter(d => d.brandTier === 1 || d.dealPrice >= 90);
+  const luxePick = pickDiverse(luxePool, 8, used);
+  luxePick.forEach(d => used.add(d.productId));
+  const latestPick = pickDiverse(showcase, 10, used);
+
+  // Hydratation (includes complets) des deals choisis, ordre round-robin conservé.
+  const chosenIds = [...hotPick, ...luxePick, ...latestPick].map(d => d.id);
+  const hydrated = chosenIds.length
+    ? await prisma.deal.findMany({
+        where: { id: { in: chosenIds } },
+        include: {
+          merchant: true,
+          product: { include: { category: true, images: { orderBy: { position: 'asc' }, take: 5 } } },
+        },
+      })
+    : [];
+  const byId = new Map(hydrated.map(d => [d.id, d]));
+  const order = (picks: Lite[]) => picks.map(d => byId.get(d.id)).filter(Boolean) as typeof hydrated;
+  const hotDeals = order(hotPick);
+  const luxeDeals = order(luxePick);
+  const latestDeals = order(latestPick);
 
   const [stats, variantsToday, topBrands] = await Promise.all([
     // Stats globales
@@ -305,7 +262,11 @@ export default async function HomePage() {
 
   // Exemple prix+date citable (offre la mieux remisée du jour) + date en clair.
   const todayStr = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
-  const dod = hotDeals[0];
+  // Deal du jour = la meilleure VRAIE remise parmi les vitrines (les discounters
+  // n'ont pas de % → on ne veut pas afficher « meilleure remise … −0% »).
+  const dod = [...hotDeals, ...luxeDeals]
+    .filter(d => d.discountPercent > 0)
+    .sort((a, b) => b.discountPercent - a.discountPercent)[0] ?? hotDeals[0];
   const dodName = dod ? (dod.product.brand && !dod.product.name.toLowerCase().startsWith(String(dod.product.brand).toLowerCase()) ? `${dod.product.brand} ${dod.product.name}` : dod.product.name) : null;
 
   // ItemList (Product + Offer) des carrousels — citable par les IA.
@@ -411,7 +372,11 @@ export default async function HomePage() {
             <p className="font-mono text-[11px] md:text-xs text-neutral-400 tracking-wide">
               Prix relevés six fois par jour chez {stats.merchants > 0 ? `${stats.merchants} enseignes — Sephora, Nocibé, Marionnaud, My-Origines et Notino` : 'Sephora, Nocibé, Marionnaud, My-Origines et Notino'} : {stats.products} parfums, {stats.variants} contenances suivies{stats.variantsToday > 0 ? `, ${stats.variantsToday} relevés aujourd'hui` : ''} — avec historique.
               {dod && dodName ? (
-                <> Le {todayStr}, meilleure remise relevée : {dodName} à {dod.dealPrice.toFixed(2).replace('.', ',')} € chez {dod.merchant?.name}{dod.discountPercent > 0 ? ` (−${dod.discountPercent}%)` : ''}.</>
+                dod.discountPercent > 0 ? (
+                  <> Le {todayStr}, meilleure remise relevée : {dodName} à {dod.dealPrice.toFixed(2).replace('.', ',')} € chez {dod.merchant?.name} (−{dod.discountPercent}%).</>
+                ) : (
+                  <> Le {todayStr}, un des meilleurs prix relevés : {dodName} à {dod.dealPrice.toFixed(2).replace('.', ',')} € chez {dod.merchant?.name}.</>
+                )
               ) : null}
             </p>
           </div>

@@ -328,9 +328,15 @@ async function main() {
   // a été bloqué. Seule une vraie panne d'extraction (0 offre écrite ALORS que
   // rien n'était bloqué) reste un échec légitime à signaler.
   const wasBlocked = merchants.some((m) => (blockEvents[m] || 0) >= MAX_BLOCK_EVENTS);
-  process.exit(
-    summary.written > 0 || summary.processed === 0 || dryRun || wasBlocked ? 0 : 1,
-  );
+  // Échec SYSTÉMIQUE (markup cassé) = beaucoup d'échecs, pas une seule fiche. En
+  // régime incrémental, la plupart des fiches sont fraîches et on n'en traite que
+  // quelques-unes : une URL bancale isolée (ex. lien coffret, page sans prix)
+  // ne doit PAS faire rougir le job (elle sera mise en quarantaine après
+  // QUARANTINE_RETRIES). On ne signale un échec que si TOUT ce qui a été traité a
+  // échoué ET qu'il y avait au moins 3 fiches (signal d'une vraie panne d'extracteur).
+  const systemicFailure =
+    summary.written === 0 && !dryRun && !wasBlocked && summary.processed >= 3 && summary.errors >= summary.processed;
+  process.exit(systemicFailure ? 1 : 0);
 }
 
 /**

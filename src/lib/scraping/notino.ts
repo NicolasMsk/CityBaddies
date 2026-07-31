@@ -39,12 +39,21 @@ let context: BrowserContext | null = null;
 async function ensureContext(): Promise<BrowserContext> {
   if (context) return context;
   if (!browserPromise) {
-    // Import dynamique de playwright-core (pas de postinstall / téléchargement
-    // navigateur → build Railway non impacté ; le binaire Chromium est installé
-    // séparément en CI via `npx playwright-core install chromium`).
-    browserPromise = import('playwright-core').then(({ chromium }) =>
-      chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'] }) as unknown as Promise<Browser>,
-    );
+    // Import dynamique de playwright-extra + plugin STEALTH : masque les signaux
+    // d'automatisation (navigator.webdriver, etc.) que Cloudflare détecte → le
+    // Chromium headless passe le challenge même depuis une IP datacenter
+    // (VÉRIFIÉ : 4/4 pages Notino sans stealth = bloquées, avec = 200).
+    // playwright-extra s'appuie sur playwright-core (déjà en deps, pas de
+    // postinstall → build Railway non impacté ; Chromium installé en CI).
+    browserPromise = (async () => {
+      const { chromium } = await import('playwright-extra');
+      const stealth = (await import('puppeteer-extra-plugin-stealth')).default;
+      chromium.use(stealth());
+      return chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
+      }) as unknown as Browser;
+    })();
   }
   const browser = await browserPromise;
   context = await browser.newContext({

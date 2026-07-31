@@ -15,11 +15,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
   title: 'Guides d\'Achat Parfums | Comparatifs & Avis - City Baddies',
-  description: 'Nos guides d\'achat parfums pour choisir la bonne fragrance au bon prix. Comparatifs honnêtes entre Sephora, Nocibé, Marionnaud et My-Origines.',
+  description: 'Nos guides d\'achat parfums pour choisir la bonne fragrance au bon prix. Comparatifs honnêtes entre Sephora, Nocibé, Marionnaud, My-Origines et Notino.',
   alternates: { canonical: `${BASE_URL}/guides` },
   openGraph: {
     title: 'Guides d\'Achat Parfums | City Baddies',
-    description: 'Comparatifs honnêtes entre Sephora, Nocibé, Marionnaud et My-Origines.',
+    description: 'Comparatifs honnêtes entre Sephora, Nocibé, Marionnaud, My-Origines et Notino.',
     url: `${BASE_URL}/guides`,
     type: 'website',
   },

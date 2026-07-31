@@ -20,7 +20,7 @@ export function generateMetadata(): Metadata {
   const mois = moisAnnee();
   return {
     title: `Observatoire des prix parfums — ${mois} | City Baddies`,
-    description: `L'étude mensuelle des prix parfums en France : quelle enseigne est la moins chère, l'écart moyen entre Sephora, Nocibé, Marionnaud et My-Origines, les plus fortes baisses et les prix barrés non conformes. Données ${mois}.`,
+    description: `L'étude mensuelle des prix parfums en France : quelle enseigne est la moins chère, l'écart moyen entre Sephora, Nocibé, Marionnaud, My-Origines et Notino, les plus fortes baisses et les prix barrés non conformes. Données ${mois}.`,
     alternates: { canonical: `${BASE_URL}/observatoire-des-prix` },
     openGraph: {
       title: `Observatoire des prix parfums — ${mois}`,
@@ -147,7 +147,7 @@ export default async function ObservatoirePage() {
   const datasetSchema = {
     '@context': 'https://schema.org', '@type': 'Dataset',
     name: `Observatoire des prix parfums City Baddies — ${mois}`,
-    description: `Relevés de prix parfums (Sephora, Nocibé, Marionnaud, My-Origines) : ${o.comparisons} comparaisons à taille égale, écart moyen ${fmt(o.avgGap)} €, ${o.releves} relevés archivés. Mis à jour six fois par jour.`,
+    description: `Relevés de prix parfums (Sephora, Nocibé, Marionnaud, My-Origines, Notino) : ${o.comparisons} comparaisons à taille égale, écart moyen ${fmt(o.avgGap)} €, ${o.releves} relevés archivés. Mis à jour six fois par jour.`,
     url: `${BASE_URL}/observatoire-des-prix`,
     creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     dateModified: o.freshest?.toISOString(),
@@ -187,7 +187,7 @@ export default async function ObservatoirePage() {
               <span className="block text-3xl md:text-5xl italic font-light text-white/70 mt-3">Parfums — {mois}</span>
             </h1>
             <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
-              Chaque mois, ce que révèlent nos relevés de prix sur Sephora, Nocibé, Marionnaud et My-Origines :
+              Chaque mois, ce que révèlent nos relevés de prix sur Sephora, Nocibé, Marionnaud, My-Origines et Notino :
               qui est vraiment la moins chère, de combien, et quelles «&nbsp;promos&nbsp;» n&apos;en sont pas.
             </p>
           </div>
@@ -308,7 +308,7 @@ export default async function ObservatoirePage() {
             <h2 className="font-serif text-2xl text-white mb-4">Comment lire cet observatoire</h2>
             <p>
               Toutes les données viennent de nos relevés automatisés, six fois par jour, sur les fiches produit officielles
-              de Sephora, Nocibé, Marionnaud et My-Origines, comparées <strong className="text-white font-medium">à contenance identique</strong>.
+              de Sephora, Nocibé, Marionnaud, My-Origines et Notino, comparées <strong className="text-white font-medium">à contenance identique</strong>.
               Les baisses sont mesurées sur 30 jours glissants. La colonne «&nbsp;jamais relevé au-dessus de&nbsp;» reflète notre
               fenêtre d&apos;observation, pas l&apos;historique complet du produit. Rien n&apos;est estimé ni extrapolé.{' '}
               <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-white transition-colors">Méthodologie détaillée</Link>.

@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const discountText = bestDeal && bestDeal.discountPercent > 0 ? `(-${bestDeal.discountPercent}%)` : '';
 
   const title = `${fullName} ${discountText}`.trim();
-  const description = `${fullName} ${priceText} ${discountText}. Comparez les prix entre Sephora, Nocibé, Marionnaud et My-Origines. ${categoryName} — City Baddies.`;
+  const description = `${fullName} ${priceText} ${discountText}. Comparez les prix entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. ${categoryName} — City Baddies.`;
 
   return {
     title,
@@ -177,7 +177,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   };
 
   // Politique de retour (recommandé "Fiches de marchand" GSC). Seule valeur
-  // VÉRIDIQUE pour les 4 enseignes : le droit de rétractation légal de 14 jours
+  // VÉRIDIQUE pour les 5 enseignes : le droit de rétractation légal de 14 jours
   // (art. L221-18 code de la conso) pour les achats en ligne. On ne déclare PAS
   // shippingDetails : les frais de port varient par enseigne/seuil/opération et
   // on ne les relève pas — un montant inventé serait faux.
@@ -277,7 +277,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   if (bestDeal) {
     productFaq.push({
       question: `Où acheter ${fullName} au meilleur prix ?`,
-      answer: `Le meilleur prix est de ${fmtEur(bestDeal.dealPrice)} € chez ${bestDeal.merchant.name}${bestSizeLabel ? ` (flacon de ${bestSizeLabel})` : ''}${bestSeenAt ? `, prix vérifié le ${bestSeenAt}` : ''}. City Baddies compare les prix chez Sephora, Nocibé, Marionnaud et My-Origines six fois par jour.`,
+      answer: `Le meilleur prix est de ${fmtEur(bestDeal.dealPrice)} € chez ${bestDeal.merchant.name}${bestSizeLabel ? ` (flacon de ${bestSizeLabel})` : ''}${bestSeenAt ? `, prix vérifié le ${bestSeenAt}` : ''}. City Baddies compare les prix chez Sephora, Nocibé, Marionnaud, My-Origines et Notino six fois par jour.`,
     });
     if (merchantCount > 1 && maxSpreadRow && maxSpreadRow.spread > 0) {
       productFaq.push({
@@ -605,7 +605,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                 )}
 
                 <figcaption className="mt-6 text-xs font-light italic text-neutral-500 tracking-wide">
-                  Prix vérifiés six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines.{' '}
+                  Prix vérifiés six fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino.{' '}
                   <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">
                     Comment on compare
                   </Link>

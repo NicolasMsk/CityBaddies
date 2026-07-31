@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     default: "City Baddies Parfums | Comparateur Prix Parfums — Sephora, Nocibé, Marionnaud, My-Origines",
     template: "%s | City Baddies Parfums",
   },
-  description: "Comparez les prix de vos parfums préférés entre Sephora, Nocibé, Marionnaud et My-Origines. Eau de parfum, eau de toilette, coffrets — prix vérifiés quotidiennement, historique des prix et vraies promos démasquées.",
+  description: "Comparez les prix de vos parfums préférés entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Eau de parfum, eau de toilette, coffrets — prix vérifiés quotidiennement, historique des prix et vraies promos démasquées.",
   keywords: [
     "parfum pas cher",
     "comparateur prix parfum",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "City Baddies Parfums | Comparateur Prix Parfums en France",
-    description: "Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, vraies promos et fausses réductions démasquées.",
+    description: "Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, vraies promos et fausses réductions démasquées.",
     type: "website",
     locale: "fr_FR",
     url: BASE_URL,
@@ -87,7 +87,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "City Baddies Parfums | Comparateur Prix Parfums",
-    description: "Comparez les prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Vraies promos démasquées.",
+    description: "Comparez les prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Vraies promos démasquées.",
   },
   robots: {
     index: true,
@@ -112,7 +112,7 @@ const organizationSchema = {
   name: "City Baddies",
   url: BASE_URL,
   logo: `${BASE_URL}/images/logo.png`,
-  description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, analyse des vraies promos et alertes prix.",
+  description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, analyse des vraies promos et alertes prix.",
   sameAs: [
     // Handle unique partout : @city_baddies (aligné footer/about)
     "https://www.tiktok.com/@city_baddies",

@@ -40,7 +40,7 @@ const CATEGORY_CONTENT: Record<string, {
   'parfums': {
     heroTitle: 'Parfums — Comparateur de Prix entre Sephora, Nocibé & Marionnaud',
     heroDescription: 'Comparez les prix de vos parfums préférés. Eau de parfum, eau de toilette, coffrets — trouvez le meilleur prix sur les fragrances iconiques.',
-    seoDescription: 'Comparateur prix parfums : Chanel, Dior, YSL, Guerlain, Lancôme. Comparez Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, vraies promos démasquées.',
+    seoDescription: 'Comparateur prix parfums : Chanel, Dior, YSL, Guerlain, Lancôme. Comparez Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, vraies promos démasquées.',
     keywords: ['parfum femme pas cher', 'comparateur prix parfum', 'eau de parfum promo', 'parfum homme moins cher', 'coffret parfum promo', 'parfum niche pas cher', 'historique prix parfum', 'meilleur prix sephora nocibé marionnaud'],
     tips: [
       'Ne jetez pas vos flacons vides : Sephora et Nocibé offrent -20% sur votre prochain parfum si vous rapportez un flacon vide (même d\'une autre marque).',
@@ -48,7 +48,7 @@ const CATEGORY_CONTENT: Record<string, {
       'Eau de Parfum vs Toilette : Calculez le prix au "pschitt". Une Eau de Parfum tient 8h, une Eau de Toilette 4h. L\'EDP est souvent plus économique à l\'usage.',
     ],
     richContent: {
-      intro: 'Le parfum est l\'accessoire invisible le plus puissant. City Baddies compare les prix entre Sephora, Nocibé, Marionnaud et My-Origines pour vous aider à trouver le meilleur prix sur vos fragrances préférées. Des classiques indémodables (Chanel N°5, J\'adore Dior) aux nouveautés désirables (Libre YSL, Good Girl Carolina Herrera), découvrez où acheter au meilleur prix.',
+      intro: 'Le parfum est l\'accessoire invisible le plus puissant. City Baddies compare les prix entre Sephora, Nocibé, Marionnaud, My-Origines et Notino pour vous aider à trouver le meilleur prix sur vos fragrances préférées. Des classiques indémodables (Chanel N°5, J\'adore Dior) aux nouveautés désirables (Libre YSL, Good Girl Carolina Herrera), découvrez où acheter au meilleur prix.',
       sections: [
         { title: 'Eau de Toilette, Eau de Parfum, Parfum : quelles différences ?', content: 'La concentration en huiles essentielles détermine la tenue et le prix. Eau de Toilette (5-15%) : légère, 3-4h de tenue, idéale pour le quotidien. Eau de Parfum (15-20%) : plus intense, 6-8h, le meilleur rapport qualité-prix. Parfum/Extrait (20-40%) : très concentré, tenue maximale, luxe absolu. Calculez le prix par heure de tenue pour comparer objectivement.' },
         { title: 'Les coffrets : la stratégie gagnante', content: 'Les coffrets parfum (flacon + lait corps + miniature voyage) sont vendus au même prix, voire moins cher, que le flacon seul à Noël et pour la Fête des Mères. C\'est le meilleur moment pour acheter. Le lait corps assorti prolonge la tenue du parfum et renforce le sillage.' },
@@ -57,7 +57,7 @@ const CATEGORY_CONTENT: Record<string, {
       faq: [
         { question: 'Comment faire durer son parfum plus longtemps ?', answer: 'Appliquez sur peau hydratée (après une crème ou huile non parfumée). Ciblez les points de chaleur : poignets, cou, derrière les oreilles, plis des coudes. Ne frottez pas vos poignets, cela "casse" les molécules. Vaporisez aussi dans les cheveux (pas directement, sur la brosse).' },
         { question: 'Un parfum peut-il tourner ou périmer ?', answer: 'Oui. Conservez vos parfums à l\'abri de la lumière et de la chaleur (pas dans la salle de bain). Un parfum bien conservé dure 3-5 ans. Les notes de tête (agrumes) s\'évaporent en premier. Si l\'odeur change ou devient vinaigrée, il est temps de le remplacer.' },
-        { question: 'Où acheter des parfums moins cher ?', answer: 'Comparez les prix entre Sephora, Nocibé, Marionnaud et My-Origines sur City Baddies. Les meilleures périodes : ventes privées, soldes d\'hiver (janvier) et d\'été (juillet), Black Friday, et l\'offre "flacon vide" (-20%). Évitez les sites douteux promettant -70% : risque élevé de contrefaçons.' }
+        { question: 'Où acheter des parfums moins cher ?', answer: 'Comparez les prix entre Sephora, Nocibé, Marionnaud, My-Origines et Notino sur City Baddies. Les meilleures périodes : ventes privées, soldes d\'hiver (janvier) et d\'été (juillet), Black Friday, et l\'offre "flacon vide" (-20%). Évitez les sites douteux promettant -70% : risque élevé de contrefaçons.' }
       ]
     }
   },
@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const maxDisc = topDeal.discountPercent;
 
   const content = CATEGORY_CONTENT[slug] || {
-    seoDescription: `Comparez les prix ${category.name.toLowerCase()} entre Sephora, Nocibé, Marionnaud et My-Origines${maxDisc > 0 ? `, jusqu'à -${maxDisc}% en ce moment` : ''}.`,
+    seoDescription: `Comparez les prix ${category.name.toLowerCase()} entre Sephora, Nocibé, Marionnaud, My-Origines et Notino${maxDisc > 0 ? `, jusqu'à -${maxDisc}% en ce moment` : ''}.`,
     keywords: [`${category.name} pas cher`, `${category.name} promo`],
   };
 
@@ -373,7 +373,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             Plus de deals {category.name}
           </h2>
           <p className="text-slate-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-            Nous comparons quotidiennement les offres de Sephora, Nocibé, Marionnaud et My-Origines pour vous garantir les meilleurs prix sur vos produits {category.name.toLowerCase()} favoris.
+            Nous comparons quotidiennement les offres de Sephora, Nocibé, Marionnaud, My-Origines et Notino pour vous garantir les meilleurs prix sur vos produits {category.name.toLowerCase()} favoris.
           </p>
           <Link
             href={`/produits?category=${slug}&sortBy=discountPercent`}

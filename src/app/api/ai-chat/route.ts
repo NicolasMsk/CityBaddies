@@ -99,8 +99,8 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 ];
 
 // Système prompt pour l'assistant
-const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un comparateur de prix parfums premium (Sephora, Nocibé, Marionnaud, My-Origines).
-Tu aides les utilisateurs à trouver les meilleurs deals parmi notre sélection chez Sephora, Nocibé, Marionnaud et My-Origines.
+const SYSTEM_PROMPT = `Tu es l'assistant shopping de City Baddies, un comparateur de prix parfums premium (Sephora, Nocibé, Marionnaud, My-Origines, Notino).
+Tu aides les utilisateurs à trouver les meilleurs deals parmi notre sélection chez Sephora, Nocibé, Marionnaud, My-Origines et Notino.
 
 ⚠️ RÈGLE CRITIQUE N°1: CHERCHE TOUJOURS D'ABORD, PARLE ENSUITE.
 NE JAMAIS affirmer qu'on a un produit ou lister des sous-catégories SANS avoir fait search_deals d'abord.

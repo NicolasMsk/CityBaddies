@@ -12,7 +12,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 export const metadata: Metadata = {
   title: 'Méthodologie — Comment on relève les prix',
   description:
-    'Comment City Baddies relève les prix des parfums chez Sephora, Nocibé, Marionnaud et My-Origines : fréquence des relevés, archivage daté, comparaison à taille égale, indépendance.',
+    'Comment City Baddies relève les prix des parfums chez Sephora, Nocibé, Marionnaud, My-Origines et Notino : fréquence des relevés, archivage daté, comparaison à taille égale, indépendance.',
   alternates: { canonical: `${BASE_URL}/methodologie` },
   openGraph: {
     title: 'Méthodologie City Baddies — Comment on relève les prix',
@@ -42,7 +42,7 @@ export default async function MethodologiePage() {
     name: 'Méthodologie — Comment City Baddies relève les prix',
     url: `${BASE_URL}/methodologie`,
     description:
-      'Méthodologie de relevé de prix de City Baddies : six relevés par jour sur les fiches produit publiques de Sephora, Nocibé, Marionnaud et My-Origines, archivés et datés, comparés à taille égale.',
+      'Méthodologie de relevé de prix de City Baddies : six relevés par jour sur les fiches produit publiques de Sephora, Nocibé, Marionnaud, My-Origines et Notino, archivés et datés, comparés à taille égale.',
     publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
   };
 
@@ -51,7 +51,7 @@ export default async function MethodologiePage() {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [
-      { q: 'À quelle fréquence City Baddies relève-t-il les prix ?', a: 'Six fois par jour, sur les fiches produit publiques de Sephora.fr, Nocibé.fr, Marionnaud.fr et My-Origines.com, chaque contenance relevée séparément.' },
+      { q: 'À quelle fréquence City Baddies relève-t-il les prix ?', a: 'Six fois par jour, sur les fiches produit publiques de Sephora.fr, Nocibé.fr, Marionnaud.fr, My-Origines.com et Notino.fr, chaque contenance relevée séparément.' },
       { q: 'Les prix sont-ils datés et archivés ?', a: 'Oui : chaque relevé est horodaté et conservé, ce qui permet d\'afficher l\'évolution du prix sur plusieurs mois et de distinguer une vraie baisse d\'un prix barré marketing.' },
       { q: 'Comment les prix sont-ils comparés entre enseignes ?', a: 'Toujours à contenance identique, identifiée par le code-barres (EAN) quand il est disponible — jamais un 30 ml contre un 100 ml.' },
       { q: 'Montrez-vous toutes les offres ou seulement les bonnes ?', a: 'Toutes les offres relevées, y compris les moins intéressantes. City Baddies ne vend rien : l\'achat se fait sur le site officiel du marchand.' },
@@ -85,7 +85,7 @@ export default async function MethodologiePage() {
               <h2 className="text-xl text-white font-medium mb-4">À quelle fréquence relève-t-on les prix ?</h2>
               <p>
                 Chaque matin, puis cinq autres fois dans la journée, nous relevons les prix affichés sur les fiches produit
-                publiques de <strong className="text-white font-medium">Sephora.fr, Nocibé.fr, Marionnaud.fr et My-Origines.com</strong>.
+                publiques de <strong className="text-white font-medium">Sephora.fr, Nocibé.fr, Marionnaud.fr, My-Origines.com et Notino.fr</strong>.
                 Nous relevons chaque contenance séparément (30&nbsp;ml, 50&nbsp;ml, 100&nbsp;ml…), car un « à partir de »
                 ne dit rien du format que vous achetez réellement.
               </p>
@@ -133,7 +133,7 @@ export default async function MethodologiePage() {
               <h2 className="text-xl text-white font-medium mb-4">Limites connues</h2>
               <p className="text-neutral-400">
                 Les prix peuvent changer entre deux relevés — la date affichée sur chaque offre fait foi. Certaines
-                références n&apos;existent pas chez les quatre enseignes ; nous n&apos;inventons jamais une correspondance
+                références n&apos;existent pas chez les cinq enseignes ; nous n&apos;inventons jamais une correspondance
                 approximative (un dérivé ou flanker n&apos;est pas le même parfum).
               </p>
             </section>

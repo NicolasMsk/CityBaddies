@@ -6,7 +6,7 @@ export const SEO_CONFIG = {
   siteUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com',
   
   // Description par défaut
-  defaultDescription: 'Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Eau de parfum, eau de toilette, coffrets — historique des prix et vraies promos.',
+  defaultDescription: 'Comparez les prix de vos parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Eau de parfum, eau de toilette, coffrets — historique des prix et vraies promos.',
 
   // Mots-clés principaux
   primaryKeywords: [
@@ -74,7 +74,7 @@ export const organizationSchema = {
   name: SEO_CONFIG.siteName,
   url: SEO_CONFIG.siteUrl,
   logo: `${SEO_CONFIG.siteUrl}/images/logo.png`,
-  description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines. Historique des prix, analyse des promos et alertes prix sur vos fragrances préférées.",
+  description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, analyse des promos et alertes prix sur vos fragrances préférées.",
   email: SEO_CONFIG.contact.email,
   sameAs: Object.values(SEO_CONFIG.social).filter(Boolean),
   contactPoint: {

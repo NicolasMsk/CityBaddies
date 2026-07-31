@@ -38,7 +38,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 // (les catégories maquillage/soins existent en base mais n'ont aucune offre).
 export const metadata: Metadata = {
   title: "Catégories | Parfums comparés - City Baddies",
-  description: "Explorez les catégories suivies par City Baddies : parfums comparés entre Sephora, Nocibé, Marionnaud et My-Origines, prix relevés six fois par jour avec historique.",
+  description: "Explorez les catégories suivies par City Baddies : parfums comparés entre Sephora, Nocibé, Marionnaud, My-Origines et Notino, prix relevés six fois par jour avec historique.",
   keywords: [
     "parfum réduction",
     "comparateur prix parfum",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Catégories | City Baddies",
-    description: "Parfums comparés entre Sephora, Nocibé, Marionnaud et My-Origines.",
+    description: "Parfums comparés entre Sephora, Nocibé, Marionnaud, My-Origines et Notino.",
     url: `${BASE_URL}/categories`,
     type: "website",
   },
@@ -245,7 +245,7 @@ export default async function CategoriesPage() {
 
             <div className="mt-20 pt-8 border-t border-dashed border-white/10 text-center">
               <p className="text-slate-500 text-sm">
-                Prix relevés six fois par jour sur les fiches produit de Sephora, Nocibé, Marionnaud et My-Origines.
+                Prix relevés six fois par jour sur les fiches produit de Sephora, Nocibé, Marionnaud, My-Origines et Notino.
               </p>
             </div>
           </section>

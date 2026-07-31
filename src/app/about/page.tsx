@@ -8,7 +8,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
 export const metadata: Metadata = {
   title: 'À Propos de City Baddies | Comparateur de Prix Parfums',
-  description: 'Découvrez City Baddies : le comparateur de prix parfums qui relève les prix plusieurs fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines, avec historique par contenance.',
+  description: 'Découvrez City Baddies : le comparateur de prix parfums qui relève les prix plusieurs fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, avec historique par contenance.',
   keywords: [
     "comparateur prix parfum",
     "historique prix parfum",
@@ -43,7 +43,7 @@ const structuredData = {
       // Handle unique partout : @city_baddies (aligné footer/layout)
       "https://www.tiktok.com/@city_baddies"
     ],
-    "description": "Comparateur de prix parfums indépendant : relevés plusieurs fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines, avec historique des prix par contenance."
+    "description": "Comparateur de prix parfums indépendant : relevés plusieurs fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, avec historique des prix par contenance."
   }
 };
 
@@ -95,7 +95,7 @@ export default function AboutPage() {
                   <span className="text-white font-medium">Nous rétablissons la vérité.</span>
                 </p>
                 <p>
-                  Nos relevés tournent plusieurs fois par jour sur les fiches produit de Sephora, Nocibé, Marionnaud et My-Origines. On ne traque pas seulement les prix baissés : on archive chaque relevé, contenance par contenance, pour distinguer la vraie baisse du prix barré marketing.
+                  Nos relevés tournent plusieurs fois par jour sur les fiches produit de Sephora, Nocibé, Marionnaud, My-Origines et Notino. On ne traque pas seulement les prix baissés : on archive chaque relevé, contenance par contenance, pour distinguer la vraie baisse du prix barré marketing.
                 </p>
               </div>
             </div>

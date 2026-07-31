@@ -30,7 +30,7 @@ const FAQ = [
   {
     question: 'Peut-on vraiment avoir un parfum de marque pour moins de 50 € ?',
     answer:
-      "Oui — à deux conditions : viser les formats 20 à 50 ml plutôt que les grands flacons, et acheter au bon moment, parce que les enseignes font tourner leurs promos en permanence. La liste ci-dessus ne contient que des offres réellement relevées sur les sites de Sephora, Nocibé, Marionnaud et My-Origines, avec la date du relevé. Zéro spéculation.",
+      "Oui — à deux conditions : viser les formats 20 à 50 ml plutôt que les grands flacons, et acheter au bon moment, parce que les enseignes font tourner leurs promos en permanence. La liste ci-dessus ne contient que des offres réellement relevées sur les sites de Sephora, Nocibé, Marionnaud, My-Origines et Notino, avec la date du relevé. Zéro spéculation.",
   },
   {
     question: 'Un petit format, est-ce un bon calcul ?',
@@ -45,7 +45,7 @@ const FAQ = [
   {
     question: 'Ces parfums pas chers sont-ils authentiques ?',
     answer:
-      "Tous les prix listés viennent exclusivement des sites officiels de Sephora, Nocibé, Marionnaud et My-Origines — des distributeurs agréés. Ni marketplaces, ni revendeurs parallèles, ni « testeurs » douteux : le parfum pas cher ne doit jamais être un parfum risqué.",
+      "Tous les prix listés viennent exclusivement des sites officiels de Sephora, Nocibé, Marionnaud, My-Origines et Notino — des distributeurs agréés. Ni marketplaces, ni revendeurs parallèles, ni « testeurs » douteux : le parfum pas cher ne doit jamais être un parfum risqué.",
   },
 ];
 
@@ -175,7 +175,7 @@ export default async function Under50Page() {
             <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
               Un vrai parfum de marque sous 50&nbsp;€, ça existe — à condition de savoir où regarder
               et quand. Ici, que des flacons de <strong className="text-white font-medium">20&nbsp;ml et plus</strong>,
-              à des prix réellement relevés chez Sephora, Nocibé, Marionnaud et My-Origines. La liste respire
+              à des prix réellement relevés chez Sephora, Nocibé, Marionnaud, My-Origines et Notino. La liste respire
               avec les prix : elle se met à jour toute seule, six fois par jour.
             </p>
           </div>
@@ -206,7 +206,7 @@ export default async function Under50Page() {
               La sélection, <span className="italic font-light text-white/70">du plus petit prix au plus grand</span>
             </h2>
             <p className="text-neutral-500 text-sm font-light mb-8">
-              Clique sur un flacon : tu verras les quatre enseignes, toutes les tailles, et l&apos;évolution du prix.
+              Clique sur un flacon : tu verras les cinq enseignes, toutes les tailles, et l&apos;évolution du prix.
             </p>
             <div className="grid sm:grid-cols-2 gap-px bg-white/10 border border-white/10">
               {rows.map(r => (

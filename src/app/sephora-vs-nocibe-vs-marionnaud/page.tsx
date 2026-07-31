@@ -15,7 +15,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 export const metadata: Metadata = {
   title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
   description:
-    "Comparaison réelle des prix parfums entre Sephora, Nocibé, Marionnaud et My-Origines : victoires par enseigne, écarts constatés à taille égale, mis à jour à chaque relevé (6 fois par jour).",
+    "Comparaison réelle des prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino : victoires par enseigne, écarts constatés à taille égale, mis à jour à chaque relevé (6 fois par jour).",
   alternates: { canonical: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
   openGraph: {
     title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
@@ -184,7 +184,7 @@ export default async function EnseignesMatchPage() {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: 'Comparaison de prix parfums — Sephora vs Nocibé vs Marionnaud',
-    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé, Marionnaud et My-Origines. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
+    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
     url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
     creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     dateModified: freshest?.toISOString(),
@@ -223,7 +223,7 @@ export default async function EnseignesMatchPage() {
             </h1>
             <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
               Tout le monde a un avis. Nous, on a les relevés. Même flacon, même contenance,
-              quatre enseignes — Sephora, Nocibé, Marionnaud et le discounter My-Origines — et on refait les
+              cinq enseignes — Sephora, Nocibé, Marionnaud et les discounters My-Origines et Notino — et on refait les
               comptes six fois par jour, pour que tu n&apos;aies jamais à croire quelqu&apos;un sur parole. Pas même nous.
             </p>
           </div>
@@ -346,8 +346,9 @@ export default async function EnseignesMatchPage() {
                 mise sur les exclusivités et des offres ciblées ; <strong className="text-white font-medium">Nocibé</strong> (groupe
                 Douglas) dégaine des promos quasi permanentes sur les grandes marques ;{' '}
                 <strong className="text-white font-medium">Marionnaud</strong> (A.S. Watson) fonctionne par vagues de coupons
-                et d&apos;offres fidélité ; et <strong className="text-white font-medium">My-Origines</strong>, pure-player
-                discount, casse les prix au quotidien sur son catalogue. Résultat : ton parfum peut changer d&apos;enseigne
+                et d&apos;offres fidélité ; enfin <strong className="text-white font-medium">My-Origines</strong> et{' '}
+                <strong className="text-white font-medium">Notino</strong>, pure-players discount, cassent les prix au
+                quotidien sur leur catalogue. Résultat : ton parfum peut changer d&apos;enseigne
                 gagnante d&apos;une semaine à l&apos;autre. Un verdict figé ne vaut rien — le nôtre se réécrit tout seul.
               </p>
             </div>

@@ -60,7 +60,7 @@ const PROMO_PAGES = [
       { question: 'Y a-t-il souvent des codes promo Sephora valides ?', answer: "Moins que ce que les sites de coupons laissent croire : Sephora privilégie les ventes flash et les offres membres plutôt que les codes publics. Quand un code fiable existe, il est généralement diffusé par l'enseigne elle-même (newsletter, application)." },
       { question: 'Les codes Sephora sont-ils cumulables avec les promos ?', answer: "En règle générale, non : la plupart des codes excluent les produits déjà remisés et certaines marques. Les conditions exactes figurent toujours dans les mentions du code." },
       { question: 'Comment savoir si un code Sephora fonctionne encore ?', answer: "Le seul test fiable est le panier : si la remise ne s'affiche pas sur le total avant paiement, le code est mort ou soumis à conditions. Ne crée pas ton compte « pour voir » — compare d'abord les prix." },
-      { question: 'Comment être sûre de payer mon parfum au meilleur prix chez Sephora ?', answer: "Vérifie la fiche du parfum sur City Baddies : on relève les prix six fois par jour chez Sephora, Nocibé, Marionnaud et My-Origines, à contenance identique, avec l'historique complet. Si Sephora n'est pas la moins chère aujourd'hui, tu le verras en dix secondes." },
+      { question: 'Comment être sûre de payer mon parfum au meilleur prix chez Sephora ?', answer: "Vérifie la fiche du parfum sur City Baddies : on relève les prix six fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, à contenance identique, avec l'historique complet. Si Sephora n'est pas la moins chère aujourd'hui, tu le verras en dix secondes." },
     ],
     conclusion:
       "<p>Le meilleur « code promo Sephora », c'est de savoir quand le prix est réellement bas. Compare ta contenance sur City Baddies, surveille l'historique, et garde les ventes privées membres pour les achats prévus à l'avance.</p>",
@@ -198,10 +198,10 @@ const GUIDES: GuideSeed[] = [
     title: 'Meilleurs parfums femme : le classement aux vrais prix',
     metaTitle: 'Meilleurs parfums femme — classement & vrais prix',
     metaDescription:
-      'Notre classement des meilleurs parfums femme, avec les prix réellement relevés chez Sephora, Nocibé, Marionnaud et My-Origines — pas des impressions, des données.',
+      'Notre classement des meilleurs parfums femme, avec les prix réellement relevés chez Sephora, Nocibé, Marionnaud, My-Origines et Notino — pas des impressions, des données.',
     heroImageUrl: '/images/baddies_2.png',
     introduction:
-      "<p>Les classements de parfums, tout le monde en fait. La différence ici : chaque parfum de cette sélection est suivi par nos relevés de prix, six fois par jour, chez Sephora, Nocibé, Marionnaud et My-Origines. Tu sais donc non seulement <strong>lequel choisir</strong>, mais aussi <strong>où et quand l'acheter</strong>. Cinq monuments, cinq personnalités — et zéro flacon qu'on n'assumerait pas sur notre propre coiffeuse.</p>",
+      "<p>Les classements de parfums, tout le monde en fait. La différence ici : chaque parfum de cette sélection est suivi par nos relevés de prix, six fois par jour, chez Sephora, Nocibé, Marionnaud, My-Origines et Notino. Tu sais donc non seulement <strong>lequel choisir</strong>, mais aussi <strong>où et quand l'acheter</strong>. Cinq monuments, cinq personnalités — et zéro flacon qu'on n'assumerait pas sur notre propre coiffeuse.</p>",
     content:
       "<p>Notre sélection privilégie les parfums au succès durable — pas les buzz d'une saison. Chacun est noté par la rédaction sur sa signature olfactive, sa polyvalence et son rapport plaisir/prix constaté dans nos relevés.</p>",
     conclusion:
@@ -215,7 +215,7 @@ const GUIDES: GuideSeed[] = [
     faq: [
       { question: 'Quel est le meilleur parfum femme en ce moment ?', answer: "Celui qui te ressemble — mais si on parle des valeurs sûres, La Vie Est Belle, Coco Mademoiselle et Libre dominent les ventes françaises depuis des années. Notre classement détaille pourquoi, et surtout à quel prix réel." },
       { question: 'Vaut-il mieux acheter en eau de parfum ou en eau de toilette ?', answer: "L'eau de parfum tient plus longtemps, l'eau de toilette coûte moins cher à ligne identique. Pour un parfum signature porté tous les jours, l'EDP est généralement le bon calcul ; pour un parfum d'été ou de bureau, l'EDT suffit souvent." },
-      { question: 'Comment payer ces parfums moins cher ?', answer: "Trois leviers : comparer les quatre enseignes à contenance identique (les écarts dépassent parfois plusieurs dizaines d'euros), choisir le format au meilleur prix au millilitre, et acheter dans un creux de l'historique — trois choses que chaque fiche City Baddies affiche." },
+      { question: 'Comment payer ces parfums moins cher ?', answer: "Trois leviers : comparer les cinq enseignes à contenance identique (les écarts dépassent parfois plusieurs dizaines d'euros), choisir le format au meilleur prix au millilitre, et acheter dans un creux de l'historique — trois choses que chaque fiche City Baddies affiche." },
     ],
     tags: 'classement,best-sellers,femme',
     targetKeywords: 'meilleur parfum femme, classement parfum femme, parfum femme populaire',
@@ -282,10 +282,10 @@ const GUIDES: GuideSeed[] = [
     title: 'Quel parfum offrir ? La sélection cadeau qui fait mouche',
     metaTitle: 'Quel parfum offrir ? Sélection cadeau qui fait mouche',
     metaDescription:
-      "Offrir un parfum sans se tromper : notre sélection de valeurs sûres testées et comparées, avec les vrais prix chez Sephora, Nocibé, Marionnaud et My-Origines.",
+      "Offrir un parfum sans se tromper : notre sélection de valeurs sûres testées et comparées, avec les vrais prix chez Sephora, Nocibé, Marionnaud, My-Origines et Notino.",
     heroImageUrl: '/images/baddies_3.png',
     introduction:
-      "<p>Offrir un parfum, c'est le cadeau le plus élégant — et le plus risqué. La règle d'or : on n'offre pas une curiosité de niche à quelqu'un dont on ne connaît pas les goûts, on offre une <strong>valeur sûre magnifiquement exécutée</strong>. Voici notre sélection spéciale cadeau : des parfums qui plaisent à (presque) tout le monde, classés par profil, avec les prix réels relevés chez les quatre enseignes — parce qu'un beau cadeau payé trop cher, c'est dommage.</p>",
+      "<p>Offrir un parfum, c'est le cadeau le plus élégant — et le plus risqué. La règle d'or : on n'offre pas une curiosité de niche à quelqu'un dont on ne connaît pas les goûts, on offre une <strong>valeur sûre magnifiquement exécutée</strong>. Voici notre sélection spéciale cadeau : des parfums qui plaisent à (presque) tout le monde, classés par profil, avec les prix réels relevés chez les cinq enseignes — parce qu'un beau cadeau payé trop cher, c'est dommage.</p>",
     content:
       "<p>Sélection pensée par profil de destinataire : la romantique, la pétillante, l'élégante, la douce, la moderne. Tous ces parfums existent en plusieurs contenances — le 30 ou 50 ml est le format cadeau idéal.</p>",
     conclusion:
@@ -294,7 +294,7 @@ const GUIDES: GuideSeed[] = [
       'Plaît au plus grand nombre (taux de retour minimal)',
       'Flacon qui fait de l’effet au déballage',
       'Disponible en plusieurs contenances',
-      'Comparé chez les 4 enseignes (vrai prix vérifiable)',
+      'Comparé chez les 5 enseignes (vrai prix vérifiable)',
     ],
     faq: [
       { question: 'Quel parfum offrir quand on ne connaît pas les goûts de la personne ?', answer: "Va vers les floraux lumineux ou les gourmands doux, best-sellers depuis des années : Flowerbomb, Chance Eau Tendre ou Idôle plaisent très largement. Évite les parfums très clivants (cuir, oud, gourmands extrêmes) et les eaux fraîches trop discrètes." },
@@ -366,10 +366,10 @@ const GUIDES: GuideSeed[] = [
     title: 'Les parfums femme qui tiennent vraiment toute la journée',
     metaTitle: 'Parfums femme longue tenue — la sélection qui dure',
     metaDescription:
-      "Marre des parfums qui disparaissent à midi ? Notre sélection de parfums femme à la tenue redoutable, comparés aux vrais prix chez les 4 enseignes.",
+      "Marre des parfums qui disparaissent à midi ? Notre sélection de parfums femme à la tenue redoutable, comparés aux vrais prix chez les 5 enseignes.",
     heroImageUrl: '/images/baddies_5.png',
     introduction:
-      "<p>Le crime le plus frustrant de la parfumerie : payer un flacon plein tarif pour ne plus rien sentir à midi. La tenue d'un parfum dépend de sa concentration, de sa construction… et de ta peau — mais certaines compositions sont structurellement taillées pour durer : gourmands denses, orientaux ambrés, muscs profonds. Voici notre sélection de forteresses olfactives, toutes suivies par nos relevés de prix chez Sephora, Nocibé, Marionnaud et My-Origines.</p>",
+      "<p>Le crime le plus frustrant de la parfumerie : payer un flacon plein tarif pour ne plus rien sentir à midi. La tenue d'un parfum dépend de sa concentration, de sa construction… et de ta peau — mais certaines compositions sont structurellement taillées pour durer : gourmands denses, orientaux ambrés, muscs profonds. Voici notre sélection de forteresses olfactives, toutes suivies par nos relevés de prix chez Sephora, Nocibé, Marionnaud, My-Origines et Notino.</p>",
     content:
       "<p>Sélection concentrée sur les eaux de parfum à fond ambré, gourmand ou musqué — les familles dont la rémanence est la plus documentée. Astuce d'application : hydrate ta peau avant (crème neutre), vaporise sur les points de pulsation ET sur les vêtements (en vérifiant qu'ils ne tachent pas).</p>",
     conclusion:
@@ -378,7 +378,7 @@ const GUIDES: GuideSeed[] = [
       'Tenue sur peau réputée (8 h et plus)',
       'Sillage présent sans être étouffant',
       'Concentration eau de parfum minimum',
-      'Prix comparés chez les 4 enseignes',
+      'Prix comparés chez les 5 enseignes',
     ],
     faq: [
       { question: 'Pourquoi mon parfum ne tient-il pas sur moi ?', answer: "Peau sèche, application sur peau nue non hydratée, ou composition trop volatile (agrumes, eaux fraîches). Hydrate ta peau avant application, vise les points de chaleur (poignets, cou, derrière les oreilles) et privilégie les eaux de parfum aux fonds ambrés ou musqués." },

@@ -1,5 +1,5 @@
 /**
- * Seed éditorial : pages codes promo (3 enseignes) + guides d'achat (3).
+ * Seed éditorial : pages codes promo (5 enseignes) + guides d'achat (3).
  *
  * Règles de rédaction (ligne éditoriale City Baddies) :
  * - AUCUN code promo inventé : on ne publie jamais un code qu'on n'a pas
@@ -160,6 +160,100 @@ const PROMO_PAGES = [
       "<p>Marionnaud récompense la patience : au bon moment, avec le bon coupon, l'enseigne peut battre tout le monde. Le reste du temps, nos relevés t'éviteront de payer le prix fort.</p>",
     relatedMerchants: 'sephora,nocibe',
     targetKeywords: 'code promo marionnaud, coupon marionnaud, réduction marionnaud parfum, carte fidélité marionnaud',
+  },
+  {
+    merchantSlug: 'my-origines',
+    canonicalSlug: 'my-origines',
+    metaTitle: 'Codes promo My-Origines parfum — les vrais leviers | City Baddies',
+    metaDescription:
+      "Codes promo My-Origines : ce qui fait vraiment baisser le prix chez le discounter parfum. Prix déjà cassés, newsletter, ventes — zéro code bidon.",
+    heroTitle: 'Codes promo My-Origines',
+    heroSubtitle: "Le discounter parfum qui casse déjà les prix — voici comment gratter les derniers euros, sans les codes bidons.",
+    introduction:
+      "<p>My-Origines (l'ancien Origines Parfums) joue une carte simple : des prix bas <strong>toute l'année</strong>, pas des prix gonflés qu'on barre le jour des soldes. Dans nos relevés, c'est souvent l'enseigne la moins chère à contenance égale — donc avant même de chercher un code, tu pars déjà d'un bon prix. Chez City Baddies, on ne publie jamais un code qu'on n'a pas vérifié : cette page documente ce qui fait <strong>réellement</strong> baisser la note chez My-Origines, et nos relevés six fois par jour te disent si c'est bien la moins chère sur ton parfum aujourd'hui.</p>",
+    merchantDescription:
+      "<p>My-Origines est un pure-player français de la parfumerie : pas de magasins, un catalogue très large de grandes marques, et un positionnement discount assumé. L'achat se fait sur my-origines.com, avec livraison à domicile ou en point relais. Comme il s'agit d'un revendeur (et non d'une boutique de marque), le vrai levier n'est pas un code mystère mais le prix de base, déjà agressif — nos historiques le confirment relevé après relevé.</p>",
+    merchantAdvantages: [
+      { icon: '🏷️', title: 'Prix bas permanents', text: "Le modèle discount : des tarifs cassés en continu plutôt que de fausses promos ponctuelles. Souvent l'enseigne la moins chère de nos relevés." },
+      { icon: '📧', title: 'Newsletter & ventes', text: "Les meilleures offres et codes ponctuels passent par la newsletter et les opérations commerciales du site — c'est là qu'ils apparaissent, pas sur les sites de coupons." },
+      { icon: '📦', title: 'Livraison offerte dès un seuil', text: "La livraison devient gratuite au-delà d'un montant de panier — regrouper deux flacons peut suffire à l'atteindre." },
+    ],
+    howToUse: [
+      { step: 1, title: 'Compare d’abord le prix', description: "My-Origines est souvent la moins chère, mais vérifie sur City Baddies à ta contenance : un code sur un prix plus élevé ailleurs ne vaut rien face au prix de base d'un discounter." },
+      { step: 2, title: 'Ajoute ton parfum au panier', description: "Choisis la bonne contenance : le prix au millilitre décide de tout, et une remise ne porte pas toujours sur toutes les tailles." },
+      { step: 3, title: 'Colle le code dans le panier', description: "Le champ code apparaît au moment du panier : applique-le avant paiement et vérifie que la remise s'affiche bien sur le total." },
+      { step: 4, title: 'Si le code ne passe pas, laisse tomber', description: "Il est expiré ou conditionné (minimum d'achat, sélection exclue). Le prix bas de base reste ta meilleure carte — reviens au comparateur pour confirmer." },
+    ],
+    tips: [
+      { title: 'Le prix de base bat le code', content: "Chez un discounter, l'essentiel de l'économie est déjà dans le prix affiché. Un code n'est qu'un bonus : ne le laisse jamais te faire oublier de comparer à taille égale." },
+      { title: 'Atteins le seuil de livraison gratuite', content: "Les frais de port peuvent effacer une petite remise. Regrouper deux achats pour passer la livraison offerte est souvent plus rentable qu'un code." },
+      { title: 'Vérifie l’historique, même chez un discounter', content: "Un prix bas peut baisser encore. L'historique de prix sur chaque fiche City Baddies te montre si le moment est vraiment bon." },
+    ],
+    bestTimeToShop:
+      "Les grandes opérations commerciales du site (ventes saisonnières, temps forts beauté), les soldes réglementées (janvier, puis juin-juillet) et le Black Friday. Comme le prix de base est déjà bas, les vraies fenêtres à guetter sont les baisses supplémentaires sur ton flacon précis — que l'historique de prix révèle en un coup d'œil.",
+    loyaltyProgram:
+      "My-Origines s'appuie surtout sur sa newsletter et ses opérations pour diffuser offres et codes ponctuels, plutôt que sur une carte de fidélité physique. L'inscription est gratuite : c'est le canal le plus fiable pour recevoir les vraies réductions avant tout le monde.",
+    shippingInfo:
+      "Livraison à domicile ou en point relais, offerte au-delà d'un seuil de panier (montant variable selon les opérations). Conditions détaillées sur my-origines.com.",
+    returnPolicy:
+      "Droit de rétractation légal de 14 jours pour les achats en ligne ; modalités détaillées sur my-origines.com.",
+    faq: [
+      { question: 'My-Origines est-il vraiment moins cher ?', answer: "Souvent oui, à contenance égale — c'est ce que montrent nos relevés, où le discounter remporte une grande partie des comparaisons. Mais « souvent » n'est pas « toujours » : la fiche du parfum sur City Baddies, mise à jour six fois par jour, tranche pour ton flacon précis." },
+      { question: 'Les produits My-Origines sont-ils authentiques ?', answer: "My-Origines est un revendeur de parfums de grandes marques ; l'achat se fait sur son site officiel, avec les garanties légales associées. En cas de doute, les conditions et informations produit figurent sur my-origines.com." },
+      { question: 'Y a-t-il souvent des codes promo My-Origines ?', answer: "Ils existent mais restent ponctuels, diffusés via la newsletter et les opérations du site. L'essentiel de l'économie est déjà dans le prix de base — ne fais pas d'un code une obsession." },
+      { question: 'Comment payer mon parfum au meilleur prix chez My-Origines ?', answer: "Vérifie la fiche sur City Baddies : on relève les prix six fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, à contenance identique, avec l'historique complet. Si My-Origines n'est pas la moins chère aujourd'hui, tu le verras en dix secondes." },
+    ],
+    conclusion:
+      "<p>Chez My-Origines, le « code promo » le plus puissant, c'est le prix de base déjà cassé. Compare ta contenance sur City Baddies, vise la livraison offerte, et garde la newsletter pour les vraies baisses supplémentaires.</p>",
+    relatedMerchants: 'notino,nocibe',
+    targetKeywords: 'code promo my-origines, réduction my-origines, my-origines parfum pas cher, my origines discount',
+  },
+  {
+    merchantSlug: 'notino',
+    canonicalSlug: 'notino',
+    metaTitle: 'Codes promo Notino parfum — les vrais leviers | City Baddies',
+    metaDescription:
+      "Codes promo Notino : ce qui fait vraiment baisser le prix sur le plus gros catalogue parfum en ligne. Prix agressifs, app, ventes — zéro code bidon.",
+    heroTitle: 'Codes promo Notino',
+    heroSubtitle: "Le plus gros catalogue parfum en ligne, et des prix parmi les plus agressifs — voici comment en profiter vraiment.",
+    introduction:
+      "<p>Notino, c'est le mastodonte européen de la parfumerie en ligne : un catalogue immense et des prix souvent très bas. Dans nos relevés, l'enseigne remporte régulièrement la comparaison à contenance égale — tu pars donc déjà d'un bon prix avant même de chercher un code. Chez City Baddies, on ne publie jamais un code non vérifié : cette page documente les <strong>vrais</strong> leviers d'économie chez Notino, et nos relevés six fois par jour te disent si c'est bien la moins chère sur ton parfum aujourd'hui.</p>",
+    merchantDescription:
+      "<p>Notino est un pure-player présent dans toute l'Europe, sans magasins physiques : tout se passe sur notino.fr et son application. Le catalogue parfums est l'un des plus profonds du marché, avec un positionnement prix très compétitif. Comme pour tout revendeur, le vrai levier n'est pas un code miracle mais le prix de base et les opérations régulières — nos historiques le confirment relevé après relevé.</p>",
+    merchantAdvantages: [
+      { icon: '🏷️', title: 'Prix agressifs', text: "Un des positionnements prix les plus bas de nos relevés à contenance égale : l'économie est d'abord dans le prix affiché, pas dans un code." },
+      { icon: '📱', title: 'Application & ventes flash', text: "L'app et le site enchaînent opérations et ventes flash ; les meilleures offres et codes ponctuels y apparaissent en premier." },
+      { icon: '📦', title: 'Livraison offerte dès un seuil', text: "La livraison devient gratuite au-delà d'un montant de panier — regrouper les achats aide à l'atteindre." },
+    ],
+    howToUse: [
+      { step: 1, title: 'Compare d’abord le prix', description: "Notino est souvent la moins chère, mais vérifie sur City Baddies à ta contenance : c'est le seul moyen de savoir si le prix du jour bat vraiment les autres enseignes." },
+      { step: 2, title: 'Ajoute ton parfum au panier', description: "Vérifie bien la contenance et l'édition (eau de parfum vs intense, rechargeable vs coffret) : le prix au millilitre dépend de la référence exacte." },
+      { step: 3, title: 'Applique le code dans le panier', description: "Le champ code apparaît au moment du panier : colle-le avant paiement et contrôle que la remise s'affiche sur le total." },
+      { step: 4, title: 'Compare le total final', description: "Frais de livraison inclus : sous le seuil de gratuité, les frais de port peuvent annuler une petite remise. Le comparateur raisonne toujours en prix produit, à toi d'ajouter le port." },
+    ],
+    tips: [
+      { title: 'Le prix de base fait l’essentiel', content: "Avec un catalogue aussi large et des prix aussi bas, le gros de l'économie est déjà là. Un code est un bonus — ne lui sacrifie jamais la comparaison à taille égale." },
+      { title: 'Vise le seuil de livraison gratuite', content: "Regrouper deux flacons pour passer la livraison offerte rapporte souvent plus qu'un petit code isolé." },
+      { title: 'Attention aux éditions proches', content: "Un même parfum existe en plusieurs versions (intense, rechargeable, coffret). Compare la même référence, sinon le « bon prix » n'en est pas un — nos fiches distinguent chaque contenance." },
+    ],
+    bestTimeToShop:
+      "Les ventes flash de l'application, les grandes opérations européennes (rentrée, temps forts beauté), les soldes réglementées (janvier, puis juin-juillet) et le Black Friday. Le prix de base étant déjà bas, la vraie fenêtre à guetter est la baisse supplémentaire sur ton flacon précis — que l'historique de prix City Baddies met en évidence.",
+    loyaltyProgram:
+      "Notino mise sur son application et sa newsletter pour diffuser offres et codes ponctuels, ainsi que sur un programme d'avantages selon les périodes. L'inscription est gratuite : c'est le canal le plus fiable pour attraper les vraies réductions dès leur sortie.",
+    shippingInfo:
+      "Livraison à domicile ou en point relais, offerte au-delà d'un seuil de panier (montant variable selon les opérations). Conditions détaillées sur notino.fr.",
+    returnPolicy:
+      "Droit de rétractation légal de 14 jours pour les achats en ligne ; modalités détaillées sur notino.fr.",
+    faq: [
+      { question: 'Notino est-il fiable pour acheter du parfum ?', answer: "Notino est un revendeur européen établi ; l'achat se fait sur son site officiel, avec les garanties légales. Comme pour tout achat en ligne, vérifie la référence exacte et les conditions sur notino.fr avant de valider." },
+      { question: 'Notino est-il vraiment moins cher ?', answer: "Souvent oui, à contenance égale — l'enseigne remporte une part importante de nos comparaisons. Mais le classement change selon le parfum et la semaine : la fiche City Baddies, mise à jour six fois par jour, donne la réponse du moment." },
+      { question: 'Où trouver les vrais codes promo Notino ?', answer: "Principalement dans l'application et la newsletter Notino, ainsi que pendant les ventes flash. Les sites de coupons tiers recyclent surtout des codes expirés — on ne les relaie pas." },
+      { question: 'Comment payer mon parfum au meilleur prix chez Notino ?', answer: "Vérifie la fiche sur City Baddies : on relève les prix six fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, à contenance identique, avec l'historique. Si Notino n'est pas la moins chère aujourd'hui, tu le verras aussitôt." },
+    ],
+    conclusion:
+      "<p>Notino gagne surtout par son prix de base et la profondeur de son catalogue. Compare ta contenance sur City Baddies, surveille les ventes flash de l'app, et vise la livraison offerte pour ne pas rendre au port ce que tu gagnes sur le flacon.</p>",
+    relatedMerchants: 'my-origines,nocibe',
+    targetKeywords: 'code promo notino, réduction notino parfum, notino pas cher, code reduction notino',
   },
 ];
 

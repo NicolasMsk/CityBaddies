@@ -20,7 +20,7 @@
  * =============================================================================
  */
 import 'dotenv/config';
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -69,8 +69,9 @@ function concentration(name: string): string {
 const fmt = (n: number) => n.toFixed(2).replace('.', ',');
 const fmtInt = (n: number) => (Math.abs(n - Math.round(n)) < 0.005 ? String(Math.round(n)) : fmt(n));
 
-/** Choisit l'histoire au plus gros écart (produit × contenance, ≥2 enseignes). */
-async function pickStory(productSlug?: string): Promise<Story | null> {
+/** Choisit l'histoire au plus gros écart (produit × contenance, ≥2 enseignes).
+ *  `exclude` : slugs à ignorer (parfums déjà utilisés récemment → variété). */
+async function pickStory(productSlug?: string, exclude?: Set<string>): Promise<Story | null> {
   const deals = await prisma.deal.findMany({
     where: { status: 'ACTIVE', type: 'tracked', ...(productSlug ? { product: { slug: productSlug } } : {}) },
     include: { merchant: { select: { slug: true } }, product: { select: { slug: true, name: true, brand: true, images: { select: { url: true }, orderBy: { position: 'asc' } } } }, variant: true },
@@ -90,7 +91,9 @@ async function pickStory(productSlug?: string): Promise<Story | null> {
     const [minSlug, minP] = sorted[0]; const maxP = sorted[sorted.length - 1][1];
     const gap = maxP - minP;
     if (best && gap <= best.gap) continue;
-    const d0 = ds[0]; const imgs = d0.product.images.map((i) => i.url);
+    const d0 = ds[0];
+    if (!productSlug && exclude?.has(d0.product.slug)) continue; // déjà utilisé récemment
+    const imgs = d0.product.images.map((i) => i.url);
     // Ne garder que les produits avec une image AFFICHABLE (sinon flacon cassé).
     const image = imgs.find((u) => RENDERABLE.test(u) && PACKSHOT.test(u)) || imgs.find((u) => RENDERABLE.test(u)) || '';
     if (!image) continue; // aucune image rendable → produit ignoré
@@ -204,31 +207,72 @@ async function sendEmail(to: string, s: Story, mp4: string, cover: string, capti
   return data?.id;
 }
 
+/** Log une exécution dans StudioRun (audit + anti-répétition). Best-effort. */
+async function logRun(row: {
+  status: string; source: string; story?: Story | null; emailId?: string | null;
+  videoBytes?: number | null; durationMs: number; errorMessage?: string | null;
+}): Promise<void> {
+  try {
+    await prisma.studioRun.create({
+      data: {
+        status: row.status, source: row.source,
+        productSlug: row.story?.slug ?? null, productName: row.story?.displayName ?? null,
+        oldPrice: row.story?.oldPrice ?? null, newPrice: row.story?.newPrice ?? null,
+        gap: row.story?.gap ?? null, merchant: row.story?.merchant ?? null,
+        emailId: row.emailId ?? null, videoBytes: row.videoBytes ?? null,
+        durationMs: Math.round(row.durationMs), errorMessage: row.errorMessage ?? null,
+      },
+    });
+  } catch (e) { console.warn('[studio] log StudioRun échoué:', e instanceof Error ? e.message : e); }
+}
+
 async function main() {
+  const started = Date.now();
   const outDir = arg('--out') || join(ROOT, 'studio-out');
   const email = arg('--email') || 'nicolas.musicki@gmail.com';
+  const source = process.env.GITHUB_ACTIONS ? 'cron' : (arg('--source') || 'manual');
+  const recentDays = parseInt(arg('--exclude-days') || '14', 10);
   mkdirSync(outDir, { recursive: true });
+  let story: Story | null = null;
 
-  console.log('🎬 Studio — sélection de l\'histoire…');
-  const story = await pickStory(arg('--product'));
-  if (!story) { console.error('Aucune histoire exploitable (pas assez de données comparées).'); process.exit(1); }
-  console.log(`   ${story.displayName} ${story.volumeLabel} · ${fmtInt(story.oldPrice)}€ → ${fmt(story.newPrice)}€ chez ${story.merchant} (écart ${fmtInt(story.gap)}€)`);
+  try {
+    // Anti-répétition : exclure les parfums déjà envoyés avec succès récemment.
+    const recent = await prisma.studioRun.findMany({
+      where: { status: 'success', createdAt: { gte: new Date(Date.now() - recentDays * 864e5) }, productSlug: { not: null } },
+      select: { productSlug: true },
+    });
+    const exclude = new Set(recent.map((r) => r.productSlug!).filter(Boolean));
 
-  console.log('🎞️  Rendu vidéo (image par image + MP4)…');
-  const { mp4, cover } = await renderVideo(story, outDir);
-  console.log(`   MP4 : ${mp4}`);
+    console.log('🎬 Studio — sélection de l\'histoire…');
+    story = await pickStory(arg('--product'), exclude);
+    // Si tout le catalogue a été utilisé récemment, on relâche l'exclusion.
+    if (!story && exclude.size > 0) story = await pickStory(arg('--product'));
+    if (!story) { console.error('Aucune histoire exploitable (pas assez de données comparées).'); await logRun({ status: 'error', source, durationMs: Date.now() - started, errorMessage: 'no story' }); await prisma.$disconnect(); process.exit(1); }
+    console.log(`   ${story.displayName} ${story.volumeLabel} · ${fmtInt(story.oldPrice)}€ → ${fmt(story.newPrice)}€ chez ${story.merchant} (écart ${fmtInt(story.gap)}€)`);
 
-  const { caption, hashtags } = buildCaption(story);
+    console.log('🎞️  Rendu vidéo (image par image + MP4)…');
+    const { mp4, cover } = await renderVideo(story, outDir);
+    console.log(`   MP4 : ${mp4}`);
 
-  if (has('--no-email')) {
-    writeFileSync(join(outDir, `${story.slug}-legende.txt`), caption + '\n\n' + hashtags);
-    console.log('📄 Légende écrite (email sauté).');
-  } else {
-    console.log(`📧 Envoi à ${email}…`);
-    const id = await sendEmail(email, story, mp4, cover, caption, hashtags);
-    console.log(`   ✅ Email envoyé (id ${id})`);
+    const { caption, hashtags } = buildCaption(story);
+    let emailId: string | null = null;
+    if (has('--no-email')) {
+      writeFileSync(join(outDir, `${story.slug}-legende.txt`), caption + '\n\n' + hashtags);
+      console.log('📄 Légende écrite (email sauté).');
+    } else {
+      console.log(`📧 Envoi à ${email}…`);
+      emailId = (await sendEmail(email, story, mp4, cover, caption, hashtags)) ?? null;
+      console.log(`   ✅ Email envoyé (id ${emailId})`);
+    }
+    await logRun({ status: 'success', source, story, emailId, videoBytes: statSync(mp4).size, durationMs: Date.now() - started });
+    await prisma.$disconnect();
+    process.exit(0);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('Erreur fatale:', msg);
+    await logRun({ status: 'error', source, story, durationMs: Date.now() - started, errorMessage: msg });
+    await prisma.$disconnect();
+    process.exit(1);
   }
-  await prisma.$disconnect();
-  process.exit(0);
 }
-main().catch(async (e) => { console.error('Erreur fatale:', e instanceof Error ? e.message : e); await prisma.$disconnect(); process.exit(1); });
+main();

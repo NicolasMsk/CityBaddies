@@ -1,0 +1,58 @@
+name: Studio — vidéo TikTok quotidienne
+
+# Chaque matin : génère une vidéo TikTok (plus gros écart de prix, parfum non
+# utilisé récemment) et l'envoie par email. Chaque exécution est loggée en base
+# (table StudioRun) — audit + anti-répétition.
+
+on:
+  schedule:
+    - cron: "30 6 * * *" # 06:30 UTC ≈ 08:30 Paris (été) / 07:30 (hiver)
+  workflow_dispatch:
+    inputs:
+      product:
+        description: "Slug d'un parfum précis (vide = auto, plus gros écart)"
+        required: false
+        default: ""
+      email:
+        description: "Destinataire (vide = défaut)"
+        required: false
+        default: ""
+
+concurrency:
+  group: studio-daily
+  cancel-in-progress: false
+
+jobs:
+  studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      STUDIO_EMAIL_FROM: ${{ vars.STUDIO_EMAIL_FROM }} # optionnel (défaut onboarding@resend.dev)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Notino/rendu = Chromium headless (ffmpeg est fourni par ffmpeg-static).
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps chromium
+      - name: Générer + envoyer la vidéo du jour
+        run: >-
+          npx tsx src/scripts/studio/make-video.ts
+          ${{ github.event.inputs.product && format('--product {0}', github.event.inputs.product) || '' }}
+          ${{ github.event.inputs.email && format('--email {0}', github.event.inputs.email) || '' }}
+      # Sauvegarde téléchargeable du MP4 (7 jours) — filet si l'email n'arrive pas.
+      - name: Archiver la vidéo
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiktok-du-jour
+          path: studio-out/*.mp4
+          retention-days: 7

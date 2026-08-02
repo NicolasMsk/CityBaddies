@@ -649,3 +649,26 @@ model ScrapingQueue {
   @@index([verdict])
   @@index([completeness])
 }
+
+/// Journal des exécutions du studio vidéo (cron GitHub Actions quotidien + manuel).
+/// Sert d'audit ET à éviter de reproposer le même parfum d'un jour à l'autre.
+model StudioRun {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  status       String // "success" | "error"
+  source       String   @default("cron") // "cron" | "manual"
+  productSlug  String?
+  productName  String?
+  oldPrice     Float?
+  newPrice     Float?
+  gap          Float?
+  merchant     String?
+  emailId      String? // id Resend
+  videoBytes   Int?
+  durationMs   Int?
+  errorMessage String?
+
+  @@index([createdAt])
+  @@index([productSlug])
+  @@index([status])
+}

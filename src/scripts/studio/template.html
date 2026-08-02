@@ -1,0 +1,87 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+/* Template vidéo TikTok City Baddies — piloté par window.renderAt(t) (déterministe).
+   Les tokens __XXX__ sont remplacés par make-video.ts avant le rendu. */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d4a855;--wine:#9b1515}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#080808;font-family:'Manrope','Helvetica Neue',sans-serif}
+.stage{width:1080px;height:1920px;position:relative;overflow:hidden}
+.glow{position:absolute;border-radius:50%;filter:blur(150px)}
+#g1{top:-10%;right:-18%;width:70%;height:44%;background:var(--wine);opacity:.20}
+#g2{bottom:-12%;left:-18%;width:66%;height:44%;background:var(--gold);opacity:.14}
+.vignette{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 40%,transparent 56%,rgba(0,0,0,.55) 100%)}
+#sceneA{position:absolute;inset:0}
+#brand{position:absolute;top:74px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:20px}
+#brand img{height:66px;filter:drop-shadow(0 4px 16px rgba(212,168,85,.35))}
+#brand .wm{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;color:#fff;font-size:50px}
+.core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 72px}
+#hook{font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:88px;line-height:1.02;text-align:center;font-weight:500}
+#card{margin:44px 0 26px;width:540px;height:540px;border-radius:32px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 50px 130px rgba(0,0,0,.7)}
+#card img{width:88%;height:88%;object-fit:contain}
+#pname{font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:56px;text-align:center;max-width:900px}
+#pmeta{color:#9a9a9a;font-size:29px;letter-spacing:.14em;text-transform:uppercase;margin-top:10px}
+#old{color:#8f8f8f;font-size:38px;margin-top:26px}
+#old s{text-decoration-color:var(--wine);text-decoration-thickness:5px}
+#big{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;font-weight:600;font-size:172px;line-height:1;color:#fff;margin-top:2px}
+#save{margin-top:30px;background:var(--wine);color:#fff;font-weight:800;letter-spacing:.05em;font-size:44px;padding:20px 50px;border-radius:999px;box-shadow:0 20px 60px rgba(155,21,21,.5)}
+#foot{position:absolute;left:0;right:0;bottom:110px;text-align:center;color:#bdbdbd;font-size:34px}
+#foot b{color:var(--gold);font-weight:700}
+#outro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 90px;text-align:center}
+#outro img{height:180px;filter:drop-shadow(0 10px 40px rgba(212,168,85,.4));margin-bottom:36px}
+.owm{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;color:#fff;font-size:76px;margin-bottom:44px}
+.oline{font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:74px;line-height:1.12;font-weight:500}
+.oline em{font-style:italic;color:var(--gold)}
+.osub{margin-top:40px;color:#cbb58c;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:32px}
+</style></head><body>
+<div class="stage">
+  <div class="glow" id="g1"></div><div class="glow" id="g2"></div>
+  <div id="sceneA">
+    <div id="brand"><img src="__LOGO__"><span class="wm">City Baddies</span></div>
+    <div class="core">
+      <div id="hook">__HOOK__</div>
+      <div id="card"><img id="pimg" src="__IMG__"></div>
+      <div id="pname">__PNAME__</div>
+      <div id="pmeta">__PMETA__</div>
+      <div id="old"><s>__OLD__</s></div>
+      <div id="big">__OLD__</div>
+      <div id="save">__SAVE__</div>
+    </div>
+    <div id="foot">le moins cher chez <b>__MERCHANT__</b></div>
+  </div>
+  <div id="outro">
+    <img src="__LOGO__">
+    <div class="owm">City Baddies</div>
+    <div class="oline">Tes parfums au<br><em>prix le plus bas</em></div>
+    <div class="osub">5 enseignes comparées &middot; citybaddies.com</div>
+  </div>
+  <div class="vignette"></div>
+</div>
+<script>
+var FROM=__FROM__, TO=__TO__;
+var E=function(id){return document.getElementById(id)};
+var brand=E('brand'),hook=E('hook'),card=E('card'),pname=E('pname'),pmeta=E('pmeta'),old=E('old'),big=E('big'),save=E('save'),foot=E('foot'),sceneA=E('sceneA'),outro=E('outro'),g1=E('g1'),g2=E('g2');
+function cl(x){return x<0?0:(x>1?1:x)}
+function sg(t,s,d){return cl((t-s)/d)}
+function eo(p){return 1-Math.pow(1-p,3)}
+function eob(p){var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2)}
+function eur(v){return v.toFixed(2).replace('.',',')+' €'}
+window.renderAt=function(t){
+  g1.style.transform='translate('+(-40*Math.sin(t/9000))+'px,'+(30*Math.sin(t/9000))+'px)';
+  g2.style.transform='translate('+(40*Math.sin(t/11000))+'px,'+(-30*Math.sin(t/11000))+'px)';
+  var p;
+  p=eo(sg(t,100,700)); brand.style.opacity=p; brand.style.transform='translateY('+((1-p)*-14)+'px)';
+  p=eo(sg(t,1000,800)); hook.style.opacity=p; hook.style.filter='blur('+((1-p)*12)+'px)'; hook.style.transform='translateY('+((1-p)*14)+'px)';
+  p=eo(sg(t,350,800)); var fl=(t>1150)?Math.sin((t-1150)/1400)*-9:0; card.style.opacity=p; card.style.transform='translateY('+(((1-p)*8)+fl)+'px) scale('+(0.92+0.08*p)+')';
+  pname.style.opacity=eo(sg(t,1900,600));
+  pmeta.style.opacity=eo(sg(t,2050,600));
+  old.style.opacity=eo(sg(t,2600,500));
+  p=eo(sg(t,2900,500)); big.style.opacity=p; big.style.transform='translateY('+((1-p)*12)+'px)';
+  var v=(t<2900)?FROM:(FROM+(TO-FROM)*eo(sg(t,2900,1250)));
+  big.textContent=eur(v);
+  var done=t>=4150; big.style.color=done?'#d4a855':'#fff'; big.style.textShadow=done?'0 8px 60px rgba(212,168,85,.45)':'none';
+  p=sg(t,4600,600); save.style.opacity=cl(p*2.2); save.style.transform='scale('+(0.7+0.3*eob(p))+')';
+  foot.style.opacity=eo(sg(t,5100,600));
+  var f=eo(sg(t,7200,800)); sceneA.style.opacity=1-f; sceneA.style.transform='translateY('+(-70*f)+'px) scale('+(1-0.05*f)+')'; sceneA.style.filter='blur('+(7*f)+'px)';
+  p=eo(sg(t,7600,1000)); outro.style.opacity=p; outro.style.transform='scale('+(0.92+0.08*p)+')';
+};
+window.renderAt(0);
+</script></body></html>

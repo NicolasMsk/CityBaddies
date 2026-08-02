@@ -156,18 +156,23 @@ async function renderVideo(story: Story, outDir: string): Promise<{ mp4: string;
 }
 
 function buildCaption(s: Story) {
-  const caption =
-`POV : tu allais payer ton parfum plein pot 💸
-
-${s.displayName} ${s.volumeLabel}, le MÊME flacon :
-❌ ${fmtInt(s.oldPrice)} € dans certaines enseignes
-✅ ${fmt(s.newPrice)} € chez ${s.merchant}
-
-Soit ${fmtInt(s.gap)} € d'écart. Pour rien. 🤯
-
-Chez City Baddies on compare 5 enseignes 6×/jour pour te trouver le prix le plus bas — avant que tu craques. Le lien est en bio 🔗🐆`;
+  // Légendes écrites pour sonner HUMAIN, pas généré par IA : minuscules, ton
+  // relâché (voix baddie), phrases naturelles, quasi zéro emoji, aucune liste
+  // symétrique ❌/✅. Un modèle est choisi de façon déterministe par produit
+  // (même produit → même style ; produits différents → variété).
+  const old = fmtInt(s.oldPrice), neuf = fmt(s.newPrice), ecart = fmtInt(s.gap);
+  const name = s.displayName, vol = s.volumeLabel, chez = s.merchant;
+  const templates = [
+    `non mais attends. le même flacon exactement. ${name} en ${vol}, c'est ${old}€ chez la plupart des enseignes… et ${neuf}€ chez ${chez}. ${ecart}€ de différence pour le même parfum, j'hallucine. je compare tout, c'est en bio si tu veux vérifier`,
+    `arrête de payer ton parfum plein pot franchement. ${name} ${vol} je l'ai trouvé à ${neuf}€ chez ${chez}, alors qu'ailleurs c'est ${old}€. même bouteille hein. tout est en bio`,
+    `${name}, le ${vol}. soit tu le paies ${old}€, soit tu le prends à ${neuf}€ chez ${chez}. ${ecart}€ d'écart quoi. je te mets où comparer en bio`,
+    `petit reminder que le même parfum change de prix selon le site. là ${name} ${vol} à ${neuf}€ chez ${chez} au lieu de ${old}€, ça fait ${ecart}€ de moins pour rien. lien en bio`,
+  ];
+  let h = 0; for (let i = 0; i < s.slug.length; i++) h = (h + s.slug.charCodeAt(i)) >>> 0;
+  const caption = templates[h % templates.length];
   const brandTag = s.brand.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
-  const hashtags = `#parfum #perfumetok ${brandTag ? '#' + brandTag + ' ' : ''}#parfumpascher #bonplan #beautytok #parfumfemme #astucebeauté #perfume #fyp #pourtoi`.replace(/\s+/g, ' ').trim();
+  // Peu de hashtags, ciblés — un mur de hashtags fait aussi "IA".
+  const hashtags = `#parfum #bonplan ${brandTag ? '#' + brandTag + ' ' : ''}#perfumetok #parfumpascher`.replace(/\s+/g, ' ').trim();
   return { caption, hashtags };
 }
 

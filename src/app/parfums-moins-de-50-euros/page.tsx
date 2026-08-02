@@ -136,6 +136,7 @@ export default async function Under50Page() {
       item: {
         '@type': 'Product',
         name: `${r.name} ${r.size}`,
+        ...(r.image ? { image: r.image } : {}), // requis Google (rich results Product)
         url: `${BASE_URL}/produits/${r.slug}`,
         ...(r.brand ? { brand: { '@type': 'Brand', name: r.brand } } : {}),
         offers: {

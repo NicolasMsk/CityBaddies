@@ -50,3 +50,7 @@ prisma/dev.db
 
 # Playwright MCP scratch
 .playwright-mcp/
+
+# Studio — vidéos générées (non versionnées)
+studio-out/
+demo-tiktok/

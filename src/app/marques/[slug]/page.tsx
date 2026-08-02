@@ -151,6 +151,7 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
         item: {
           '@type': 'Product',
           name: r.name,
+          ...(r.image ? { image: r.image } : {}), // requis Google (rich results Product)
           url: `${BASE_URL}/produits/${r.slug}`,
           brand: { '@type': 'Brand', name: content.displayName },
           offers: {

@@ -281,6 +281,10 @@ export default async function HomePage() {
       item: {
         '@type': 'Product',
         name: d.product.brand && !d.product.name.toLowerCase().startsWith(String(d.product.brand).toLowerCase()) ? `${d.product.brand} ${d.product.name}` : d.product.name,
+        // image REQUIS par Google pour les rich results Product. On privilégie une
+        // image accessible aux bots (Sephora/Marionnaud renvoient 403 aux crawlers
+        // → image invalide). undefined => la clé est omise (produit sans image).
+        image: (d.product.images || []).map((im) => im.url).find((u) => /nocibe\.|my-origines|notinoimg|demandware/i.test(u)) || d.product.images?.[0]?.url,
         url: `${BASE_URL}/produits/${d.product.slug}`,
         offers: { '@type': 'Offer', price: d.dealPrice, priceCurrency: 'EUR', availability: 'https://schema.org/InStock', seller: { '@type': 'Organization', name: d.merchant?.name } },
       },

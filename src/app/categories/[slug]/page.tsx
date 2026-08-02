@@ -235,6 +235,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         '@type': 'Product',
         name: d.product.brand && !d.product.name.toLowerCase().startsWith(String(d.product.brand).toLowerCase())
           ? `${d.product.brand} ${d.product.name}` : d.product.name,
+        // image requise Google — préférer une image accessible aux bots.
+        image: (d.product.images || []).map((im: { url: string }) => im.url).find((u: string) => /nocibe\.|my-origines|notinoimg|demandware/i.test(u)) || d.product.images?.[0]?.url,
         url: `${BASE_URL}/produits/${d.product.slug}`,
         offers: {
           '@type': 'Offer',

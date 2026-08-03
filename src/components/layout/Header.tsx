@@ -69,16 +69,21 @@ export default function Header() {
         <div className="flex items-center h-14 md:h-16">
 
           {/* ── Logo ── */}
-          <Link href="/" className="shrink-0 mr-6">
+          <Link href="/" className="shrink-0 mr-3 md:mr-6">
             <Image
               src="/images/logo.png"
               alt="City Baddies"
               width={140}
               height={46}
-              className="h-10 md:h-12 w-auto object-contain"
+              className="h-9 md:h-12 w-auto object-contain"
               priority
             />
           </Link>
+
+          {/* ── Recherche MOBILE (inline, à côté du menu) ── */}
+          <div className="flex-1 min-w-0 md:hidden">
+            <SearchBar placeholder="Rechercher un parfum…" />
+          </div>
 
           {/* ── Desktop Nav ── */}
           <nav className="hidden lg:flex items-center h-full gap-0">
@@ -130,7 +135,7 @@ export default function Header() {
 
           {/* ── Right side ── */}
           <div className="flex items-center gap-2 ml-auto">
-            <div className="hidden md:block">
+            <div className="hidden md:block w-52 lg:w-64">
               <SearchBar placeholder="Chercher un parfum, une marque…" />
             </div>
             <UserMenu />
@@ -245,15 +250,7 @@ export default function Header() {
       {mobileOpen && (
         <div className="lg:hidden border-t border-white/5 bg-[#0a0a0a] animate-fade-in max-h-[calc(100vh-3.5rem)] overflow-y-auto">
           <div className="px-4 py-4 space-y-1">
-            {/* Search mobile */}
-            <div className="mb-4">
-              <SearchBar
-                isMobile
-                placeholder="Chercher un parfum, une marque…"
-                onClose={closeAllMobile}
-              />
-            </div>
-
+            {/* (recherche déplacée en haut, à côté du menu — plus de doublon ici) */}
             {/* PARFUMS — accordion */}
             <div>
               <button

@@ -389,7 +389,7 @@ export default async function HomePage() {
 
       {/* Top Marques - Logo Band */}
       {topBrands.length > 0 && (
-        <section className="relative z-10 py-24 border-b border-white/5 bg-gradient-to-b from-[#0a0a0a] to-transparent">
+        <section className="relative z-10 py-12 md:py-24 border-b border-white/5 bg-gradient-to-b from-[#0a0a0a] to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-xs text-center text-neutral-500 mb-6 tracking-widest uppercase">
               On traque les plus grandes marques
@@ -429,7 +429,7 @@ export default async function HomePage() {
       )}
 
       {/* Categories - Dark Grid */}
-      <section className="relative z-10 py-16 md:py-24 bg-transparent">
+      <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#9b1515] mb-2">
@@ -449,7 +449,7 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Picks - Carousel */}
-      <section className="relative z-10 py-16 md:py-24 overflow-hidden">
+      <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -475,7 +475,7 @@ export default async function HomePage() {
           {hotDeals.length > 0 ? (
             <DealCarouselSection deals={hotDeals as any} autoPlayInterval={4500} />
           ) : (
-            <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
+            <div className="text-center py-10 md:py-16 bg-white/5 rounded-2xl border border-white/10">
               <Sparkles className="h-8 w-8 text-neutral-600 mx-auto mb-4" />
               <p className="text-neutral-500">Pas de produits pour l&apos;instant, reviens vite !</p>
             </div>
@@ -496,7 +496,7 @@ export default async function HomePage() {
 
       {/* Luxe Accessible Section - Carousel */}
       {luxeDeals.length > 0 && (
-        <section className="relative z-10 py-16 md:py-24 bg-gradient-to-b from-transparent to-black/50 overflow-hidden">
+        <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 bg-gradient-to-b from-transparent to-black/50 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <div>
@@ -540,7 +540,7 @@ export default async function HomePage() {
 
       {/* Derniers Deals Ajoutés - Carousel */}
       {latestDeals.length > 0 && (
-        <section className="relative z-10 py-16 md:py-24 bg-transparent overflow-hidden">
+        <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 bg-transparent overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <div>
@@ -588,7 +588,7 @@ export default async function HomePage() {
       {/* SECTION CODES PROMO — SEO optimized                       */}
       {/* ══════════════════════════════════════════════════════════ */}
       {promoPages.length > 0 && (
-        <section className="relative z-10 py-16 md:py-24 border-t border-white/5">
+        <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <div>
@@ -711,7 +711,7 @@ export default async function HomePage() {
       {/* SECTION GUIDES D'ACHAT — Dynamic from DB                 */}
       {/* ══════════════════════════════════════════════════════════ */}
       {guides.length > 0 && (
-        <section className="relative z-10 py-16 md:py-24 border-t border-white/5">
+        <section className="relative z-10 py-10 md:py-16 md:py-12 md:py-24 border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <div>
@@ -868,7 +868,7 @@ export default async function HomePage() {
       )}
 
       {/* Visual Interlude - Baddies 5 */}
-      <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+      <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 md:mb-24 mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
         <div className="relative aspect-[4/5] sm:aspect-[16/8] md:aspect-[21/9] w-full overflow-hidden rounded-2xl border border-white/10 group">
            {/* next/image : sert un webp optimisé (~150 Ko) au lieu du PNG 2,5 Mo brut */}
            <Image
@@ -883,11 +883,11 @@ export default async function HomePage() {
       </div>
 
       {/* About Section - Le Concept (Redesigned) */}
-      <section className="relative z-10 py-32 bg-transparent">
+      <section className="relative z-10 py-16 md:py-32 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 pb-8 border-b border-white/10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-10 md:mb-16 pb-6 md:pb-8 border-b border-white/10">
             <h2 className="text-4xl md:text-6xl font-serif text-white tracking-tight">
               La méthode
             </h2>
@@ -996,9 +996,9 @@ export default async function HomePage() {
       </div>
 
       {/* FAQ Section */}
-      <section className="relative z-10 py-24 border-t border-transparent bg-[#0a0a0a] -mt-32">
+      <section className="relative z-10 py-12 md:py-24 border-t border-transparent bg-[#0a0a0a] -mt-32">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-          <div className="text-center mb-16 bg-[#0a0a0a]/80 backdrop-blur-md py-8 rounded-2xl border border-white/5 inline-block w-full shadow-2xl">
+          <div className="text-center mb-10 md:mb-16 bg-[#0a0a0a]/80 backdrop-blur-md py-8 rounded-2xl border border-white/5 inline-block w-full shadow-2xl">
             <h2 className="text-3xl md:text-4xl font-light text-white mb-4 tracking-tight">
               QUESTIONS <span className="font-semibold text-[#d4a855]">FRÉQUENTES</span>
             </h2>

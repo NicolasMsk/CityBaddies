@@ -207,7 +207,7 @@ export default function SearchBar({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Input */}
       <div className="relative">
-        <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 ${isMobile ? 'text-neutral-500' : 'text-neutral-400'}`} />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
         <input
           ref={inputRef}
           type="text"
@@ -216,12 +216,12 @@ export default function SearchBar({
           onKeyDown={handleKeyDown}
           onFocus={() => (results.length > 0 || matchingCategories.length > 0 || brands.length > 0) && setIsOpen(true)}
           placeholder={placeholder}
+          // Largeur pilotée par le parent (w-full) → réutilisable inline (barre du
+          // haut mobile), en pleine largeur (menu), ou en encart (desktop).
           className={`
-            ${isMobile 
-              ? 'w-full pl-12 pr-10 py-4 bg-white/5 border border-white/10 rounded-none' 
-              : 'w-32 lg:w-44 pl-10 pr-8 py-2 bg-[#1a1a1a] border border-white/10 rounded-none hover:border-white/20'
-            }
-            text-xs lg:text-sm text-white placeholder-neutral-500 font-light tracking-wide
+            w-full pl-10 pr-9 rounded-none border border-white/10
+            ${isMobile ? 'py-3.5 bg-white/5' : 'py-2.5 bg-[#1a1a1a] hover:border-white/20'}
+            text-sm text-white placeholder-neutral-500 font-light tracking-wide
             focus:outline-none focus:border-[#d4a855] focus:bg-black
             transition-all duration-300
           `}

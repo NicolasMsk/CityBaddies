@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // fullProductName évite "Lancôme Lancôme La Vie Est Belle…" (le nom contient déjà la marque)
   const fullName = fullProductName(brandName, product.name);
   const bestSize = bestDeal?.variant ? ` (${bestDeal.variant.volumeValue} ${bestDeal.variant.volumeUnit})` : '';
-  const priceText = bestDeal ? `à partir de ${bestDeal.dealPrice.toFixed(2)}€${bestSize}` : '';
+  const priceText = bestDeal ? `à partir de ${bestDeal.dealPrice.toFixed(2).replace('.', ',')}€${bestSize}` : '';
   const discountText = bestDeal && bestDeal.discountPercent > 0 ? `(-${bestDeal.discountPercent}%)` : '';
 
   const title = `${fullName} ${discountText}`.trim();

@@ -350,10 +350,10 @@ export default function SearchBar({
                         -{result.discountPercent}%
                       </span>
                       <span className="text-white font-medium">
-                        {result.dealPrice.toFixed(2)}€
+                        {result.dealPrice.toFixed(2).replace('.', ',')}€
                       </span>
                       <span className="text-neutral-500 line-through">
-                        {result.originalPrice.toFixed(2)}€
+                        {result.originalPrice.toFixed(2).replace('.', ',')}€
                       </span>
                     </div>
                     <p className="text-xs text-neutral-500 truncate">

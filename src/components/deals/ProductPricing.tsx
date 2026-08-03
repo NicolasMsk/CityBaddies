@@ -178,7 +178,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
   const cheapest = merchantPrices[0];
   const mostExpensive = merchantPrices[merchantPrices.length - 1];
   const priceDiff = mostExpensive && cheapest
-    ? (mostExpensive.currentPrice - cheapest.currentPrice).toFixed(2)
+    ? (mostExpensive.currentPrice - cheapest.currentPrice).toFixed(2).replace('.', ',')
     : '0';
   const hasMultipleMerchants = merchantPrices.length > 1;
 
@@ -199,7 +199,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
             <span className="text-base sm:text-lg font-light tracking-wide">{currentLabel}</span>
             <div className="flex items-center gap-3 sm:gap-6">
               <span className="text-xs sm:text-sm text-neutral-400 font-light">
-                <span className="hidden sm:inline">à partir de </span><span className="text-white font-medium">{cheapest.currentPrice.toFixed(2)} €</span>
+                <span className="hidden sm:inline">à partir de </span><span className="text-white font-medium">{cheapest.currentPrice.toFixed(2).replace('.', ',')} €</span>
               </span>
               <ChevronDown className={`h-4 w-4 text-neutral-500 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -232,7 +232,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                       )}
                     </div>
                     <span className={`text-sm sm:text-base font-medium ${isSelected ? 'text-white' : ''}`}>
-                      {variantBest.dealPrice.toFixed(2)} €
+                      {variantBest.dealPrice.toFixed(2).replace('.', ',')} €
                     </span>
                   </button>
                 );
@@ -307,7 +307,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                   </div>
                   {diffFromBest > 0 && (
                     <span className="text-[10px] sm:text-xs text-neutral-500 font-light">
-                      +{diffFromBest.toFixed(2)} € vs meilleur prix
+                      +{diffFromBest.toFixed(2).replace('.', ',')} € vs meilleur prix
                     </span>
                   )}
                   <ReleveLabel iso={mp.lastSeenAt} isFirst={isFirst} />
@@ -327,11 +327,11 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
                     <div className="flex items-baseline gap-1.5 sm:gap-3">
                       {mp.originalPrice > mp.currentPrice && (
                         <span className={`text-[10px] sm:text-sm line-through ${isFirst ? 'text-neutral-500' : 'text-neutral-600'}`}>
-                          {mp.originalPrice.toFixed(2)} €
+                          {mp.originalPrice.toFixed(2).replace('.', ',')} €
                         </span>
                       )}
                       <span className={`text-lg sm:text-xl md:text-2xl tracking-tight ${isFirst ? 'font-bold' : 'font-light'}`}>
-                        {mp.currentPrice.toFixed(2)} €
+                        {mp.currentPrice.toFixed(2).replace('.', ',')} €
                       </span>
                     </div>
                     {mp.discountPercent > 0 && (

@@ -37,7 +37,7 @@ function formatPricePerUnit(pricePerUnit: number | null | undefined, volumeUnit:
       ? pricePerUnit.toFixed(2).replace(/\.?0+$/, '')
       : pricePerUnit.toFixed(0);
     const unitLabel = unit === 'ml' ? 'ml' : 'g';
-    return `${priceFormatted}€/${unitLabel}`;
+    return `${priceFormatted.replace('.', ',')}€/${unitLabel}`;
   }
   
   // Pour les formats normaux, prix/100ml ou /100g
@@ -48,7 +48,7 @@ function formatPricePerUnit(pricePerUnit: number | null | undefined, volumeUnit:
   if (pricePer100 > 500) {
     // Prix trop élevé pour 100ml/g, afficher par unité
     const priceFormatted = pricePerUnit.toFixed(2).replace(/\.?0+$/, '');
-    return `${priceFormatted}€/${unit === 'ml' ? 'ml' : 'g'}`;
+    return `${priceFormatted.replace('.', ',')}€/${unit === 'ml' ? 'ml' : 'g'}`;
   }
   
   let formatted: string;
@@ -60,7 +60,7 @@ function formatPricePerUnit(pricePerUnit: number | null | undefined, volumeUnit:
       formatted = pricePer100.toFixed(2);
     }
   }
-  return `${formatted}€/${unitLabel}`;
+  return `${formatted.replace('.', ',')}€/${unitLabel}`;
 }
 
 // Capitalise le premier mot d'une chaîne
@@ -403,11 +403,11 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
               </span>
               {deal.discountPercent > 0 && (
                 <span className="text-[10px] text-neutral-500 uppercase tracking-wide line-through decoration-[#9b1515]/50">
-                  {deal.originalPrice.toFixed(2)} €
+                  {deal.originalPrice.toFixed(2).replace('.', ',')} €
                 </span>
               )}
               <span className="text-base sm:text-lg md:text-xl font-light text-white tracking-tight leading-none">
-                {deal.dealPrice.toFixed(2)} <span className="text-[10px] sm:text-xs md:text-sm align-top">€</span>
+                {deal.dealPrice.toFixed(2).replace('.', ',')} <span className="text-[10px] sm:text-xs md:text-sm align-top">€</span>
               </span>
             </div>
             

@@ -183,7 +183,7 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
             {d.fullDate}
           </p>
           <p className="text-white font-medium text-lg tracking-tight">
-            {price.toFixed(2)} €
+            {price.toFixed(2).replace('.', ',')} €
           </p>
           {d.volume && (
             <p className="text-white/30 text-[10px] mt-0.5">{d.volume}</p>
@@ -191,8 +191,8 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
           <div className="mt-2.5 pt-2 border-t border-white/5">
             <p className={`text-[10px] font-medium ${vsAvg <= 0 ? 'text-[#d4a855]' : 'text-rose-300'}`}>
               {vsAvg <= 0
-                ? `${Math.abs(vsAvg).toFixed(2)} € sous la moyenne`
-                : `${vsAvg.toFixed(2)} € au-dessus`}
+                ? `${Math.abs(vsAvg).toFixed(2).replace('.', ',')} € sous la moyenne`
+                : `${vsAvg.toFixed(2).replace('.', ',')} € au-dessus`}
             </p>
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
             {savings !== 0 && (
               <div className="sm:text-right flex-shrink-0">
                 <p className={`text-sm sm:text-base font-medium ${savings >= 0 ? 'text-[#d4a855]' : 'text-rose-300'}`}>
-                  {savings >= 0 ? `-${savings.toFixed(2)} €` : `+${Math.abs(savings).toFixed(2)} €`}
+                  {savings >= 0 ? `-${savings.toFixed(2).replace('.', ',')} €` : `+${Math.abs(savings).toFixed(2).replace('.', ',')} €`}
                 </p>
                 <p className="text-white/30 text-[9px] mt-0.5 uppercase tracking-widest">vs moyenne</p>
               </div>
@@ -263,8 +263,8 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
           {/* Jauge */}
           <div className="mt-5 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between text-[10px] text-white/35 uppercase tracking-widest mb-2.5">
-              <span>{priceStats.lowest.toFixed(2)} €</span>
-              <span>{priceStats.highest.toFixed(2)} €</span>
+              <span>{priceStats.lowest.toFixed(2).replace('.', ',')} €</span>
+              <span>{priceStats.highest.toFixed(2).replace('.', ',')} €</span>
             </div>
             <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
@@ -322,7 +322,7 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
                   stroke="rgba(255,255,255,0.12)"
                   strokeDasharray="6 4"
                   label={{
-                    value: `Moy. ${priceStats.average.toFixed(2)}€`,
+                    value: `Moy. ${priceStats.average.toFixed(2).replace('.', ',')}€`,
                     position: 'insideTopRight',
                     fill: '#555',
                     fontSize: 9,
@@ -384,13 +384,13 @@ export default function PriceChart({ priceHistory, priceStats, currentPrice }: P
           <div className="flex-1 bg-white/[0.03] border border-white/5 rounded-2xl p-3 sm:p-4 text-center">
             <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-widest mb-1.5">Habituel</p>
             <p className="text-sm sm:text-base font-light text-white/70 tabular-nums">
-              {priceStats.average.toFixed(2)} €
+              {priceStats.average.toFixed(2).replace('.', ',')} €
             </p>
           </div>
           <div className="flex-1 bg-white/[0.03] border border-white/5 rounded-2xl p-3 sm:p-4 text-center">
             <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-widest mb-1.5">Plus haut</p>
             <p className="text-sm sm:text-base font-light text-rose-300/70 tabular-nums">
-              {priceStats.highest.toFixed(2)} €
+              {priceStats.highest.toFixed(2).replace('.', ',')} €
             </p>
           </div>
         </div>

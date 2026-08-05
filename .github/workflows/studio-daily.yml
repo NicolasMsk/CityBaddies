@@ -31,6 +31,10 @@ jobs:
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       STUDIO_EMAIL_FROM: ${{ vars.STUDIO_EMAIL_FROM }} # optionnel (défaut onboarding@resend.dev)
+      # Dépôt auto en brouillon TikTok (optionnel — si absents, l'étape est sautée)
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

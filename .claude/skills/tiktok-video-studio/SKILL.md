@@ -44,6 +44,15 @@ is `nicolas.musicki@gmail.com`.
 3. Relay the result to the user: the perfume/gap chosen, the MP4 path, and the
    email id. Remind them of the one manual step (trending sound) — it's in the email.
 
+## Dépôt automatique en brouillon TikTok (optionnel)
+Si les secrets `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` / `TIKTOK_REFRESH_TOKEN`
+sont présents, le script **dépose aussi la vidéo dans les brouillons TikTok**
+(API Content Posting, mode inbox — pas d'audit public requis). L'utilisateur finit
+dans l'app : ajout du son tendance + publication (le son n'est pas automatisable
+via l'API, et c'est le levier de reach). Setup une fois : voir
+`src/scripts/studio/SETUP-TIKTOK.md` (+ helper `tiktok-auth.ts` pour le refresh
+token). Désactiver ponctuellement : `--no-tiktok`. Absent de config → étape sautée.
+
 ## Editing the look / copy
 - Animation & layout: `src/scripts/studio/template.html` (driven by `renderAt(t)`,
   deterministic — never rely on CSS-animation timing under headless).

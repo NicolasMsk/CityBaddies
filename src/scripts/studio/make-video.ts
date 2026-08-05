@@ -28,6 +28,7 @@ import ffmpegPath from 'ffmpeg-static';
 import { spawnSync } from 'node:child_process';
 import prisma from '../../lib/prisma';
 import { fullProductName } from '../../lib/seo-config';
+import { uploadToTikTokInbox, tiktokConfigured } from '../../lib/social/tiktok';
 
 const ROOT = resolve(__dirname, '../../..');
 const arg = (name: string): string | undefined => {
@@ -179,7 +180,7 @@ function buildCaption(s: Story) {
   return { caption, hashtags };
 }
 
-async function sendEmail(to: string, s: Story, mp4: string, cover: string, caption: string, hashtags: string) {
+async function sendEmail(to: string, s: Story, mp4: string, cover: string, caption: string, hashtags: string, tiktokDraft = false) {
   const { Resend } = await import('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.STUDIO_EMAIL_FROM || 'City Baddies <onboarding@resend.dev>';
@@ -189,6 +190,7 @@ async function sendEmail(to: string, s: Story, mp4: string, cover: string, capti
 <div style="color:#d4a855;font-weight:800;letter-spacing:.2em;font-size:12px;text-transform:uppercase">City Baddies · Studio</div>
 <h1 style="margin:10px 0 0;font-size:23px">🎬 Vidéo TikTok prête — ${s.displayName}</h1></div>
 <div style="padding:26px;background:#fff;border:1px solid #eee;border-top:0;border-radius:0 0 14px 14px">
+${tiktokDraft ? `<div style="background:#eefaf0;border:1px solid #bfe6c9;border-radius:10px;padding:14px 16px;margin-bottom:16px"><strong>📲 Déjà déposée dans tes brouillons TikTok.</strong> Ouvre l'app → brouillons → ajoute un son tendance → publie. ~30 secondes.</div>` : ''}
 <p>La vidéo <strong>${s.displayName} ${s.volumeLabel}</strong> (écart <strong>${fmtInt(s.gap)} €</strong>, moins cher chez <strong>${s.merchant}</strong>) est en <strong>pièce jointe</strong> — 1080×1920, H.264, prête pour TikTok, Reels et Shorts.</p>
 <h3 style="margin-top:22px">✍️ Légende</h3>${pre(caption)}
 <h3>🏷️ Hashtags</h3>${pre(hashtags)}
@@ -254,6 +256,20 @@ async function main() {
     const { mp4, cover } = await renderVideo(story, outDir);
     console.log(`   MP4 : ${mp4}`);
 
+    // Dépôt automatique en BROUILLON TikTok (si configuré). L'app finit le job :
+    // ajout du son tendance + publication. Best-effort — n'interrompt jamais.
+    let tiktokDraft = false;
+    if (!has('--no-tiktok') && tiktokConfigured()) {
+      try {
+        console.log('📲 Dépôt du brouillon TikTok…');
+        const publishId = await uploadToTikTokInbox(mp4);
+        tiktokDraft = true;
+        console.log(`   ✅ Brouillon déposé sur TikTok (publish_id ${publishId})`);
+      } catch (e) {
+        console.warn('   ⚠ TikTok (brouillon non déposé) :', e instanceof Error ? e.message : e);
+      }
+    }
+
     const { caption, hashtags } = buildCaption(story);
     let emailId: string | null = null;
     if (has('--no-email')) {
@@ -261,7 +277,7 @@ async function main() {
       console.log('📄 Légende écrite (email sauté).');
     } else {
       console.log(`📧 Envoi à ${email}…`);
-      emailId = (await sendEmail(email, story, mp4, cover, caption, hashtags)) ?? null;
+      emailId = (await sendEmail(email, story, mp4, cover, caption, hashtags, tiktokDraft)) ?? null;
       console.log(`   ✅ Email envoyé (id ${emailId})`);
     }
     await logRun({ status: 'success', source, story, emailId, videoBytes: statSync(mp4).size, durationMs: Date.now() - started });

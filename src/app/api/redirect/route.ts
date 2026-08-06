@@ -85,6 +85,12 @@ export async function GET(request: NextRequest) {
             brand: sp.get('b') ?? undefined,
             product: sp.get('p') ?? undefined,
             price: Number.isFinite(priceRaw) && priceRaw > 0 ? priceRaw : undefined,
+            // La métrique « Prix au clic » est déclarée en unité Devise dans GA4.
+            // Sans `currency`, GA4 suppose l'USD et convertit vers l'EUR de la
+            // propriété : un prix de 83,40 € était enregistré 72,38. Déclarer
+            // l'EUR rend la conversion neutre. Les prix relevés sont toujours en
+            // euros — les cinq marchands suivis sont français.
+            currency: 'EUR',
             page_location: sourcePage,
           },
         },

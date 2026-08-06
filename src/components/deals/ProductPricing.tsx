@@ -69,6 +69,9 @@ function ReleveLabel({ iso, isFirst }: { iso?: string | null; isFirst: boolean }
 interface ProductPricingProps {
   deals: DealData[];
   priceHistory?: PriceHistory[];
+  /** Marque et slug produit : uniquement pour l'événement GA4 `select_merchant`. */
+  brand?: string;
+  productSlug?: string;
 }
 
 // ── Logos marchands (taille cible individuelle pour uniformité visuelle) ──
@@ -80,7 +83,17 @@ const MERCHANT_LOGOS: Record<string, { src: string; w: number; h: number }> = {
   'notino':     { src: '/images/notino_logo.png',      w: 110, h: 28 },
 };
 
-export default function ProductPricing({ deals, priceHistory }: ProductPricingProps) {
+export default function ProductPricing({ deals, priceHistory, brand, productSlug }: ProductPricingProps) {
+  /** Voir buildMerchantHref dans DealCard : mêmes paramètres, même consommateur. */
+  const merchantHref = (url: string | null, price: number) => {
+    if (!url) return '#';
+    const params = new URLSearchParams({ url });
+    if (brand) params.set('b', brand);
+    if (productSlug) params.set('p', productSlug);
+    if (price) params.set('pr', String(price));
+    return `/api/redirect?${params.toString()}`;
+  };
+
   // ── Regrouper les deals par contenance ──
   const variantMap = useMemo(() => {
     const map = new Map<string, { label: string; deals: DealData[] }>();
@@ -263,7 +276,7 @@ export default function ProductPricing({ deals, priceHistory }: ProductPricingPr
             return (
               <a
                 key={mp.merchantSlug}
-                href={mp.url ? `/api/redirect?url=${encodeURIComponent(mp.url)}` : '#'}
+                href={merchantHref(mp.url, mp.currentPrice)}
                 target="_blank"
                 rel="nofollow sponsored noopener"
                 className={`

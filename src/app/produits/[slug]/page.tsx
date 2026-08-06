@@ -489,6 +489,8 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               <ProductPricing
                 deals={serializedDeals}
                 priceHistory={serializedPriceHistory}
+                brand={brandName}
+                productSlug={product.slug}
               />
 
               {/* Category tag + lien vers la page maison (maillage interne :

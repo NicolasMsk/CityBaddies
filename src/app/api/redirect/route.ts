@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clientIdFromGaCookie, sessionIdFromGaCookie, sendGa4Events } from '@/lib/analytics/ga4-server';
+
+/** Le slug marchand se déduit du domaine cible : aucun paramètre à faire confiance. */
+const MERCHANT_BY_HOST: Record<string, string> = {
+  'sephora.fr': 'sephora',
+  'nocibe.fr': 'nocibe',
+  'marionnaud.fr': 'marionnaud',
+  'my-origines.com': 'my-origines',
+  'notino.fr': 'notino',
+};
+
+function merchantFromHost(host: string): string {
+  const entry = Object.entries(MERCHANT_BY_HOST).find(([d]) => host === d || host.endsWith('.' + d));
+  return entry ? entry[1] : host;
+}
 
 /**
  * GET /api/redirect?url=...
  * Redirige vers l'URL externe avec un délai pour éviter la détection bot
+ *
+ * Paramètres de mesure optionnels (jamais utilisés pour la redirection elle-même,
+ * uniquement pour l'événement GA4 `select_merchant`) :
+ *   b  — slug/nom de la marque
+ *   p  — slug du produit
+ *   pr — prix affiché au moment du clic
+ *   sp — page d'origine, à passer quand le lien porte rel="noreferrer"
  */
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url');
@@ -32,6 +54,43 @@ export async function GET(request: NextRequest) {
   const allowed = ALLOWED_HOSTS.some((d) => host === d || host.endsWith('.' + d));
   if (!allowed) {
     return NextResponse.json({ error: 'Domaine non autorisé' }, { status: 400 });
+  }
+
+  // ── Mesure : l'événement business du site ────────────────────────────────
+  // Émis avant de rendre la page de redirection, et jamais bloquant : toute
+  // erreur d'envoi est avalée par sendGa4Events.
+  const sp = request.nextUrl.searchParams;
+  const clientId = clientIdFromGaCookie(request.cookies.get('_ga')?.value);
+  if (clientId) {
+    const suffix = (process.env.GA4_MEASUREMENT_ID ?? '').replace(/^G-/, '');
+    const sessionId = sessionIdFromGaCookie(request.cookies.get(`_ga_${suffix}`)?.value);
+    const priceRaw = Number(sp.get('pr'));
+    let sourcePage = sp.get('sp') ?? undefined;
+    if (!sourcePage) {
+      // rel="noopener" laisse passer le Referer ; rel="noreferrer" non — d'où le
+      // paramètre `sp` explicite sur les liens qui le portent.
+      try {
+        const ref = request.headers.get('referer');
+        if (ref) sourcePage = new URL(ref).pathname;
+      } catch {
+        /* Referer illisible : on renonce à la page d'origine, pas à l'événement. */
+      }
+    }
+    await sendGa4Events(
+      [
+        {
+          name: 'select_merchant',
+          params: {
+            merchant: merchantFromHost(host),
+            brand: sp.get('b') ?? undefined,
+            product: sp.get('p') ?? undefined,
+            price: Number.isFinite(priceRaw) && priceRaw > 0 ? priceRaw : undefined,
+            page_location: sourcePage,
+          },
+        },
+      ],
+      { clientId, sessionId }
+    );
   }
 
   // Échappements avant injection dans le HTML (attribut href) et dans le JS.

@@ -120,6 +120,27 @@ async function getRelatedGuides(category: string, currentSlug: string) {
   });
 }
 
+/**
+ * Lien marchand enrichi pour l'événement GA4 `select_merchant` émis par
+ * /api/redirect. Ces liens portent rel="noreferrer" : le Referer n'arrive pas
+ * jusqu'au serveur, donc la page d'origine doit être passée explicitement en
+ * `sp`, sinon les clics venant des guides remontent sans page d'attribution.
+ */
+function buildMerchantHref(
+  productUrl: string,
+  brand: string | null | undefined,
+  productSlug: string | null | undefined,
+  price: number | null | undefined,
+  sourcePage: string
+): string {
+  const params = new URLSearchParams({ url: productUrl });
+  if (brand) params.set('b', brand);
+  if (productSlug) params.set('p', productSlug);
+  if (price) params.set('pr', String(price));
+  params.set('sp', sourcePage);
+  return `/api/redirect?${params.toString()}`;
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -418,7 +439,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
                           </div>
                           
                           <a 
-                            href={item.deal.productUrl ? `/api/redirect?url=${encodeURIComponent(item.deal.productUrl)}` : `/produits?search=${encodeURIComponent(item.deal.product?.name || item.deal.title || '')}`}
+                            href={item.deal.productUrl ? buildMerchantHref(item.deal.productUrl, product?.brand, product?.slug, item.deal.dealPrice, `/guides/${slug}`) : `/produits?search=${encodeURIComponent(item.deal.product?.name || item.deal.title || '')}`}
                             target="_blank"
                             rel="nofollow sponsored noopener noreferrer" 
                             className={`group/btn relative px-8 py-4 rounded-full font-black text-[12px] uppercase tracking-[0.1em] transition-all duration-500 flex items-center gap-3 overflow-hidden ${rank === 1 ? 'bg-[#d4a855] text-black shadow-[0_10px_30px_-10px_rgba(212,168,85,0.3)]' : 'bg-white text-black hover:shadow-xl'}`}

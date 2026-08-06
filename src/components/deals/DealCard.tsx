@@ -12,6 +12,19 @@ import ScoreGauge from './ScoreGauge';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
 
+/**
+ * Lien marchand enrichi des paramètres de mesure lus par /api/redirect, qui émet
+ * l'événement GA4 `select_merchant`. Le marchand est redéduit côté serveur
+ * depuis le domaine cible ; on ne transmet donc que ce qu'il ne peut pas savoir.
+ */
+function buildMerchantHref(deal: Deal): string {
+  const params = new URLSearchParams({ url: deal.productUrl || '' });
+  if (deal.product?.brand) params.set('b', deal.product.brand);
+  if (deal.product?.slug) params.set('p', deal.product.slug);
+  if (deal.dealPrice) params.set('pr', String(deal.dealPrice));
+  return `/api/redirect?${params.toString()}`;
+}
+
 // Map des merchants vers leurs logos
 const getMerchantLogo = (slug: string): string | null => {
   const logoMap: Record<string, string> = {
@@ -412,7 +425,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             </div>
             
             <a
-              href={`/api/redirect?url=${encodeURIComponent(deal.productUrl || '')}`}
+              href={buildMerchantHref(deal)}
               target="_blank"
               rel="nofollow sponsored noopener"
               className="flex items-center gap-1 sm:gap-2 bg-white text-black px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest hover:bg-[#d4a855] hover:text-white transition-colors"

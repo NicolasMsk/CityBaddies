@@ -143,6 +143,24 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
 
   if (!product) notFound();
 
+  // Les notes sont uniquement celles de la rédaction publiées dans un guide.
+  // Jamais de faux aggregateRating : on expose un Review seulement si son texte
+  // et sa note existent réellement et sont aussi visibles sur cette page.
+  const editorialReview = await prisma.buyingGuideProduct.findFirst({
+    where: {
+      rating: { not: null },
+      deal: { productId: product.id },
+      guide: { status: 'PUBLISHED' },
+    },
+    select: {
+      rating: true,
+      miniReview: true,
+      verdict: true,
+      guide: { select: { title: true, slug: true } },
+    },
+    orderBy: { rank: 'asc' },
+  });
+
   const bestDeal = product.deals[0]; // Lowest price (ordered by dealPrice asc)
   const bestScore = Math.max(...product.deals.map(d => d.score || 0));
   const categoryName = product.category?.name || 'Beauté';
@@ -384,6 +402,15 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     image: schemaImage,
     brand: brandName ? { '@type': 'Brand', name: brandName } : undefined,
     category: categoryName,
+    ...(editorialReview?.rating ? {
+      review: {
+        '@type': 'Review',
+        author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
+        reviewRating: { '@type': 'Rating', ratingValue: editorialReview.rating, bestRating: 5 },
+        reviewBody: editorialReview.verdict || editorialReview.miniReview,
+        url: `${BASE_URL}/guides/${editorialReview.guide.slug}`,
+      },
+    } : {}),
   };
 
   let productSchema: Record<string, unknown>;
@@ -452,7 +479,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
             {product.category && (
               <>
                 <span className="text-neutral-700 flex-shrink-0">/</span>
-                <Link href={`/produits?category=${product.category.slug}`} className="hover:text-white transition-colors flex-shrink-0">
+                <Link href={`/categories/${product.category.slug}`} className="hover:text-white transition-colors flex-shrink-0">
                   {product.category.name}
                 </Link>
               </>
@@ -494,7 +521,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
               {/* Category tag + lien vers la page maison (maillage interne :
                   chaque fiche irrigue sa page /marques/[slug]) */}
               <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-neutral-500 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-white/10">
-                <Link href={`/produits?category=${product.category?.slug}`} className="hover:text-white transition-colors">
+                <Link href={`/categories/${product.category?.slug}`} className="hover:text-white transition-colors">
                   {categoryName}
                 </Link>
                 {product.subcategory && (
@@ -611,6 +638,28 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                   </Link>
                 </figcaption>
               </figure>
+            </section>
+          )}
+
+          {editorialReview?.rating && (
+            <section className="mb-12 sm:mb-16 md:mb-24 border-y border-white/10 py-8 sm:py-10">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-8">
+                <div className="flex-shrink-0">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-500 mb-2">Note de la rédaction</p>
+                  <p className="font-serif text-4xl text-[#d4a855]">
+                    {editorialReview.rating.toFixed(1).replace('.', ',')}<span className="text-xl text-neutral-500">/5</span>
+                  </p>
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl text-white mb-3">Notre avis sur {fullName}</h2>
+                  <p className="text-sm text-neutral-300 font-light leading-relaxed">
+                    {editorialReview.verdict || editorialReview.miniReview}
+                  </p>
+                  <Link href={`/guides/${editorialReview.guide.slug}`} className="inline-block mt-4 text-xs text-[#d4a855] hover:text-white transition-colors">
+                    Lire le guide « {editorialReview.guide.title} » →
+                  </Link>
+                </div>
+              </div>
             </section>
           )}
 

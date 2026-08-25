@@ -24,7 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const leaderText = leader
     ? `${leader.label} est la moins chère dans ${leader.pct}% des ${o.comparisons} comparaisons`
     : `${o.comparisons} comparaisons de prix à taille égale`;
-  const title = `Prix des parfums en ${mois.toLowerCase()} : qui est moins cher ?`;
+  const title = leader
+    ? `Prix parfums ${mois.toLowerCase()} : ${leader.label} gagne ${leader.pct} %`
+    : `Prix des parfums en ${mois.toLowerCase()} : le comparatif`;
   const description = `${leaderText}. Écart moyen : ${o.avgGap.toFixed(2).replace('.', ',')} €. ${o.drops.length} baisses détectées sur 30 jours. Données relevées 6 fois par jour.`;
   return {
     title: { absolute: title },

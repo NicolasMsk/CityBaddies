@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Diamond, Loader2, CheckCircle } from 'lucide-react';
 
 export default function NewsletterSection() {
+  const pathname = usePathname();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -24,7 +26,7 @@ export default function NewsletterSection() {
       const response = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'homepage' }),
+        body: JSON.stringify({ email, source: pathname || '/' }),
       });
 
       const data = await response.json();

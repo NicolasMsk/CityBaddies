@@ -8,6 +8,12 @@ export const revalidate = 3600; // Revalidate every hour
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 
+function latestDate(dates: (Date | null | undefined)[]): Date {
+  return dates
+    .filter((date): date is Date => !!date)
+    .reduce((latest, date) => date > latest ? date : latest, new Date('2026-01-01'));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Date du dernier relevé de prix réel : c'est LA vraie date de modification des
   // pages dynamiques (home, /produits). Un new Date() à chaque render simule une
@@ -132,7 +138,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     where: {
       products: { some: { deals: { some: { status: 'ACTIVE', type: 'tracked' } } } },
     },
-    select: { slug: true, updatedAt: true },
+    select: {
+      slug: true,
+      updatedAt: true,
+      products: {
+        where: { deals: { some: { status: 'ACTIVE', type: 'tracked' } } },
+        select: {
+          deals: {
+            where: { status: 'ACTIVE', type: 'tracked' },
+            select: { updatedAt: true, lastSeenAt: true },
+          },
+        },
+      },
+    },
     orderBy: { name: 'asc' },
   });
 
@@ -145,7 +163,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...activeBrands.map((b) => ({
       url: `${BASE_URL}/marques/${b.slug}`,
-      lastModified: dataDate,
+      lastModified: latestDate([
+        b.updatedAt,
+        ...b.products.flatMap(product => product.deals.flatMap(deal => [deal.updatedAt, deal.lastSeenAt])),
+      ]),
       changeFrequency: 'daily' as const,
       priority: 0.7,
     })),
@@ -161,9 +182,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       updatedAt: true,
       deals: {
         where: { status: 'ACTIVE' },
-        select: { score: true },
-        orderBy: { score: 'desc' },
-        take: 1,
+        select: { score: true, updatedAt: true, lastSeenAt: true },
       },
     },
     take: 500,
@@ -171,9 +190,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productPages: MetadataRoute.Sitemap = activeProducts.map((product) => ({
     url: `${BASE_URL}/produits/${product.slug}`,
-    lastModified: product.updatedAt || new Date(),
+    lastModified: latestDate([
+      product.updatedAt,
+      ...product.deals.flatMap(deal => [deal.updatedAt, deal.lastSeenAt]),
+    ]),
     changeFrequency: 'daily' as const,
-    priority: product.deals[0]?.score && product.deals[0].score > 50 ? 0.8 : 0.6,
+    priority: product.deals.some(deal => (deal.score ?? 0) > 50) ? 0.8 : 0.6,
   }));
 
   // Récupérer les guides d'achat publiés

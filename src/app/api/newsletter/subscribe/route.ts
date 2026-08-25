@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resend, emailConfig } from '@/lib/email/resend';
 import { getNewsletterConfirmEmailHtml, getNewsletterConfirmEmailText } from '@/lib/email/templates/newsletter-confirm';
 import { rateLimit, clientIp, tooMany } from '@/lib/rate-limit';
+import { clientIdFromGaCookie, sessionIdFromGaCookie, sendGa4Events } from '@/lib/analytics/ga4-server';
 
 // Validation email raisonnable (l'ancien `includes('@')` laissait passer n'importe quoi).
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     const existing = await prisma.newsletterSubscription.findUnique({
       where: { email: email.toLowerCase() },
     });
+    let shouldTrackSignup = false;
 
     if (existing) {
       // Si déjà confirmé
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
             confirmedAt: new Date(),
           },
         });
+        shouldTrackSignup = true;
       }
     } else {
       // Nouvelle inscription - on confirme directement (pas de double opt-in pour simplifier)
@@ -59,6 +62,30 @@ export async function POST(request: NextRequest) {
           confirmedAt: new Date(),
         },
       });
+      shouldTrackSignup = true;
+    }
+
+    // Conversion douce GA4 : aucun email ni identifiant métier n'est envoyé.
+    // Comme pour les clics marchands, l'événement ne part que si `_ga` prouve
+    // que la personne a accepté la mesure. Une réinscription est comptée, pas
+    // un formulaire soumis par quelqu'un déjà abonné.
+    if (shouldTrackSignup) {
+      const clientId = clientIdFromGaCookie(request.cookies.get('_ga')?.value);
+      if (clientId) {
+        const suffix = (process.env.GA4_MEASUREMENT_ID ?? '').replace(/^G-/, '');
+        const sessionId = sessionIdFromGaCookie(request.cookies.get(`_ga_${suffix}`)?.value);
+        const sourcePath = safeSource.startsWith('/') ? safeSource : '/';
+        await sendGa4Events(
+          [{
+            name: 'sign_up',
+            params: {
+              method: 'newsletter',
+              page_location: `${request.nextUrl.origin}${sourcePath}`,
+            },
+          }],
+          { clientId, sessionId }
+        );
+      }
     }
 
     // 1. Envoyer l'email de confirmation à l'utilisateur

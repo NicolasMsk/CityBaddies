@@ -72,12 +72,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!guide) return { title: 'Guide non trouvé', robots: { index: false, follow: false } };
 
+  const title = guide.metaTitle || guide.title;
   return {
-    title: guide.metaTitle || `${guide.title} | City Baddies`,
+    title: { absolute: title },
     description: guide.metaDescription || `Guide d'achat : ${guide.title}`,
     alternates: { canonical: `${BASE_URL}/guides/${slug}` },
     openGraph: {
-      title: guide.metaTitle || guide.title,
+      title,
       description: guide.metaDescription || `Guide d'achat : ${guide.title}`,
       url: `${BASE_URL}/guides/${slug}`,
       type: 'article',
@@ -166,7 +167,18 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
     datePublished: guide.publishedAt?.toISOString(),
     dateModified: (guide.updatedAt || guide.publishedAt)?.toISOString(),
     author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
+    publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
     mainEntityOfPage: `${BASE_URL}/guides/${guide.slug}`,
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: "Guides d'achat", item: `${BASE_URL}/guides` },
+      { '@type': 'ListItem', position: 3, name: guide.title, item: `${BASE_URL}/guides/${guide.slug}` },
+    ],
   };
 
   // FAQPage : la FAQ est VISIBLE plus bas dans la page → le schema doit refléter
@@ -220,6 +232,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
   return (
     <>
       <JsonLd id="guide-article" data={articleSchema} />
+      <JsonLd id="guide-breadcrumb" data={breadcrumbSchema} />
       {faqSchema && <JsonLd id="guide-faq" data={faqSchema} />}
       {rankedSchema && <JsonLd id="guide-ranking" data={rankedSchema} />}
 

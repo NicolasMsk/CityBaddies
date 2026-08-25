@@ -132,7 +132,7 @@ export async function generateMetadata({ params }: { params: Promise<{ pair: str
   const data = await getPairData(pair as PairSlug);
   const leader = data.ranking[0];
   const share = data.comparisons ? Math.round((leader.wins / data.comparisons) * 100) : 0;
-  const title = `${data.config.left.label} vs ${data.config.right.label} : qui est le moins cher ?`;
+  const title = `${data.config.left.label} vs ${data.config.right.label} : ${leader.label} gagne ${share} %`;
   const description = `${leader.label} gagne ${share}% des ${data.comparisons} comparaisons de parfums à taille égale. Écart moyen : ${data.avgGap.toFixed(2).replace('.', ',')} €. Prix relevés 6 fois par jour.`;
 
   return {

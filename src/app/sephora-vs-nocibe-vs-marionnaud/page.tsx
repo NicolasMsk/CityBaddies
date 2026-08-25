@@ -141,7 +141,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const date = freshest
     ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' }).format(freshest)
     : "aujourd'hui";
-  const title = 'Sephora vs Nocibé vs Marionnaud : le moins cher';
+  const title = `Sephora, Nocibé, Marionnaud : ${leaderName} gagne ${share} %`;
   const description = `${leaderName} gagne ${share}% des ${comparisons} comparaisons de parfums à taille égale. Écart moyen : ${avgGap.toFixed(2).replace('.', ',')} €. Prix vérifiés le ${date}.`;
 
   return {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import ProduitsPageClient from './ProduitsPageClient';
+import { generateBrandSlug, normalizeBrandName } from '@/lib/brands';
 
 // Force dynamic rendering pour avoir des données fraîches
 export const dynamic = 'force-dynamic';
@@ -33,18 +34,19 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const hasNoiseParams = !!(
     params.subcategory || params.subsubcategory || params.merchant ||
     params.tag || params.search || params.sortBy || params.sortOrder ||
-    params.hot || params.minPrice || params.maxPrice ||
+    params.hot || params.minPrice || params.maxPrice || params.tier ||
     page > 1
   );
 
-  const isIndexable = !hasNoiseParams && (!brand || !!category);
+  // Les filtres servent l'UX, mais les pages SEO propres sont /categories/[slug]
+  // et /marques/[slug]. On évite ainsi les doublons et la cannibalisation.
+  const isIndexable = !hasNoiseParams && !category && !brand;
 
   let canonicalUrl = `${BASE_URL}/produits`;
-  if (category) {
-    canonicalUrl = `${BASE_URL}/produits?category=${category}`;
-    if (brand && !hasNoiseParams) {
-      canonicalUrl = `${BASE_URL}/produits?category=${category}&brand=${encodeURIComponent(brand)}`;
-    }
+  if (brand) {
+    canonicalUrl = `${BASE_URL}/marques/${generateBrandSlug(normalizeBrandName(brand) || brand)}`;
+  } else if (category) {
+    canonicalUrl = `${BASE_URL}/categories/${category}`;
   }
 
   let title: string;

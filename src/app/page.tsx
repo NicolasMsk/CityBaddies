@@ -20,7 +20,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 // Positionnement assumé : parfums FEMME uniquement (stratégie mono-catégorie,
 // cohérente avec la marque) — le title/desc portent la requête « parfum femme ».
 export const metadata: Metadata = {
-  title: "City Baddies | Comparateur Prix Parfum Femme — Sephora, Nocibé, Marionnaud, My-Origines",
+  title: { absolute: "City Baddies : comparateur de prix parfum femme" },
   description: "Comparez les prix de vos parfums femme préférés entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, vraies promos démasquées et fausses réductions exposées. Eau de parfum, eau de toilette et coffrets.",
   keywords: [
     "comparateur prix parfum",
@@ -331,14 +331,10 @@ export default async function HomePage() {
           
           {/* Main Text Block */}
           <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-[1px] w-12 bg-[#d4a855]"></span>
-              <span className="text-[#d4a855] text-xs font-bold tracking-[0.2em] uppercase">
-                Comparateur Prix Parfums
-              </span>
-            </div>
-
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-white leading-[0.85] tracking-tight mb-8">
+              <span className="block text-[#d4a855] text-xs font-bold font-sans tracking-[0.2em] uppercase mb-7">
+                City Baddies · Comparateur prix parfums
+              </span>
               <span className="block italic font-light opacity-90">Ton Parfum.</span>
               <span className="block font-medium">Meilleur Prix.</span>
             </h1>

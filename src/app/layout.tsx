@@ -109,7 +109,9 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
   name: "City Baddies",
+  alternateName: ["City Baddies Parfums", "citybaddies.com"],
   url: BASE_URL,
   logo: `${BASE_URL}/images/logo.png`,
   description: "Comparateur de prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. Historique des prix, analyse des vraies promos et alertes prix.",
@@ -129,7 +131,9 @@ const organizationSchema = {
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
   name: "City Baddies",
+  alternateName: "City Baddies Parfums",
   url: BASE_URL,
   description: "Comparateur de prix parfums — Sephora, Nocibé, Marionnaud, My-Origines",
   potentialAction: {
@@ -168,4 +172,3 @@ export default function RootLayout({
     </html>
   );
 }
-

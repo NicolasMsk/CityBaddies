@@ -66,6 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.8,
     },
+    ...['sephora-vs-nocibe', 'sephora-vs-marionnaud', 'nocibe-vs-marionnaud'].map(pair => ({
+      url: `${BASE_URL}/comparatif/${pair}`,
+      lastModified: dataDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    })),
     {
       url: `${BASE_URL}/parfums-moins-de-50-euros`,
       lastModified: dataDate,
@@ -117,14 +123,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: category.updatedAt || new Date(),
     changeFrequency: 'daily',
     priority: 0.7,
-  }));
-
-  // --- SEO Landing Pages : /produits?category=slug (indexables) ---
-  const dealsCategoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${BASE_URL}/produits?category=${category.slug}`,
-    lastModified: dataDate,
-    changeFrequency: 'daily' as const,
-    priority: 0.8,
   }));
 
   // --- Pages marques : /marques + /marques/[slug] ---
@@ -218,7 +216,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticPages,
     ...categoryPages,
-    ...dealsCategoryPages,   // /produits?category=parfums (indexable landing pages)
     ...brandPages,            // /marques + /marques/chanel, dior, etc.
     ...productPages,
     ...guidePages,

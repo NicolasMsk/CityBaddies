@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cache } from 'react';
 import prisma from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 import { fullProductName } from '@/lib/seo-config';
@@ -16,22 +17,29 @@ function moisAnnee(d = new Date()) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
   const mois = moisAnnee();
+  const o = await getObservatoire();
+  const leader = o.ranking[0];
+  const leaderText = leader
+    ? `${leader.label} est la moins chère dans ${leader.pct}% des ${o.comparisons} comparaisons`
+    : `${o.comparisons} comparaisons de prix à taille égale`;
+  const title = `Prix des parfums en ${mois.toLowerCase()} : qui est moins cher ?`;
+  const description = `${leaderText}. Écart moyen : ${o.avgGap.toFixed(2).replace('.', ',')} €. ${o.drops.length} baisses détectées sur 30 jours. Données relevées 6 fois par jour.`;
   return {
-    title: `Observatoire des prix parfums — ${mois} | City Baddies`,
-    description: `L'étude mensuelle des prix parfums en France : quelle enseigne est la moins chère, l'écart moyen entre Sephora, Nocibé, Marionnaud, My-Origines et Notino, les plus fortes baisses et les prix barrés non conformes. Données ${mois}.`,
+    title: { absolute: title },
+    description,
     alternates: { canonical: `${BASE_URL}/observatoire-des-prix` },
     openGraph: {
-      title: `Observatoire des prix parfums — ${mois}`,
-      description: 'Quelle enseigne est la moins chère, écarts, baisses du mois et prix barrés démasqués. Données réelles, relevées 6×/jour.',
+      title,
+      description,
       url: `${BASE_URL}/observatoire-des-prix`,
       type: 'article',
     },
   };
 }
 
-async function getObservatoire() {
+const getObservatoire = cache(async () => {
   const now = Date.now();
   const d30 = new Date(now - 30 * 864e5);
 
@@ -118,7 +126,7 @@ async function getObservatoire() {
     ranking, topGaps, drops, fakes, freshest,
     maxDropPct: drops[0]?.pct ?? 0,
   };
-}
+});
 
 export default async function ObservatoirePage() {
   const o = await getObservatoire();

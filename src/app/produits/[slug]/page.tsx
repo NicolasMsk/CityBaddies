@@ -36,8 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       deals: {
         where: { status: 'ACTIVE' },
         orderBy: { dealPrice: 'asc' },
-        take: 1,
-        include: { variant: true },
+        include: { variant: true, merchant: true },
       },
     },
   });
@@ -57,15 +56,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const categoryName = product.category?.name || 'Beauté';
   // fullProductName évite "Lancôme Lancôme La Vie Est Belle…" (le nom contient déjà la marque)
   const fullName = fullProductName(brandName, product.name);
-  const bestSize = bestDeal?.variant ? ` (${bestDeal.variant.volumeValue} ${bestDeal.variant.volumeUnit})` : '';
-  const priceText = bestDeal ? `à partir de ${bestDeal.dealPrice.toFixed(2).replace('.', ',')}€${bestSize}` : '';
-  const discountText = bestDeal && bestDeal.discountPercent > 0 ? `(-${bestDeal.discountPercent}%)` : '';
-
-  const title = `${fullName} ${discountText}`.trim();
-  const description = `${fullName} ${priceText} ${discountText}. Comparez les prix entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. ${categoryName} — City Baddies.`;
+  const bestSize = bestDeal.variant ? ` (${bestDeal.variant.volumeValue} ${bestDeal.variant.volumeUnit})` : '';
+  const price = bestDeal.dealPrice.toFixed(2).replace('.', ',');
+  const merchantCount = new Set(product.deals.map(deal => deal.merchant.slug)).size;
+  const title = `${fullName} : prix dès ${price} €`;
+  const description = `Comparez ${fullName} chez ${merchantCount} enseigne${merchantCount > 1 ? 's' : ''}. Meilleur prix : ${price} € chez ${bestDeal.merchant.name}${bestSize}. Prix vérifiés 6 fois par jour et historique.`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     robots: { index: true, follow: true },
     keywords: [
@@ -89,7 +87,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     twitter: {
       card: 'summary_large_image',
       title,
-      description: priceText ? `${fullName} ${priceText}` : fullName,
+      description,
       images: bestDeal?.imageUrl ? [bestDeal.imageUrl] : [],
     },
   };
@@ -160,7 +158,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Accueil', url: BASE_URL },
     { name: 'Produits', url: `${BASE_URL}/produits` },
-    ...(product.category ? [{ name: product.category.name, url: `${BASE_URL}/produits?category=${product.category.slug}` }] : []),
+    ...(product.category ? [{ name: product.category.name, url: `${BASE_URL}/categories/${product.category.slug}` }] : []),
     { name: fullName, url: `${BASE_URL}/produits/${slug}` },
   ]);
 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cache } from 'react';
 import prisma from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 import { fullProductName } from '@/lib/seo-config';
@@ -11,19 +12,6 @@ import SafeImage from '@/components/ui/SafeImage';
 export const revalidate = 900;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
-
-export const metadata: Metadata = {
-  title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
-  description:
-    "Comparaison réelle des prix parfums entre Sephora, Nocibé, Marionnaud, My-Origines et Notino : victoires par enseigne, écarts constatés à taille égale, mis à jour à chaque relevé (6 fois par jour).",
-  alternates: { canonical: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
-  openGraph: {
-    title: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
-    description: 'Le match des enseignes, tranché par de vrais relevés de prix — pas par des impressions.',
-    url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
-    type: 'article',
-  },
-};
 
 // FAQ visible + schema FAQPage (contenu identique, guideline Google).
 // Réponses DURABLES : aucun chiffre figé — les chiffres vivent dans la page.
@@ -69,7 +57,7 @@ const MERCHANT_LABEL: Record<string, string> = {
 };
 const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 
-async function getMatchData() {
+const getMatchData = cache(async () => {
   const deals = await prisma.deal.findMany({
     where: { status: 'ACTIVE', type: 'tracked' },
     include: {
@@ -143,6 +131,30 @@ async function getMatchData() {
   const products = new Set(deals.map(d => d.product.slug)).size;
 
   return { wins, ties, comparisons, avgGap: comparisons ? gapSum / comparisons : 0, topGaps: dedupedGaps.slice(0, 6), freshest, products };
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { wins, comparisons, avgGap, freshest } = await getMatchData();
+  const leader = Object.entries(wins).sort((a, b) => b[1] - a[1])[0];
+  const leaderName = leader ? merchantLabel(leader[0]) : 'Une enseigne';
+  const share = leader && comparisons ? Math.round((leader[1] / comparisons) * 100) : 0;
+  const date = freshest
+    ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' }).format(freshest)
+    : "aujourd'hui";
+  const title = 'Sephora vs Nocibé vs Marionnaud : le moins cher';
+  const description = `${leaderName} gagne ${share}% des ${comparisons} comparaisons de parfums à taille égale. Écart moyen : ${avgGap.toFixed(2).replace('.', ',')} €. Prix vérifiés le ${date}.`;
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
+      type: 'article',
+    },
+  };
 }
 
 export default async function EnseignesMatchPage() {
@@ -227,6 +239,18 @@ export default async function EnseignesMatchPage() {
               comptes six fois par jour, pour que tu n&apos;aies jamais à croire quelqu&apos;un sur parole. Pas même nous.
             </p>
           </div>
+
+          <nav aria-label="Comparatifs deux à deux" className="mb-14 flex flex-wrap gap-3">
+            <Link href="/comparatif/sephora-vs-nocibe" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
+              Sephora vs Nocibé
+            </Link>
+            <Link href="/comparatif/sephora-vs-marionnaud" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
+              Sephora vs Marionnaud
+            </Link>
+            <Link href="/comparatif/nocibe-vs-marionnaud" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
+              Nocibé vs Marionnaud
+            </Link>
+          </nav>
 
           {/* ── Le verdict — pull-quote magazine, citable (server-rendered) ── */}
           <figure className="relative mb-20 border border-[#d4a855]/25 bg-gradient-to-b from-[#d4a855]/[0.06] to-transparent p-8 sm:p-10">

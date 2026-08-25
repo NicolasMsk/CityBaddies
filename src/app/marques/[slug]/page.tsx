@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import prisma from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 import { fullProductName } from '@/lib/seo-config';
@@ -23,7 +24,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://citybaddies.com';
 // Data
 // ──────────────────────────────────────────────────────────────────
 
-async function getBrandData(slug: string) {
+const getBrandData = cache(async (slug: string) => {
   const brand = await prisma.brand.findUnique({
     where: { slug },
     include: {
@@ -43,7 +44,7 @@ async function getBrandData(slug: string) {
   });
   if (!brand || brand.products.length === 0) return null;
   return brand;
-}
+});
 
 // ──────────────────────────────────────────────────────────────────
 // Metadata
@@ -51,10 +52,7 @@ async function getBrandData(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const brand = await prisma.brand.findUnique({
-    where: { slug },
-    include: { products: { where: { deals: { some: { status: 'ACTIVE', type: 'tracked' } } }, select: { id: true } } },
-  });
+  const brand = await getBrandData(slug);
 
   // Marque inconnue OU sans produit actif → noindex (pas de page vide indexée)
   if (!brand || brand.products.length === 0) {
@@ -63,11 +61,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const content = BRAND_CONTENT[slug] || fallbackBrandContent(brand.name);
   const n = brand.products.length;
-  const title = `Parfums ${content.displayName} : prix comparés Sephora, Nocibé, Marionnaud`;
-  const description = `${n} parfum${n > 1 ? 's' : ''} ${content.displayName} suivi${n > 1 ? 's' : ''} : prix relevés 6 fois par jour chez Sephora, Nocibé, Marionnaud, My-Origines et Notino, comparés à taille égale, avec historique. ${content.signature}`;
+  const deals = brand.products.flatMap(product => product.deals).sort((a, b) => a.dealPrice - b.dealPrice);
+  const best = deals[0];
+  const merchantCount = new Set(deals.map(deal => deal.merchant.slug)).size;
+  const bestPrice = best.dealPrice.toFixed(2).replace('.', ',');
+  const title = `Parfums ${content.displayName} dès ${bestPrice} € : prix comparés`;
+  const description = `${n} parfum${n > 1 ? 's' : ''} ${content.displayName} comparé${n > 1 ? 's' : ''} chez ${merchantCount} enseigne${merchantCount > 1 ? 's' : ''}. Meilleur prix : ${bestPrice} € chez ${best.merchant.name}. Relevés 6 fois par jour.`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `${BASE_URL}/marques/${slug}` },
     robots: { index: true, follow: true },
@@ -123,6 +125,36 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
     .sort((a, b) => b.getTime() - a.getTime())[0];
   const freshLabel = freshest ? dateFmt.format(freshest) : null;
   const fmt = (n: number) => n.toFixed(2).replace('.', ',');
+
+  // Une réponse dédiée aux recherches "marque + enseigne", sans créer de
+  // nouvelles pages minces : chaque bloc repose uniquement sur les offres live.
+  const byMerchant = new Map<string, {
+    name: string;
+    products: { slug: string; name: string; price: number }[];
+  }>();
+  for (const product of brand.products) {
+    const cheapestByMerchant = new Map<string, (typeof product.deals)[number]>();
+    for (const deal of product.deals) {
+      const current = cheapestByMerchant.get(deal.merchant.slug);
+      if (!current || deal.dealPrice < current.dealPrice) cheapestByMerchant.set(deal.merchant.slug, deal);
+    }
+    for (const [merchantSlug, deal] of cheapestByMerchant) {
+      const section = byMerchant.get(merchantSlug) ?? { name: deal.merchant.name, products: [] };
+      section.products.push({
+        slug: product.slug,
+        name: fullProductName(brand.name, product.name),
+        price: deal.dealPrice,
+      });
+      byMerchant.set(merchantSlug, section);
+    }
+  }
+  const merchantSections = [...byMerchant.entries()]
+    .map(([merchantSlug, section]) => ({
+      merchantSlug,
+      ...section,
+      products: section.products.sort((a, b) => a.price - b.price),
+    }))
+    .sort((a, b) => b.products.length - a.products.length);
 
   // ── Schemas (natifs, HTML initial) ──
   const breadcrumbSchema = {
@@ -275,6 +307,40 @@ export default async function MarquePage({ params }: { params: Promise<{ slug: s
               Prix relevés six fois par jour, comparés à contenance identique.{' '}
               <Link href="/methodologie" className="underline decoration-[#d4a855]/40 underline-offset-4 hover:text-neutral-300 transition-colors not-italic">Notre méthodologie</Link>
             </p>
+          </section>
+
+          {/* Intentions "marque + enseigne" observées dans Search Console. */}
+          <section className="mb-20">
+            <h2 className="font-serif text-2xl sm:text-3xl text-white mb-3">
+              Où acheter un parfum {content.displayName} au meilleur prix ?
+            </h2>
+            <p className="text-sm font-light text-neutral-400 leading-relaxed mb-8">
+              Compare les offres disponibles par enseigne. Les montants ci-dessous sont les meilleurs prix
+              actuellement relevés pour chaque parfum, toutes contenances disponibles confondues.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {merchantSections.map(section => (
+                <article key={section.merchantSlug} className="border border-white/10 p-5 sm:p-6">
+                  <h3 className="text-white text-lg font-serif mb-2">
+                    Parfums {content.displayName} chez {section.name}
+                  </h3>
+                  <p className="text-xs text-neutral-500 mb-4">
+                    {section.products.length} parfum{section.products.length > 1 ? 's' : ''} disponible{section.products.length > 1 ? 's' : ''}, dès{' '}
+                    <span className="text-[#d4a855]">{fmt(section.products[0].price)}&nbsp;€</span>
+                  </p>
+                  <ul className="space-y-2">
+                    {section.products.slice(0, 3).map(product => (
+                      <li key={product.slug} className="flex items-baseline justify-between gap-3 text-sm">
+                        <Link href={`/produits/${product.slug}`} className="text-neutral-300 hover:text-white transition-colors line-clamp-1">
+                          {product.name}
+                        </Link>
+                        <span className="text-neutral-400 whitespace-nowrap">{fmt(product.price)}&nbsp;€</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </section>
 
           {/* FAQ — visible + FAQPage schema (les deux restent identiques) */}

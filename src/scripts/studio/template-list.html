@@ -1,0 +1,95 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+/* Template vidéo TikTok "TOP 3" City Baddies — piloté par window.renderAt(t).
+   Tokens __XXX__ remplacés par make-video.ts avant le rendu. */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d4a855;--wine:#9b1515}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#080808;font-family:'Manrope','Helvetica Neue',sans-serif}
+.stage{width:1080px;height:1920px;position:relative;overflow:hidden}
+.glow{position:absolute;border-radius:50%;filter:blur(150px)}
+#g1{top:-10%;right:-18%;width:70%;height:44%;background:var(--wine);opacity:.20}
+#g2{bottom:-12%;left:-18%;width:66%;height:44%;background:var(--gold);opacity:.14}
+.vignette{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 40%,transparent 56%,rgba(0,0,0,.55) 100%)}
+#sceneA{position:absolute;inset:0}
+#brand{position:absolute;top:58px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:18px}
+#brand img{height:58px;filter:drop-shadow(0 4px 16px rgba(212,168,85,.35))}
+#brand .wm{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;color:#fff;font-size:44px}
+#title{position:absolute;top:168px;left:0;right:0;padding:0 84px;text-align:center;font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:82px;line-height:1.04;font-weight:500}
+#title em{font-style:italic;color:var(--gold)}
+.rows{position:absolute;top:470px;left:0;right:0}
+.row{display:flex;align-items:center;gap:34px;padding:0 64px;height:430px}
+.rank{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;color:var(--gold);font-size:150px;line-height:1;width:112px;text-align:center;flex:none;text-shadow:0 8px 40px rgba(212,168,85,.35)}
+.thumb{width:300px;height:300px;border-radius:28px;background:#fff;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 34px 90px rgba(0,0,0,.6)}
+.thumb img{width:86%;height:86%;object-fit:contain}
+.info{flex:1;min-width:0}
+.rname{font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:52px;line-height:1.04}
+.rmeta{color:#9a9a9a;font-size:25px;letter-spacing:.12em;text-transform:uppercase;margin-top:10px}
+.rprice{margin-top:16px;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.rprice .now{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;font-weight:600;color:var(--gold);font-size:78px;line-height:1}
+.rprice .old{color:#8f8f8f;font-size:33px}
+.rprice .old s{text-decoration-color:var(--wine);text-decoration-thickness:4px}
+.rmerch{color:#cbb58c;font-weight:700;font-size:30px;margin-top:8px}
+#outro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 90px;text-align:center}
+#outro img{height:180px;filter:drop-shadow(0 10px 40px rgba(212,168,85,.4));margin-bottom:36px}
+.owm{font-family:'Didot','Bodoni MT',Georgia,serif;font-style:italic;color:#fff;font-size:76px;margin-bottom:44px}
+.oline{font-family:'Didot','Bodoni MT',Georgia,serif;color:#fff;font-size:74px;line-height:1.12;font-weight:500}
+.oline em{font-style:italic;color:var(--gold)}
+.osub{margin-top:40px;color:#cbb58c;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:32px}
+</style></head><body>
+<div class="stage">
+  <div class="glow" id="g1"></div><div class="glow" id="g2"></div>
+  <div id="sceneA">
+    <div id="brand"><img src="__LOGO__"><span class="wm">City Baddies</span></div>
+    <div id="title">__TITLE__</div>
+    <div class="rows">
+      <div class="row" id="row1">
+        <div class="rank">1</div>
+        <div class="thumb"><img class="w8" src="__IMG1__"></div>
+        <div class="info"><div class="rname">__NAME1__</div><div class="rmeta">__META1__</div>
+          <div class="rprice"><span class="now">__PRICE1__</span><span class="old"><s>__OLD1__</s></span></div>
+          <div class="rmerch">le moins cher chez __MERCH1__</div></div>
+      </div>
+      <div class="row" id="row2">
+        <div class="rank">2</div>
+        <div class="thumb"><img class="w8" src="__IMG2__"></div>
+        <div class="info"><div class="rname">__NAME2__</div><div class="rmeta">__META2__</div>
+          <div class="rprice"><span class="now">__PRICE2__</span><span class="old"><s>__OLD2__</s></span></div>
+          <div class="rmerch">le moins cher chez __MERCH2__</div></div>
+      </div>
+      <div class="row" id="row3">
+        <div class="rank">3</div>
+        <div class="thumb"><img class="w8" src="__IMG3__"></div>
+        <div class="info"><div class="rname">__NAME3__</div><div class="rmeta">__META3__</div>
+          <div class="rprice"><span class="now">__PRICE3__</span><span class="old"><s>__OLD3__</s></span></div>
+          <div class="rmerch">le moins cher chez __MERCH3__</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="outro">
+    <img src="__LOGO__">
+    <div class="owm">City Baddies</div>
+    <div class="oline">Tes parfums au<br><em>prix le plus bas</em></div>
+    <div class="osub">5 enseignes comparées &middot; citybaddies.com</div>
+  </div>
+  <div class="vignette"></div>
+</div>
+<script>
+var E=function(id){return document.getElementById(id)};
+var brand=E('brand'),title=E('title'),row1=E('row1'),row2=E('row2'),row3=E('row3'),sceneA=E('sceneA'),outro=E('outro'),g1=E('g1'),g2=E('g2');
+function cl(x){return x<0?0:(x>1?1:x)}
+function sg(t,s,d){return cl((t-s)/d)}
+function eo(p){return 1-Math.pow(1-p,3)}
+function revealRow(el,t,start){var p=eo(sg(t,start,650));el.style.opacity=p;el.style.transform='translateX('+((1-p)*-46)+'px)';}
+window.renderAt=function(t){
+  g1.style.transform='translate('+(-40*Math.sin(t/9000))+'px,'+(30*Math.sin(t/9000))+'px)';
+  g2.style.transform='translate('+(40*Math.sin(t/11000))+'px,'+(-30*Math.sin(t/11000))+'px)';
+  var p;
+  p=eo(sg(t,100,700)); brand.style.opacity=p; brand.style.transform='translateY('+((1-p)*-14)+'px)';
+  p=eo(sg(t,900,800)); title.style.opacity=p; title.style.filter='blur('+((1-p)*12)+'px)'; title.style.transform='translateY('+((1-p)*14)+'px)';
+  revealRow(row1,t,2000);
+  revealRow(row2,t,2700);
+  revealRow(row3,t,3400);
+  var f=eo(sg(t,8800,800)); sceneA.style.opacity=1-f; sceneA.style.transform='translateY('+(-70*f)+'px) scale('+(1-0.05*f)+')'; sceneA.style.filter='blur('+(7*f)+'px)';
+  p=eo(sg(t,9200,1000)); outro.style.opacity=p; outro.style.transform='scale('+(0.92+0.08*p)+')';
+};
+window.renderAt(0);
+</script></body></html>

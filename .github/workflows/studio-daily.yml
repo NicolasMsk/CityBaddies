@@ -9,8 +9,12 @@ on:
     - cron: "30 6 * * *" # 06:30 UTC ≈ 08:30 Paris (été) / 07:30 (hiver)
   workflow_dispatch:
     inputs:
+      concept:
+        description: "Concept forcé (vide = rotation du jour). Ex: luxe-moins-100, moins-50, grosses-economies, culte-au-meilleur-prix, deal-du-jour"
+        required: false
+        default: ""
       product:
-        description: "Slug d'un parfum précis (vide = auto, plus gros écart)"
+        description: "Slug d'un parfum précis (vide = auto). Force le format single."
         required: false
         default: ""
       email:
@@ -49,6 +53,7 @@ jobs:
       - name: Générer + envoyer la vidéo du jour
         run: >-
           npx tsx src/scripts/studio/make-video.ts
+          ${{ github.event.inputs.concept && format('--concept {0}', github.event.inputs.concept) || '' }}
           ${{ github.event.inputs.product && format('--product {0}', github.event.inputs.product) || '' }}
           ${{ github.event.inputs.email && format('--email {0}', github.event.inputs.email) || '' }}
       # Sauvegarde téléchargeable du MP4 (7 jours) — filet si l'email n'arrive pas.

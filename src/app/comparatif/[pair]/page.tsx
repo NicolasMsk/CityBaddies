@@ -5,6 +5,11 @@ import { cache } from 'react';
 import JsonLd from '@/components/seo/JsonLd';
 import prisma from '@/lib/prisma';
 import { fullProductName } from '@/lib/seo-config';
+import {
+  averageCityBaddiesRating,
+  buildComparisonProductListSchema,
+  type ComparisonOfferSchemaInput,
+} from '@/lib/structured-data/comparison-products';
 
 export const revalidate = 900;
 
@@ -42,6 +47,37 @@ const getPairData = cache(async (pair: PairSlug) => {
     },
     include: { merchant: true, product: true, variant: true },
   });
+  const editorialReviews = await prisma.buyingGuideProduct.findMany({
+    where: {
+      rating: { not: null },
+      guide: { status: 'PUBLISHED' },
+      deal: { productId: { in: [...new Set(deals.map(deal => deal.productId))] } },
+    },
+    select: {
+      rating: true,
+      miniReview: true,
+      verdict: true,
+      updatedAt: true,
+      guide: { select: { slug: true } },
+      deal: { select: { productId: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+  const reviewByProduct = new Map<string, {
+    rating: number;
+    body: string;
+    guideSlug: string;
+    updatedAt: Date;
+  }>();
+  for (const review of editorialReviews) {
+    if (review.rating === null || reviewByProduct.has(review.deal.productId)) continue;
+    reviewByProduct.set(review.deal.productId, {
+      rating: review.rating,
+      body: review.verdict || review.miniReview,
+      guideSlug: review.guide.slug,
+      updatedAt: review.updatedAt,
+    });
+  }
 
   const grouped = new Map<string, typeof deals>();
   for (const deal of deals) {
@@ -66,17 +102,24 @@ const getPairData = cache(async (pair: PairSlug) => {
     rightPrice: number;
     gap: number;
     winner: string | null;
+    brand: string | null;
+    image: string | null;
+    offers: ComparisonOfferSchemaInput[];
+    rating: number | null;
+    editorialReview: ReturnType<typeof reviewByProduct.get> | null;
   }[] = [];
 
   for (const group of grouped.values()) {
-    const cheapest = new Map<string, number>();
+    const cheapest = new Map<string, (typeof group)[number]>();
     for (const deal of group) {
       const current = cheapest.get(deal.merchant.slug);
-      if (current === undefined || deal.dealPrice < current) cheapest.set(deal.merchant.slug, deal.dealPrice);
+      if (!current || deal.dealPrice < current.dealPrice) cheapest.set(deal.merchant.slug, deal);
     }
-    const leftPrice = cheapest.get(config.left.slug);
-    const rightPrice = cheapest.get(config.right.slug);
-    if (leftPrice === undefined || rightPrice === undefined) continue;
+    const leftDeal = cheapest.get(config.left.slug);
+    const rightDeal = cheapest.get(config.right.slug);
+    if (!leftDeal || !rightDeal) continue;
+    const leftPrice = leftDeal.dealPrice;
+    const rightPrice = rightDeal.dealPrice;
 
     const gap = Math.abs(leftPrice - rightPrice);
     const winner = leftPrice === rightPrice
@@ -87,6 +130,14 @@ const getPairData = cache(async (pair: PairSlug) => {
     gapSum += gap;
 
     const sample = group[0];
+    const offers: ComparisonOfferSchemaInput[] = [leftDeal, rightDeal].map(deal => ({
+      price: deal.dealPrice,
+      url: deal.productUrl || `${BASE_URL}/produits/${deal.product.slug}`,
+      sellerName: deal.merchant.name,
+      sellerUrl: deal.merchant.website,
+      score: deal.score,
+      lastSeenAt: deal.lastSeenAt,
+    }));
     rows.push({
       slug: sample.product.slug,
       name: fullProductName(sample.product.brand, sample.product.name),
@@ -95,6 +146,11 @@ const getPairData = cache(async (pair: PairSlug) => {
       rightPrice,
       gap,
       winner,
+      brand: sample.product.brand,
+      image: sample.product.imageUrl || sample.imageUrl,
+      offers,
+      rating: averageCityBaddiesRating(offers)?.value ?? null,
+      editorialReview: reviewByProduct.get(sample.productId) ?? null,
     });
   }
 
@@ -171,6 +227,22 @@ export default async function PairComparisonPage({ params }: { params: Promise<{
     },
   ];
   const pageUrl = `${BASE_URL}/comparatif/${pair}`;
+  const productListSchema = buildComparisonProductListSchema(data.examples.map((row, index) => ({
+    position: index + 1,
+    slug: row.slug,
+    name: row.name,
+    brand: row.brand,
+    image: row.image,
+    size: row.size,
+    offers: row.offers,
+    editorialReview: row.editorialReview ? {
+      ratingValue: row.editorialReview.rating,
+      bestRating: 5,
+      body: row.editorialReview.body,
+      url: `${BASE_URL}/guides/${row.editorialReview.guideSlug}`,
+      datePublished: row.editorialReview.updatedAt,
+    } : null,
+  })));
   const schemas = [
     {
       '@context': 'https://schema.org',
@@ -181,17 +253,7 @@ export default async function PairComparisonPage({ params }: { params: Promise<{
         { '@type': 'ListItem', position: 3, name: `${left.label} vs ${right.label}`, item: pageUrl },
       ],
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Dataset',
-      name: `Prix parfums : ${left.label} vs ${right.label}`,
-      description: `${data.comparisons} comparaisons à contenance identique, écart moyen ${fmt(data.avgGap)} € par flacon.`,
-      url: pageUrl,
-      creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-      dateModified: data.freshest?.toISOString(),
-      isAccessibleForFree: true,
-      measurementTechnique: 'Relevé automatisé des prix en ligne six fois par jour, comparaison à parfum et contenance identiques.',
-    },
+    productListSchema,
     {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -237,17 +299,31 @@ export default async function PairComparisonPage({ params }: { params: Promise<{
           <h2 className="font-serif text-3xl text-white mb-3">Comparaison parfum par parfum</h2>
           <p className="text-sm text-neutral-500 mb-7">Même parfum, même contenance, prix actifs lors du dernier relevé.</p>
           <div className="overflow-x-auto border-y border-white/10">
-            <table className="w-full min-w-[620px] text-left">
+            <table className="w-full min-w-[720px] text-left">
               <thead className="text-[10px] uppercase tracking-widest text-neutral-500 border-b border-white/10">
-                <tr><th className="py-4 pr-4">Parfum</th><th className="py-4 px-4">Taille</th><th className="py-4 px-4 text-right">{left.label}</th><th className="py-4 pl-4 text-right">{right.label}</th></tr>
+                <tr><th className="py-4 pr-4">Parfum</th><th className="py-4 px-4">Taille</th><th className="py-4 px-4 text-right">{left.label}</th><th className="py-4 px-4 text-right">{right.label}</th><th className="py-4 pl-4 text-right">Note prix</th></tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {data.examples.map(row => (
                   <tr key={`${row.slug}-${row.size}`}>
-                    <td className="py-4 pr-4"><Link href={`/produits/${row.slug}`} className="text-white hover:text-[#d4a855]">{row.name}</Link></td>
+                    <td className="py-4 pr-4">
+                      <Link href={`/produits/${row.slug}`} className="text-white hover:text-[#d4a855]">{row.name}</Link>
+                      {row.editorialReview && (
+                        <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-neutral-500 line-clamp-2">
+                          {row.editorialReview.body}
+                        </p>
+                      )}
+                    </td>
                     <td className="py-4 px-4 text-neutral-500 text-sm">{row.size}</td>
                     <td className={`py-4 px-4 text-right ${row.winner === left.slug ? 'text-[#d4a855]' : 'text-neutral-300'}`}>{fmt(row.leftPrice)}&nbsp;€</td>
-                    <td className={`py-4 pl-4 text-right ${row.winner === right.slug ? 'text-[#d4a855]' : 'text-neutral-300'}`}>{fmt(row.rightPrice)}&nbsp;€</td>
+                    <td className={`py-4 px-4 text-right ${row.winner === right.slug ? 'text-[#d4a855]' : 'text-neutral-300'}`}>{fmt(row.rightPrice)}&nbsp;€</td>
+                    <td className="py-4 pl-4 text-right font-mono text-neutral-300">
+                      {row.editorialReview ? (
+                        <Link href={`/guides/${row.editorialReview.guideSlug}`} className="text-[#d4a855] hover:text-white">
+                          {row.editorialReview.rating.toFixed(1).replace('.', ',')}/5
+                        </Link>
+                      ) : row.rating ? `${row.rating.toFixed(1).replace('.', ',')}/10` : '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

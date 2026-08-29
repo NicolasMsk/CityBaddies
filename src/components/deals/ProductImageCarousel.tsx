@@ -65,7 +65,7 @@ export default function ProductImageCarousel({
           alt={currentImage.alt || `${brandName} ${productName}`}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          quality={90}
+          quality={75}
           className="object-contain"
           priority={safeIndex === 0}
           onAllFailed={() => handleImageFullyFailed(originalIndices[safeIndex])}

@@ -292,6 +292,19 @@ Le travail GEO déjà commité (`llms.txt`, JSON-LD natif, `/methodologie`, rép
 3. **Vérifier le bandeau de consentement** : 21 sessions pour 2 utilisateurs et 15 `first_visit` sur 16 utilisateurs pointent une identification cassée. Implémenter Consent Mode v2 correctement plutôt que de ne rien envoyer en cas de refus.
 4. **Marquer un repère** : ces chiffres ne sont pas une baseline exploitable. La vraie baseline commence après les points 1-3.
 
-### 8.5 Ce que GA4 ne permet PAS de dire
+### 8.5 Le comparateur n'a aucun chemin de monétisation direct
+
+Constaté en inspectant le HTML servi en production : `/sephora-vs-nocibe-vs-marionnaud` contient **zéro lien marchand**. Elle mentionne les domaines des enseignes 24 fois (texte et JSON-LD `Dataset`), et propose 11 liens internes vers des fiches produit et des pages marque.
+
+C'est la page qui fait **49 % des impressions et 57 % des clics** du site. Le visiteur doit donc cliquer deux fois pour atteindre un marchand : comparateur → fiche produit → marchand.
+
+Ce n'est pas nécessairement un défaut — router vers la fiche produit avant l'achat est défendable, et c'est là que se trouve le comparateur de prix par marchand. Mais deux conséquences :
+
+1. **Sur la mesure** : les clics sortants s'attribueront toujours à `/produits/…`, jamais au comparateur. Sa contribution reste lisible via le rapport des *landing pages* (la session a atterri sur lui), pas via le `page_location` de l'événement. À ne pas oublier en lisant les premiers chiffres de conversion.
+2. **Sur le revenu** : un clic de friction supplémentaire sur la page la plus fréquentée du site.
+
+Décision à prendre après deux semaines de données de conversion, pas avant.
+
+### 8.6 Ce que GA4 ne permet PAS de dire
 
 Avec 16 utilisateurs dont toi et un crawler d'audit, aucune conclusion sur le taux de rebond, la durée de session, la qualité par landing page ou la conversion n'est défendable. Les 10 sessions organiques arrivant sur `/` contredisent d'ailleurs GSC, qui donne **0 clic** sur la home. Cette section documente l'état de l'instrumentation, pas le comportement des visiteurs.

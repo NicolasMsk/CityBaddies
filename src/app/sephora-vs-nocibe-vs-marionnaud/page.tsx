@@ -6,6 +6,11 @@ import JsonLd from '@/components/seo/JsonLd';
 import { fullProductName } from '@/lib/seo-config';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
+import {
+  averageCityBaddiesRating,
+  buildComparisonProductListSchema,
+  type ComparisonOfferSchemaInput,
+} from '@/lib/structured-data/comparison-products';
 
 // ISR : page mise en cache et régénérée toutes les 900s (stats recalculées à la revalidation).
 // Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
@@ -66,6 +71,37 @@ const getMatchData = cache(async () => {
       variant: true,
     },
   });
+  const editorialReviews = await prisma.buyingGuideProduct.findMany({
+    where: {
+      rating: { not: null },
+      guide: { status: 'PUBLISHED' },
+      deal: { productId: { in: [...new Set(deals.map(deal => deal.productId))] } },
+    },
+    select: {
+      rating: true,
+      miniReview: true,
+      verdict: true,
+      updatedAt: true,
+      guide: { select: { slug: true } },
+      deal: { select: { productId: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+  const reviewByProduct = new Map<string, {
+    rating: number;
+    body: string;
+    guideSlug: string;
+    updatedAt: Date;
+  }>();
+  for (const review of editorialReviews) {
+    if (review.rating === null || reviewByProduct.has(review.deal.productId)) continue;
+    reviewByProduct.set(review.deal.productId, {
+      rating: review.rating,
+      body: review.verdict || review.miniReview,
+      guideSlug: review.guide.slug,
+      updatedAt: review.updatedAt,
+    });
+  }
 
   // Comparaisons à taille égale : (produit, contenance) présents chez ≥2 enseignes.
   const byPV = new Map<string, typeof deals>();
@@ -84,33 +120,47 @@ const getMatchData = cache(async () => {
   const gaps: {
     slug: string; name: string; size: string; image: string | null;
     min: number; max: number; gap: number; cheapest: string;
+    brand: string | null; offers: ComparisonOfferSchemaInput[]; rating: number | null;
+    editorialReview: ReturnType<typeof reviewByProduct.get> | null;
   }[] = [];
 
   for (const ds of byPV.values()) {
-    const cheapestPerMerchant = new Map<string, number>();
+    const cheapestPerMerchant = new Map<string, (typeof ds)[number]>();
     for (const d of ds) {
       const cur = cheapestPerMerchant.get(d.merchant.slug);
-      if (cur === undefined || d.dealPrice < cur) cheapestPerMerchant.set(d.merchant.slug, d.dealPrice);
+      if (!cur || d.dealPrice < cur.dealPrice) cheapestPerMerchant.set(d.merchant.slug, d);
     }
     if (cheapestPerMerchant.size < 2) continue;
     comparisons++;
-    const sorted = [...cheapestPerMerchant.entries()].sort((a, b) => a[1] - b[1]);
-    const gap = sorted[sorted.length - 1][1] - sorted[0][1];
+    const sorted = [...cheapestPerMerchant.entries()].sort((a, b) => a[1].dealPrice - b[1].dealPrice);
+    const gap = sorted[sorted.length - 1][1].dealPrice - sorted[0][1].dealPrice;
     gapSum += gap;
-    if (sorted[0][1] === sorted[1][1]) ties++;
+    if (sorted[0][1].dealPrice === sorted[1][1].dealPrice) ties++;
     else wins[sorted[0][0]] = (wins[sorted[0][0]] ?? 0) + 1;
     const d0 = ds[0];
     const raw = d0.product.images[0]?.url;
     const hd = raw ? getHighQualityImageUrl(raw) || raw : null;
+    const offers: ComparisonOfferSchemaInput[] = sorted.map(([, deal]) => ({
+      price: deal.dealPrice,
+      url: deal.productUrl || `${BASE_URL}/produits/${deal.product.slug}`,
+      sellerName: deal.merchant.name,
+      sellerUrl: deal.merchant.website,
+      score: deal.score,
+      lastSeenAt: deal.lastSeenAt,
+    }));
     gaps.push({
       slug: d0.product.slug,
       name: fullProductName(d0.product.brand, d0.product.name),
       size: `${d0.variant!.volumeValue} ${d0.variant!.volumeUnit}`,
       image: hd && (isValidImageUrl(hd) || isValidImageUrl(raw!)) ? hd : null,
-      min: sorted[0][1],
-      max: sorted[sorted.length - 1][1],
+      min: sorted[0][1].dealPrice,
+      max: sorted[sorted.length - 1][1].dealPrice,
       gap,
       cheapest: sorted[0][0],
+      brand: d0.product.brand,
+      offers,
+      rating: averageCityBaddiesRating(offers)?.value ?? null,
+      editorialReview: reviewByProduct.get(d0.productId) ?? null,
     });
   }
   gaps.sort((a, b) => b.gap - a.gap);
@@ -179,41 +229,27 @@ export default async function EnseignesMatchPage() {
     ],
   };
 
-  const articleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
-    description: `Comparaison de prix parfums en continu entre les enseignes suivies, sur ${comparisons} comparaisons à taille égale.`,
-    author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    dateModified: freshest?.toISOString(),
-    mainEntityOfPage: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
-  };
-
-  // Dataset schema : signale aux IA que cette page EST une source de données de
-  // prix (pas un simple article). variableMeasured décrit ce qu'on mesure.
-  const datasetSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Dataset',
-    name: 'Comparaison de prix parfums — Sephora vs Nocibé vs Marionnaud',
-    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
-    url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
-    creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    dateModified: freshest?.toISOString(),
-    isAccessibleForFree: true,
-    measurementTechnique: 'Relevé automatisé des prix affichés sur les fiches produit officielles, six fois par jour, comparés à contenance identique (EAN).',
-    variableMeasured: [
-      { '@type': 'PropertyValue', name: 'Comparaisons à taille égale', value: comparisons },
-      { '@type': 'PropertyValue', name: 'Écart moyen entre enseignes (EUR)', value: Number(avgGap.toFixed(2)) },
-      { '@type': 'PropertyValue', name: 'Enseigne la moins chère le plus souvent', value: `${leader.label} (${winShare} %)` },
-    ],
-  };
+  const productListSchema = buildComparisonProductListSchema(topGaps.map((product, index) => ({
+    position: index + 1,
+    slug: product.slug,
+    name: product.name,
+    brand: product.brand,
+    image: product.image,
+    size: product.size,
+    offers: product.offers,
+    editorialReview: product.editorialReview ? {
+      ratingValue: product.editorialReview.rating,
+      bestRating: 5,
+      body: product.editorialReview.body,
+      url: `${BASE_URL}/guides/${product.editorialReview.guideSlug}`,
+      datePublished: product.editorialReview.updatedAt,
+    } : null,
+  })));
 
   return (
     <>
       <JsonLd id="match-breadcrumb" data={breadcrumbSchema} />
-      <JsonLd id="match-article" data={articleSchema} />
-      <JsonLd id="match-dataset" data={datasetSchema} />
+      <JsonLd id="match-products" data={productListSchema} />
       <JsonLd id="match-faq" data={faqSchema} />
 
       <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
@@ -267,7 +303,7 @@ export default async function EnseignesMatchPage() {
               {freshLabel ? `Au ${freshLabel}` : 'Actuellement'}, sur{' '}
               <strong className="text-white font-medium">{comparisons} comparaisons à taille égale</strong> portant sur {products} parfums,{' '}
               {leader.label} affiche le prix le plus bas {leader.wins} fois, contre{' '}
-              {ranking.slice(1).map((m, i, arr) => `${m.wins} pour ${m.label}`).reduce((acc, cur, i, arr) => i === 0 ? cur : i === arr.length - 1 ? `${acc} et ${cur}` : `${acc}, ${cur}`, '')}
+              {ranking.slice(1).map(m => `${m.wins} pour ${m.label}`).reduce((acc, cur, i, arr) => i === 0 ? cur : i === arr.length - 1 ? `${acc} et ${cur}` : `${acc}, ${cur}`, '')}
               {ties > 0 ? ` (${ties} égalité${ties > 1 ? 's' : ''})` : ''}.
               Entre la moins chère et la plus chère, l&apos;écart moyen est de{' '}
               <strong className="text-white font-medium">{fmt(avgGap)}&nbsp;€ par flacon</strong> — le prix d&apos;un deuxième parfum
@@ -334,6 +370,18 @@ export default async function EnseignesMatchPage() {
                         {g.name}
                       </span>
                       <span className="block font-mono text-[10px] text-neutral-500 mt-1.5">{g.size}</span>
+                      {(g.editorialReview || g.rating) && (
+                        <span className="block font-mono text-[10px] text-[#d4a855] mt-1.5">
+                          Note City Baddies&nbsp;: {g.editorialReview
+                            ? `${g.editorialReview.rating.toFixed(1).replace('.', ',')}/5`
+                            : `${g.rating!.toFixed(1).replace('.', ',')}/10`}
+                        </span>
+                      )}
+                      {g.editorialReview && (
+                        <span className="block mt-1 text-[10px] leading-relaxed text-neutral-500 line-clamp-2">
+                          {g.editorialReview.body}
+                        </span>
+                      )}
                       <div className="mt-3 space-y-1">
                         <span className="block text-sm text-white font-light">
                           {fmt(g.min)}&nbsp;€ <span className="text-neutral-500 text-xs">chez {merchantLabel(g.cheapest)}</span>

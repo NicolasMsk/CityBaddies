@@ -6,11 +6,23 @@ description: Use when the user wants a ready-to-post TikTok/Reels/Shorts video f
 # TikTok Video Studio (City Baddies)
 
 ## Overview
-Generates a **ready-to-post vertical MP4** (1080×1920, H.264, ~10 s) from a real
-price story in the database — animated "price drop" reveal in the City Baddies
-brand — then **emails** the video + posting kit (caption, hashtags, sound & steps).
-One command does everything; the only human step left is adding a trending sound
-in-app when posting.
+Generates a **ready-to-post vertical MP4** (1080×1920, H.264) from real price data
+in the City Baddies brand, then **emails** the video + posting kit (caption,
+hashtags, sound & steps) and (optionally) **drops it in TikTok drafts**. One
+command does everything; the only human step is adding a trending sound in-app.
+
+**Concepts rotatifs (jamais deux fois la même vidéo).** Le concept tourne selon le
+jour (`jour % nombre de concepts`) + anti-répétition des parfums sur N jours.
+Défini dans `src/scripts/studio/concepts.ts` :
+- `deal-du-jour` — 1 parfum, plus gros écart (format *single*, `template.html`).
+- `luxe-moins-100` — top 3 parfums de marques prestige < 100 € (*list*, `template-list.html`).
+- `moins-50` — top 3 parfums < 50 €.
+- `grosses-economies` — top 3 des plus gros écarts de prix.
+- `culte-au-meilleur-prix` — top 3 best-sellers iconiques au prix le plus bas.
+
+Les sélecteurs restent **honnêtes** : la relance en cas d'exclusion pioche dans le
+**même pool** (ex. « moins de 50 € » n'inclura jamais un parfum plus cher). Ajouter
+un concept = pousser une entrée dans `CONCEPTS[]` (ordre = rotation).
 
 ## When to use
 - "fais/génère une vidéo", "du contenu TikTok", "prépare X vidéos à poster"
@@ -25,14 +37,17 @@ in-app when posting.
 
 ## How to run
 ```bash
-# Auto-pick the biggest price-gap story, render, and email it:
+# Concept du jour (rotation auto), rendu + email (+ brouillon TikTok si configuré):
 npx tsx src/scripts/studio/make-video.ts
 
-# A specific perfume (Product.slug), and/or a specific recipient:
+# Forcer un concept précis :
+npx tsx src/scripts/studio/make-video.ts --concept luxe-moins-100
+
+# Un parfum précis (Product.slug) en format single, et/ou un destinataire :
 npx tsx src/scripts/studio/make-video.ts --product yves-saint-laurent-libre-eau-de-parfum --email someone@mail.com
 
-# Just render, no email (writes MP4 + <slug>-legende.txt in studio-out/):
-npx tsx src/scripts/studio/make-video.ts --no-email
+# Juste rendre, sans email ni TikTok (écrit MP4 + <slug>-legende.txt dans studio-out/):
+npx tsx src/scripts/studio/make-video.ts --no-email --no-tiktok
 ```
 Output lands in `studio-out/` (`<slug>.mp4`, `<slug>-cover.png`). Default recipient
 is `nicolas.musicki@gmail.com`.

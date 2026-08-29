@@ -4,7 +4,31 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { UserMenu } from '@/components/auth';
-import { SearchBar } from '@/components/search';
+
+function HeaderSearch({ placeholder }: { placeholder: string }) {
+  return (
+    <form action="/produits" role="search" className="relative">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        name="search"
+        placeholder={placeholder}
+        aria-label={placeholder}
+        className="w-full border border-white/10 bg-[#1a1a1a] py-2.5 pl-10 pr-3 text-sm font-light tracking-wide text-white placeholder:text-neutral-500 hover:border-white/20 focus:border-[#d4a855] focus:bg-black focus:outline-none"
+      />
+    </form>
+  );
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // Navigation — chaque lien mène à une page RÉELLE avec du contenu.
@@ -82,7 +106,7 @@ export default function Header() {
 
           {/* ── Recherche MOBILE (inline, à côté du menu) ── */}
           <div className="flex-1 min-w-0 md:hidden">
-            <SearchBar placeholder="Rechercher un parfum…" />
+            <HeaderSearch placeholder="Rechercher un parfum…" />
           </div>
 
           {/* ── Desktop Nav ── */}
@@ -136,7 +160,7 @@ export default function Header() {
           {/* ── Right side ── */}
           <div className="flex items-center gap-2 ml-auto">
             <div className="hidden md:block w-52 lg:w-64">
-              <SearchBar placeholder="Chercher un parfum, une marque…" />
+              <HeaderSearch placeholder="Chercher un parfum, une marque…" />
             </div>
             <UserMenu />
 

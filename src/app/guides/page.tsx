@@ -148,7 +148,7 @@ export default async function GuidesPage() {
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        unoptimized
+                        quality={75}
                       />
                     ) : (
                       <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
@@ -189,7 +189,7 @@ export default async function GuidesPage() {
                                    fill 
                                    className="object-cover"
                                    sizes="32px"
-                                   unoptimized
+                                   quality={70}
                                  />
                                )}
                              </div>

@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/sephora-vs-nocibe-vs-marionnaud',
+        destination: '/comparatif-prix-parfums',
+        permanent: true,
+      },
+      {
         source: '/:path*',
         has: [
           {

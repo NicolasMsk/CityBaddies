@@ -269,7 +269,7 @@ export default function DealCard({ deal, featured = false }: DealCardProps) {
             alt={allImages[safeActiveIndex]?.alt || `${deal.product.brand || ''} ${deal.product.name} - Promo ${deal.discountPercent}% ${deal.product.category?.name || 'Beauté'}`.trim()}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 400px"
-            quality={85}
+            quality={75}
             className="object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
             onAllFailed={() => handleImageFailed(rawImages.indexOf(allImages[safeActiveIndex]))}
           />

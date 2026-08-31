@@ -1,19 +1,12 @@
 'use client';
 
 import Image, { ImageProps } from 'next/image';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /**
- * Les images CDN marchands (Sephora, Nocibé, Marionnaud, Notino...)
- * sont chargées directement par le navigateur (unoptimized).
- *
- * Pourquoi ?
- * - Le proxy Next.js Image (/_next/image?url=...) fait un fetch serveur
- *   qui se fait rejeter par certains CDN (Nocibé → 400, hotlink protection)
- * - En mode unoptimized, le navigateur charge l'image directement
- *   → pas de proxy serveur → pas de rejet
- * - referrerPolicy="no-referrer" empêche l'envoi du Referer header
- *   → bypass la protection hotlink des CDN marchands
+ * Les images marchandes passent d'abord par l'optimiseur Next.js afin d'obtenir
+ * un srcset réellement dimensionné et un encodage WebP/AVIF. Si un CDN refuse
+ * le fetch serveur, le composant retente automatiquement l'URL en direct.
  */
 function isExternalUrl(url: string): boolean {
   return /^https?:\/\//i.test(url);
@@ -33,61 +26,64 @@ interface SafeImageProps extends Omit<ImageProps, 'onError' | 'src'> {
 /**
  * Composant Image robuste pour les images CDN marchands.
  *
- * - Images externes : unoptimized + no-referrer (bypass proxy + hotlink)
- * - Fallback : URL HD → URL originale → null (le parent gère l'absence)
+ * - Images externes : optimisation Next.js, puis repli direct + no-referrer
+ * - Fallback : URL HD optimisée/directe → URL originale optimisée/directe → null
  * - Retourne null si tout échoue — pas d'icône cassée
  */
 export default function SafeImage({
   src,
   fallbackSrc,
-  categorySlug: _categorySlug,
+  categorySlug,
   onAllFailed,
   alt,
   className,
   ...props
 }: SafeImageProps) {
-  // Chaîne de fallback : juste l'URL originale si différente de la HD
-  const buildFallbackChain = useCallback(() => {
-    const chain: string[] = [];
-    if (fallbackSrc && fallbackSrc !== src) {
-      chain.push(fallbackSrc);
-    }
-    return chain;
-  }, [src, fallbackSrc]);
-
-  const [fallbackChain] = useState(buildFallbackChain);
-  const [fallbackIndex, setFallbackIndex] = useState(-1); // -1 = primary src
-  const [allFailed, setAllFailed] = useState(false);
-
-  const currentSrc = fallbackIndex === -1 ? src : fallbackChain[fallbackIndex];
+  const candidates = useMemo(
+    () => [src, ...(fallbackSrc && fallbackSrc !== src ? [fallbackSrc] : [])],
+    [src, fallbackSrc]
+  );
+  const sourceKey = `${src}\u0000${fallbackSrc ?? ''}`;
+  const [attempt, setAttempt] = useState({ sourceKey, candidateIndex: 0, bypassOptimizer: false, allFailed: false });
+  const currentAttempt = useMemo(() => attempt.sourceKey === sourceKey
+    ? attempt
+    : { sourceKey, candidateIndex: 0, bypassOptimizer: false, allFailed: false },
+  [attempt, sourceKey]);
+  const currentSrc = candidates[currentAttempt.candidateIndex];
+  void categorySlug;
 
   const handleError = useCallback(() => {
-    const nextIndex = fallbackIndex + 1;
-    if (nextIndex < fallbackChain.length) {
-      setFallbackIndex(nextIndex);
+    const external = isExternalUrl(currentSrc);
+    if (external && !currentAttempt.bypassOptimizer && !props.unoptimized) {
+      setAttempt({ ...currentAttempt, bypassOptimizer: true });
+      return;
+    }
+
+    const nextIndex = currentAttempt.candidateIndex + 1;
+    if (nextIndex < candidates.length) {
+      setAttempt({ sourceKey, candidateIndex: nextIndex, bypassOptimizer: false, allFailed: false });
     } else {
-      setAllFailed(true);
+      setAttempt({ ...currentAttempt, allFailed: true });
       onAllFailed?.();
     }
-  }, [fallbackIndex, fallbackChain, onAllFailed]);
+  }, [candidates.length, currentAttempt, currentSrc, onAllFailed, props.unoptimized, sourceKey]);
 
   // Si tout a échoué → ne rien afficher (le parent gère l'état vide)
-  if (allFailed || !currentSrc) {
+  if (currentAttempt.allFailed || !currentSrc) {
     return null;
   }
 
-  // Images CDN externes : bypass le proxy Next.js + hotlink protection
   const external = isExternalUrl(currentSrc);
 
   return (
     <Image
       {...props}
-      key={currentSrc}
+      key={`${currentSrc}-${currentAttempt.bypassOptimizer ? 'direct' : 'optimized'}`}
       src={currentSrc}
       alt={alt}
       className={className}
-      unoptimized={external || !!props.unoptimized}
-      referrerPolicy={external ? 'no-referrer' : undefined}
+      unoptimized={!!props.unoptimized || (external && currentAttempt.bypassOptimizer)}
+      referrerPolicy={external && currentAttempt.bypassOptimizer ? 'no-referrer' : undefined}
       onError={handleError}
     />
   );

@@ -39,7 +39,7 @@ export default function DealImage({ imageUrl, productName, discountPercent, isEx
             alt={productName}
             fill
             sizes="(max-width: 768px) 100vw, 600px"
-            quality={85}
+            quality={75}
             className={`object-contain p-8 transition-transform duration-700 ease-out ${isExpired ? 'grayscale opacity-40' : 'group-hover:scale-105'}`}
             priority
             onError={() => setImageError(true)}

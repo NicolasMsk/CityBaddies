@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 const CONSENT_KEY = 'cb-cookie-consent';
+export const CONSENT_EVENT = 'cb:consent-changed';
 
 type ConsentValue = 'accepted' | 'refused' | null;
 
@@ -26,47 +27,44 @@ export default function CookieConsent() {
   function accept() {
     localStorage.setItem(CONSENT_KEY, 'accepted');
     setVisible(false);
-    // Reload to let GA4 load
-    window.location.reload();
+    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: 'accepted' }));
   }
 
   function refuse() {
     localStorage.setItem(CONSENT_KEY, 'refused');
     setVisible(false);
+    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: 'refused' }));
   }
 
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[9999] p-4 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="max-w-4xl mx-auto bg-[#111] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          {/* Text */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-neutral-300 leading-relaxed">
-              🍪 Nous utilisons des <strong className="text-white">cookies essentiels</strong> pour le fonctionnement du site 
-              et <strong className="text-white">Google Analytics</strong> pour comprendre comment tu utilises City Baddies 
-              (pages vues, navigation). Aucune donnée n&apos;est vendue à des tiers.{' '}
-              <a
-                href="/legal#confidentialite"
-                className="text-[#d4a855] hover:underline"
-              >
-                En savoir plus
-              </a>
-            </p>
-          </div>
+    <div
+      className="fixed bottom-0 inset-x-0 z-[9999] p-2 sm:p-3 animate-in slide-in-from-bottom-2 duration-300"
+      role="dialog"
+      aria-label="Choix des cookies"
+      aria-live="polite"
+    >
+      <div className="max-w-4xl mx-auto bg-[#111]/98 border border-white/15 shadow-2xl shadow-black/50 px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:gap-5">
+          <p className="min-w-0 text-[11px] sm:text-xs text-neutral-300 leading-[1.35] sm:leading-relaxed">
+            <strong className="text-white">Mesure d&apos;audience.</strong>{' '}
+            Google Analytics est activé uniquement avec ton accord.{' '}
+            <a href="/legal#confidentialite" className="text-[#d4a855] whitespace-nowrap hover:underline">
+              En savoir plus
+            </a>
+          </p>
 
-          {/* Buttons */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={refuse}
-              className="px-4 py-2 text-xs font-bold tracking-wider uppercase text-neutral-400 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-colors"
+              className="min-h-8 px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase text-neutral-300 hover:text-white border border-white/15 hover:border-white/30 transition-colors"
             >
               Refuser
             </button>
             <button
               onClick={accept}
-              className="px-5 py-2 text-xs font-bold tracking-wider uppercase text-black bg-[#d4a855] hover:bg-[#e0b96a] rounded-lg transition-colors"
+              className="min-h-8 px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase text-black bg-[#d4a855] hover:bg-[#e0b96a] transition-colors"
             >
               Accepter
             </button>

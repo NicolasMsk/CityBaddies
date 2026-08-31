@@ -140,7 +140,7 @@ async function getHomeData() {
         where: { id: { in: chosenIds } },
         include: {
           merchant: true,
-          product: { include: { category: true, images: { orderBy: { position: 'asc' }, take: 5 } } },
+          product: { include: { category: true, images: { orderBy: { position: 'asc' }, take: 1 } } },
         },
       })
     : [];
@@ -767,8 +767,8 @@ export default async function HomePage() {
                           alt={guide.title}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          quality={75}
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
                       </div>
@@ -817,6 +817,8 @@ export default async function HomePage() {
                                     alt={gp.deal.product.name || ''}
                                     width={28}
                                     height={28}
+                                    sizes="28px"
+                                    quality={70}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (

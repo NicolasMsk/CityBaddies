@@ -1,11 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
 
-// Import dynamique pour éviter les erreurs SSR
-const DealCarousel = dynamic(() => import('./DealCarousel'), {
-  ssr: false,
-  loading: () => (
+function CarouselSkeleton() {
+  return (
     <div className="flex gap-4 overflow-hidden">
       {[...Array(4)].map((_, i) => (
         <div
@@ -16,8 +14,8 @@ const DealCarousel = dynamic(() => import('./DealCarousel'), {
         </div>
       ))}
     </div>
-  ),
-});
+  );
+}
 
 interface Deal {
   id: string;
@@ -48,12 +46,49 @@ interface DealCarouselSectionProps {
 }
 
 export default function DealCarouselSection({ deals, autoPlayInterval = 4000 }: DealCarouselSectionProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [DealCarousel, setDealCarousel] = useState<typeof import('./DealCarousel').default | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    let observer: IntersectionObserver | undefined;
+
+    const loadCarousel = () => {
+      void import('./DealCarousel').then(module => {
+        if (active) setDealCarousel(() => module.default);
+      });
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      loadCarousel();
+    } else if (containerRef.current) {
+      observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          observer?.disconnect();
+          loadCarousel();
+        }
+      }, { rootMargin: '500px 0px' });
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      active = false;
+      observer?.disconnect();
+    };
+  }, []);
+
   return (
-    <DealCarousel
-      deals={deals}
-      autoPlay={true}
-      autoPlayInterval={autoPlayInterval}
-      showControls={true}
-    />
+    <div ref={containerRef}>
+      {DealCarousel ? (
+        <DealCarousel
+          deals={deals}
+          autoPlay={true}
+          autoPlayInterval={autoPlayInterval}
+          showControls={true}
+        />
+      ) : (
+        <CarouselSkeleton />
+      )}
+    </div>
   );
 }

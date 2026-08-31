@@ -2,7 +2,7 @@
 
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
-import { getConsentValue } from './CookieConsent';
+import { CONSENT_EVENT, getConsentValue } from './CookieConsent';
 
 const GA_MEASUREMENT_ID = 'G-LWMBWRFKF2';
 
@@ -29,7 +29,13 @@ export default function GoogleAnalytics() {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    setEnabled(getConsentValue() === 'accepted' && isProductionHost());
+    const syncConsent = () => {
+      setEnabled(getConsentValue() === 'accepted' && isProductionHost());
+    };
+
+    syncConsent();
+    window.addEventListener(CONSENT_EVENT, syncConsent);
+    return () => window.removeEventListener(CONSENT_EVENT, syncConsent);
   }, []);
 
   if (!enabled) return null;

@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cache } from 'react';
 import prisma from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 import { fullProductName } from '@/lib/seo-config';
 import { getHighQualityImageUrl, isValidImageUrl } from '@/lib/utils/image';
 import SafeImage from '@/components/ui/SafeImage';
+import {
+  averageCityBaddiesRating,
+  buildComparisonProductListSchema,
+  type ComparisonOfferSchemaInput,
+} from '@/lib/structured-data/comparison-products';
 
 // ISR : page mise en cache et régénérée toutes les 900s (stats recalculées à la revalidation).
 // Le force-dynamic historique imposait des requêtes DB à CHAQUE visite (TTFB/CWV).
@@ -29,7 +35,7 @@ const FAQ = [
   {
     question: 'Les prix comparés sont-ils ceux des magasins physiques ?',
     answer:
-      "Non : on relève les prix affichés sur sephora.fr, nocibe.fr et marionnaud.fr. En boutique, les prix peuvent différer, et les programmes de fidélité ajoutent parfois des avantages qu'on ne compte pas ici.",
+      "Non : on relève les prix affichés sur Sephora, Nocibé, Marionnaud, My-Origines et Notino. En boutique, les prix peuvent différer, et les programmes de fidélité ajoutent parfois des avantages qu'on ne compte pas ici.",
   },
   {
     question: 'Comment être sûre de payer le meilleur prix ?',
@@ -55,6 +61,13 @@ const MERCHANT_LABEL: Record<string, string> = {
   'my-origines': 'My-Origines',
   notino: 'Notino',
 };
+const MERCHANT_LOGO: Record<string, { src: string; width: number; height: number }> = {
+  sephora: { src: '/images/sephora_logo.png', width: 120, height: 42 },
+  nocibe: { src: '/images/nocibe_logo.png', width: 120, height: 42 },
+  marionnaud: { src: '/images/logo_marrionaud.png', width: 120, height: 42 },
+  'my-origines': { src: '/images/my-origines_logo.svg', width: 120, height: 42 },
+  notino: { src: '/images/notino_logo.png', width: 120, height: 42 },
+};
 const merchantLabel = (slug: string) => MERCHANT_LABEL[slug] ?? slug;
 
 const getMatchData = cache(async () => {
@@ -66,6 +79,37 @@ const getMatchData = cache(async () => {
       variant: true,
     },
   });
+  const editorialReviews = await prisma.buyingGuideProduct.findMany({
+    where: {
+      rating: { not: null },
+      guide: { status: 'PUBLISHED' },
+      deal: { productId: { in: [...new Set(deals.map(deal => deal.productId))] } },
+    },
+    select: {
+      rating: true,
+      miniReview: true,
+      verdict: true,
+      updatedAt: true,
+      guide: { select: { slug: true } },
+      deal: { select: { productId: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+  const reviewByProduct = new Map<string, {
+    rating: number;
+    body: string;
+    guideSlug: string;
+    updatedAt: Date;
+  }>();
+  for (const review of editorialReviews) {
+    if (review.rating === null || reviewByProduct.has(review.deal.productId)) continue;
+    reviewByProduct.set(review.deal.productId, {
+      rating: review.rating,
+      body: review.verdict || review.miniReview,
+      guideSlug: review.guide.slug,
+      updatedAt: review.updatedAt,
+    });
+  }
 
   // Comparaisons à taille égale : (produit, contenance) présents chez ≥2 enseignes.
   const byPV = new Map<string, typeof deals>();
@@ -84,33 +128,47 @@ const getMatchData = cache(async () => {
   const gaps: {
     slug: string; name: string; size: string; image: string | null;
     min: number; max: number; gap: number; cheapest: string;
+    brand: string | null; offers: ComparisonOfferSchemaInput[]; rating: number | null;
+    editorialReview: ReturnType<typeof reviewByProduct.get> | null;
   }[] = [];
 
   for (const ds of byPV.values()) {
-    const cheapestPerMerchant = new Map<string, number>();
+    const cheapestPerMerchant = new Map<string, (typeof ds)[number]>();
     for (const d of ds) {
       const cur = cheapestPerMerchant.get(d.merchant.slug);
-      if (cur === undefined || d.dealPrice < cur) cheapestPerMerchant.set(d.merchant.slug, d.dealPrice);
+      if (!cur || d.dealPrice < cur.dealPrice) cheapestPerMerchant.set(d.merchant.slug, d);
     }
     if (cheapestPerMerchant.size < 2) continue;
     comparisons++;
-    const sorted = [...cheapestPerMerchant.entries()].sort((a, b) => a[1] - b[1]);
-    const gap = sorted[sorted.length - 1][1] - sorted[0][1];
+    const sorted = [...cheapestPerMerchant.entries()].sort((a, b) => a[1].dealPrice - b[1].dealPrice);
+    const gap = sorted[sorted.length - 1][1].dealPrice - sorted[0][1].dealPrice;
     gapSum += gap;
-    if (sorted[0][1] === sorted[1][1]) ties++;
+    if (sorted[0][1].dealPrice === sorted[1][1].dealPrice) ties++;
     else wins[sorted[0][0]] = (wins[sorted[0][0]] ?? 0) + 1;
     const d0 = ds[0];
     const raw = d0.product.images[0]?.url;
     const hd = raw ? getHighQualityImageUrl(raw) || raw : null;
+    const offers: ComparisonOfferSchemaInput[] = sorted.map(([, deal]) => ({
+      price: deal.dealPrice,
+      url: deal.productUrl || `${BASE_URL}/produits/${deal.product.slug}`,
+      sellerName: deal.merchant.name,
+      sellerUrl: deal.merchant.website,
+      score: deal.score,
+      lastSeenAt: deal.lastSeenAt,
+    }));
     gaps.push({
       slug: d0.product.slug,
       name: fullProductName(d0.product.brand, d0.product.name),
       size: `${d0.variant!.volumeValue} ${d0.variant!.volumeUnit}`,
       image: hd && (isValidImageUrl(hd) || isValidImageUrl(raw!)) ? hd : null,
-      min: sorted[0][1],
-      max: sorted[sorted.length - 1][1],
+      min: sorted[0][1].dealPrice,
+      max: sorted[sorted.length - 1][1].dealPrice,
       gap,
       cheapest: sorted[0][0],
+      brand: d0.product.brand,
+      offers,
+      rating: averageCityBaddiesRating(offers)?.value ?? null,
+      editorialReview: reviewByProduct.get(d0.productId) ?? null,
     });
   }
   gaps.sort((a, b) => b.gap - a.gap);
@@ -141,8 +199,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const date = freshest
     ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' }).format(freshest)
     : "aujourd'hui";
-  const title = `Sephora, Nocibé, Marionnaud : ${leaderName} gagne ${share} %`;
-  const description = `${leaderName} gagne ${share}% des ${comparisons} comparaisons de parfums à taille égale. Écart moyen : ${avgGap.toFixed(2).replace('.', ',')} €. Prix vérifiés le ${date}.`;
+  const title = `Comparatif parfum : ${leaderName} gagne ${share} % sur 5 enseignes`;
+  const description = `${leaderName} gagne ${share}% des ${comparisons} comparaisons à taille égale face à Sephora, Nocibé, Marionnaud, My-Origines et Notino. Écart moyen : ${avgGap.toFixed(2).replace('.', ',')} €. Prix vérifiés le ${date}.`;
 
   return {
     title: { absolute: title },
@@ -175,153 +233,191 @@ export default async function EnseignesMatchPage() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Accueil', item: BASE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Sephora vs Nocibé vs Marionnaud', item: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
+      { '@type': 'ListItem', position: 2, name: 'Comparatif prix parfums — 5 enseignes', item: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
     ],
   };
 
-  const articleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: 'Sephora vs Nocibé vs Marionnaud : qui est le moins cher ?',
-    description: `Comparaison de prix parfums en continu entre les enseignes suivies, sur ${comparisons} comparaisons à taille égale.`,
-    author: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    publisher: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    dateModified: freshest?.toISOString(),
-    mainEntityOfPage: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
-  };
-
-  // Dataset schema : signale aux IA que cette page EST une source de données de
-  // prix (pas un simple article). variableMeasured décrit ce qu'on mesure.
-  const datasetSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Dataset',
-    name: 'Comparaison de prix parfums — Sephora vs Nocibé vs Marionnaud',
-    description: `Relevés de prix parfums comparés à contenance identique entre Sephora, Nocibé, Marionnaud, My-Origines et Notino. ${comparisons} comparaisons, écart moyen ${fmt(avgGap)} € par flacon. Mis à jour six fois par jour.`,
-    url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
-    creator: { '@type': 'Organization', name: 'City Baddies', url: BASE_URL },
-    dateModified: freshest?.toISOString(),
-    isAccessibleForFree: true,
-    measurementTechnique: 'Relevé automatisé des prix affichés sur les fiches produit officielles, six fois par jour, comparés à contenance identique (EAN).',
-    variableMeasured: [
-      { '@type': 'PropertyValue', name: 'Comparaisons à taille égale', value: comparisons },
-      { '@type': 'PropertyValue', name: 'Écart moyen entre enseignes (EUR)', value: Number(avgGap.toFixed(2)) },
-      { '@type': 'PropertyValue', name: 'Enseigne la moins chère le plus souvent', value: `${leader.label} (${winShare} %)` },
-    ],
-  };
+  const productListSchema = buildComparisonProductListSchema(topGaps.map((product, index) => ({
+    position: index + 1,
+    slug: product.slug,
+    name: product.name,
+    brand: product.brand,
+    image: product.image,
+    size: product.size,
+    offers: product.offers,
+    editorialReview: product.editorialReview ? {
+      ratingValue: product.editorialReview.rating,
+      bestRating: 5,
+      body: product.editorialReview.body,
+      url: `${BASE_URL}/guides/${product.editorialReview.guideSlug}`,
+      datePublished: product.editorialReview.updatedAt,
+    } : null,
+  })));
 
   return (
     <>
       <JsonLd id="match-breadcrumb" data={breadcrumbSchema} />
-      <JsonLd id="match-article" data={articleSchema} />
-      <JsonLd id="match-dataset" data={datasetSchema} />
+      <JsonLd id="match-products" data={productListSchema} />
       <JsonLd id="match-faq" data={faqSchema} />
 
       <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
-        {/* Halos ambiance — même langage que la home */}
-        <div className="absolute top-[-5%] right-[-10%] w-[36vw] h-[36vw] bg-[#9b1515] opacity-[0.07] blur-[110px] rounded-full pointer-events-none" />
-        <div className="absolute top-[45%] left-[-12%] w-[32vw] h-[32vw] bg-[#d4a855] opacity-[0.05] blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-[-8%] right-[-12%] w-[38vw] h-[38vw] bg-[#9b1515] opacity-[0.06] blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-[42%] left-[-14%] w-[34vw] h-[34vw] bg-[#d4a855] opacity-[0.04] blur-[130px] rounded-full pointer-events-none" />
 
-        <div className="relative max-w-3xl mx-auto px-6 pt-28 pb-24">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-24">
 
-          {/* ── Hero éditorial ── */}
-          <div className="mb-16">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="h-[1px] w-12 bg-[#d4a855]" />
-              <span className="text-[#d4a855] text-xs font-bold tracking-[0.25em] uppercase">Le match</span>
+          <header className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-14 items-stretch mb-8">
+            <div className="min-w-0 flex flex-col justify-center py-4 lg:py-8">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="h-px w-10 bg-[#d4a855]" />
+                <span className="font-mono text-[10px] text-[#d4a855] tracking-[0.22em] uppercase">
+                  Comparatif live · 5 enseignes
+                </span>
+              </div>
+              <h1 className="font-serif text-white text-[2.65rem] sm:text-6xl lg:text-7xl leading-[0.95] tracking-[-0.03em] mb-6">
+                <span className="block">Le même parfum.</span>
+                <span className="block italic font-light text-white/60 mt-2">Cinq prix.</span>
+              </h1>
+              <p className="text-neutral-400 font-light text-base sm:text-lg leading-relaxed max-w-2xl">
+                Sephora, Nocibé, Marionnaud, My-Origines et Notino comparés à flacon et contenance identiques.
+                Pas de prix barré pris au mot&nbsp;: uniquement les prix relevés six fois par jour.
+              </p>
+
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-7" aria-label="Enseignes comparées">
+                {ranking.map(merchant => {
+                  const logo = MERCHANT_LOGO[merchant.slug];
+                  return (
+                    <span key={merchant.slug} className="min-w-0 h-9 inline-flex items-center gap-2 border border-white/10 bg-white/[0.025] px-2.5 text-[10px] text-neutral-300">
+                      {logo && <Image src={logo.src} alt="" width={logo.width} height={logo.height} className="h-4 w-12 shrink-0 object-contain brightness-0 invert opacity-70" />}
+                      <span className="truncate">{merchant.label}</span>
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 mt-8">
+                <a href="#classement" className="w-full sm:w-auto px-6 py-3.5 bg-white text-center text-black text-[11px] font-bold tracking-[0.16em] uppercase hover:bg-[#d4a855] transition-colors">
+                  Voir le classement
+                </a>
+                <Link href="/produits" className="w-full sm:w-auto px-6 py-3.5 border border-white/15 text-center text-white text-[11px] font-bold tracking-[0.16em] uppercase hover:border-[#d4a855]/60 hover:text-[#d4a855] transition-colors">
+                  Comparer mon parfum
+                </Link>
+              </div>
             </div>
-            <h1 className="font-serif text-white leading-[1.02] mb-8">
-              <span className="block text-4xl md:text-6xl font-medium">Sephora. Nocibé. Marionnaud.</span>
-              <span className="block text-3xl md:text-5xl italic font-light text-white/70 mt-3">Qui est vraiment la moins chère&nbsp;?</span>
-            </h1>
-            <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-xl">
-              Tout le monde a un avis. Nous, on a les relevés. Même flacon, même contenance,
-              cinq enseignes — Sephora, Nocibé, Marionnaud et les discounters My-Origines et Notino — et on refait les
-              comptes six fois par jour, pour que tu n&apos;aies jamais à croire quelqu&apos;un sur parole. Pas même nous.
-            </p>
-          </div>
 
-          <nav aria-label="Comparatifs deux à deux" className="mb-14 flex flex-wrap gap-3">
-            <Link href="/comparatif/sephora-vs-nocibe" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
-              Sephora vs Nocibé
-            </Link>
-            <Link href="/comparatif/sephora-vs-marionnaud" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
-              Sephora vs Marionnaud
-            </Link>
-            <Link href="/comparatif/nocibe-vs-marionnaud" className="border border-white/15 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:border-white/30 transition-colors">
-              Nocibé vs Marionnaud
-            </Link>
+            <aside className="relative border border-[#d4a855]/25 bg-[#0d0d0d] p-6 sm:p-8 overflow-hidden">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d4a855] to-transparent" />
+              <div className="flex items-center justify-between gap-4 mb-9">
+                <span className="inline-flex items-center gap-2 font-mono text-[9px] tracking-[0.22em] uppercase text-[#d4a855]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                  Verdict actuel
+                </span>
+                <span className="font-mono text-[9px] text-neutral-600">MAJ {freshLabel || 'dernier relevé'}</span>
+              </div>
+
+              <div className="mb-8">
+                <p className="font-serif italic text-3xl sm:text-4xl text-white mb-2">{leader.label}</p>
+                <div className="flex items-end gap-3">
+                  <span className="font-serif text-7xl sm:text-8xl leading-none text-[#d4a855]">{winShare}</span>
+                  <span className="font-serif text-3xl text-[#d4a855] mb-2">%</span>
+                  <span className="text-xs text-neutral-500 leading-relaxed mb-2 max-w-28">des prix les plus bas</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-px bg-white/10 border border-white/10">
+                <div className="bg-[#0d0d0d] p-3 sm:p-4">
+                  <strong className="block font-mono text-lg sm:text-xl text-white">{comparisons}</strong>
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-600">matchs</span>
+                </div>
+                <div className="bg-[#0d0d0d] p-3 sm:p-4">
+                  <strong className="block font-mono text-lg sm:text-xl text-white">{products}</strong>
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-600">parfums</span>
+                </div>
+                <div className="bg-[#0d0d0d] p-3 sm:p-4">
+                  <strong className="block font-mono text-lg sm:text-xl text-white">{fmt0(avgGap)}&nbsp;€</strong>
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-600">écart moyen</span>
+                </div>
+              </div>
+              <p className="mt-5 text-xs leading-relaxed text-neutral-500">
+                Sur {comparisons} comparaisons à taille égale, {leader.label} gagne {leader.wins} fois
+                {ties > 0 ? `, avec ${ties} égalité${ties > 1 ? 's' : ''}` : ''}.
+              </p>
+            </aside>
+          </header>
+
+          <nav aria-label="Navigation du comparatif" className="mb-16 border-y border-white/10 overflow-x-auto">
+            <div className="flex min-w-max items-center">
+              <a href="#classement" className="px-5 py-4 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 hover:text-white">Classement</a>
+              <a href="#ecarts" className="px-5 py-4 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 hover:text-white">Plus gros écarts</a>
+              <a href="#methode" className="px-5 py-4 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 hover:text-white">Comprendre</a>
+              <span className="h-5 w-px bg-white/10 mx-2" />
+              <Link href="/comparatif/sephora-vs-nocibe" className="px-4 py-4 text-[10px] text-neutral-500 hover:text-[#d4a855]">Sephora vs Nocibé</Link>
+              <Link href="/comparatif/sephora-vs-marionnaud" className="px-4 py-4 text-[10px] text-neutral-500 hover:text-[#d4a855]">Sephora vs Marionnaud</Link>
+              <Link href="/comparatif/nocibe-vs-marionnaud" className="px-4 py-4 text-[10px] text-neutral-500 hover:text-[#d4a855]">Nocibé vs Marionnaud</Link>
+            </div>
           </nav>
 
-          {/* ── Le verdict — pull-quote magazine, citable (server-rendered) ── */}
-          <figure className="relative mb-20 border border-[#d4a855]/25 bg-gradient-to-b from-[#d4a855]/[0.06] to-transparent p-8 sm:p-10">
-            <span className="absolute -top-3 left-8 bg-[#0a0a0a] px-3 text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4a855]">
-              Le verdict du jour
-            </span>
-            <div className="flex items-baseline gap-4 mb-5">
-              <span className="font-serif text-6xl sm:text-7xl text-[#d4a855] leading-none">{winShare}<span className="text-3xl sm:text-4xl">%</span></span>
-              <span className="font-serif italic text-xl sm:text-2xl text-white/85 leading-snug">
-                des matchs remportés par {leader.label}
-              </span>
+          <section id="classement" className="mb-24 scroll-mt-24">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+              <div>
+                <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[#d4a855]">01 · Classement live</span>
+                <h2 className="font-serif text-3xl md:text-4xl text-white mt-2">
+                  Cinq enseignes, <span className="italic font-light text-white/60">un seul podium</span>
+                </h2>
+              </div>
+              <p className="max-w-sm text-neutral-500 text-xs font-light sm:text-right">
+                Une victoire = le prix le plus bas sur le même parfum et la même contenance.
+              </p>
             </div>
-            <figcaption className="text-neutral-300 font-light leading-relaxed">
-              {freshLabel ? `Au ${freshLabel}` : 'Actuellement'}, sur{' '}
-              <strong className="text-white font-medium">{comparisons} comparaisons à taille égale</strong> portant sur {products} parfums,{' '}
-              {leader.label} affiche le prix le plus bas {leader.wins} fois, contre{' '}
-              {ranking.slice(1).map((m, i, arr) => `${m.wins} pour ${m.label}`).reduce((acc, cur, i, arr) => i === 0 ? cur : i === arr.length - 1 ? `${acc} et ${cur}` : `${acc}, ${cur}`, '')}
-              {ties > 0 ? ` (${ties} égalité${ties > 1 ? 's' : ''})` : ''}.
-              Entre la moins chère et la plus chère, l&apos;écart moyen est de{' '}
-              <strong className="text-white font-medium">{fmt(avgGap)}&nbsp;€ par flacon</strong> — le prix d&apos;un deuxième parfum
-              qui part en fumée si tu pousses la mauvaise porte.
-            </figcaption>
-          </figure>
-
-          {/* ── Podium ── */}
-          <section className="mb-20">
-            <h2 className="font-serif text-2xl md:text-3xl text-white mb-2">
-              Le podium, <span className="italic font-light text-white/70">sans filtre</span>
-            </h2>
-            <p className="text-neutral-500 text-sm font-light mb-8">
-              Une victoire = être strictement la moins chère sur un parfum, à une contenance donnée.
-            </p>
-            <div className="space-y-5">
+            <div className="flex lg:grid lg:grid-cols-5 gap-px overflow-x-auto lg:overflow-visible snap-x snap-mandatory bg-white/10 border border-white/10">
               {ranking.map((m, i) => {
                 const pct = comparisons ? Math.round((m.wins / comparisons) * 100) : 0;
+                const logo = MERCHANT_LOGO[m.slug];
                 return (
-                  <div key={m.slug}>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className={`font-serif text-lg ${i === 0 ? 'text-[#d4a855] italic' : 'text-white/80'}`}>
-                        {i + 1}. {m.label}
-                      </span>
-                      <span className="font-mono text-xs text-neutral-400">{m.wins} victoires · {pct}&nbsp;%</span>
+                  <article key={m.slug} className={`relative min-w-[78vw] sm:min-w-[42vw] lg:min-w-0 min-h-48 p-5 bg-[#0a0a0a] snap-start ${i === 0 ? 'lg:-translate-y-2 border-t-2 border-[#d4a855]' : ''}`}>
+                    <div className="flex items-start justify-between gap-3 mb-8">
+                      <span className={`font-serif text-4xl leading-none ${i === 0 ? 'text-[#d4a855]' : 'text-white/15'}`}>0{i + 1}</span>
+                      {i === 0 && <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-[#d4a855]">Leader</span>}
                     </div>
-                    <div className="h-[3px] bg-white/[0.07] relative overflow-hidden">
-                      <div
-                        className={i === 0 ? 'h-full bg-gradient-to-r from-[#d4a855] to-[#d4a855]/40' : 'h-full bg-white/25'}
-                        style={{ width: `${Math.max(pct, 1.5)}%` }}
-                      />
+                    {logo && (
+                      <div className="h-6 mb-3 flex items-center">
+                        <Image src={logo.src} alt={`Logo ${m.label}`} width={logo.width} height={logo.height} className="max-h-5 w-auto max-w-24 object-contain brightness-0 invert opacity-65" />
+                      </div>
+                    )}
+                    <h3 className={`font-serif text-xl ${i === 0 ? 'text-white' : 'text-white/80'}`}>{m.label}</h3>
+                    <p className="font-mono text-[10px] text-neutral-500 mt-1">{m.wins} victoires</p>
+                    <div className="mt-5 flex items-end justify-between gap-3">
+                      <div className="h-1 flex-1 bg-white/[0.07] overflow-hidden">
+                        <div className={`h-full ${i === 0 ? 'bg-[#d4a855]' : 'bg-white/30'}`} style={{ width: `${Math.max(pct, 1.5)}%` }} />
+                      </div>
+                      <span className={`font-mono text-sm ${i === 0 ? 'text-[#d4a855]' : 'text-neutral-400'}`}>{pct}%</span>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
           </section>
 
-          {/* ── Les écarts qui piquent — cartes visuelles ── */}
-          <section className="mb-20">
-            <h2 className="font-serif text-2xl md:text-3xl text-white mb-2">
-              Les écarts <span className="italic font-light text-white/70">qui piquent</span>
-            </h2>
-            <p className="text-neutral-500 text-sm font-light mb-8">
-              Même flacon, même taille, relevés le même jour. Oui, vraiment.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-px bg-white/10 border border-white/10">
+          <section id="ecarts" className="mb-24 scroll-mt-24">
+            <div className="mb-8">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[#d4a855]">02 · Là où ça fait mal</span>
+              <h2 className="font-serif text-3xl md:text-4xl text-white mt-2">
+                Les écarts <span className="italic font-light text-white/60">qui piquent</span>
+              </h2>
+              <p className="text-neutral-500 text-sm font-light mt-3">Même flacon, même taille, relevés le même jour.</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 border border-white/10">
               {topGaps.map(g => (
                 <Link
                   key={`${g.slug}-${g.size}`}
                   href={`/produits/${g.slug}`}
-                  className="group bg-[#0a0a0a] p-6 hover:bg-white/[0.04] transition-colors"
+                  className="group relative bg-[#0a0a0a] p-5 hover:bg-white/[0.04] transition-colors"
                 >
-                  <div className="flex items-start gap-5">
+                  <span className="absolute right-4 top-4 font-mono text-[8px] uppercase tracking-widest text-neutral-700 group-hover:text-[#d4a855] transition-colors">Voir les prix →</span>
+                  <div className="flex items-start gap-4 pt-5">
                     <div className="w-16 h-20 bg-white flex-shrink-0 flex items-center justify-center overflow-hidden">
                       {g.image ? (
                         <SafeImage src={g.image} alt={g.name} width={64} height={80} className="object-contain w-full h-full" />
@@ -334,14 +430,26 @@ export default async function EnseignesMatchPage() {
                         {g.name}
                       </span>
                       <span className="block font-mono text-[10px] text-neutral-500 mt-1.5">{g.size}</span>
+                      {(g.editorialReview || g.rating) && (
+                        <span className="block font-mono text-[10px] text-[#d4a855] mt-1.5">
+                          Note City Baddies&nbsp;: {g.editorialReview
+                            ? `${g.editorialReview.rating.toFixed(1).replace('.', ',')}/5`
+                            : `${g.rating!.toFixed(1).replace('.', ',')}/10`}
+                        </span>
+                      )}
                       <div className="mt-3 space-y-1">
                         <span className="block text-sm text-white font-light">
                           {fmt(g.min)}&nbsp;€ <span className="text-neutral-500 text-xs">chez {merchantLabel(g.cheapest)}</span>
                         </span>
                         <span className="block text-xs text-neutral-500 line-through">{fmt(g.max)}&nbsp;€ ailleurs</span>
                       </div>
-                      <span className="inline-block mt-3 px-2.5 py-1 bg-[#9b1515]/20 border border-[#9b1515]/40 text-[#e8a0a0] font-mono text-[11px] tracking-wide">
-                        tu économises {fmt0(g.gap)}&nbsp;€
+                      {g.editorialReview && (
+                        <span className="block mt-2 text-[10px] leading-relaxed text-neutral-600 line-clamp-2">
+                          {g.editorialReview.body}
+                        </span>
+                      )}
+                      <span className="inline-block mt-3 px-2.5 py-1 bg-[#9b1515]/15 border border-[#9b1515]/30 text-[#e8a0a0] font-mono text-[10px] tracking-wide">
+                        écart de {fmt0(g.gap)}&nbsp;€
                       </span>
                     </div>
                   </div>
@@ -354,7 +462,7 @@ export default async function EnseignesMatchPage() {
           </section>
 
           {/* ── Pull quote ── */}
-          <blockquote className="my-20 text-center">
+          <blockquote className="my-24 text-center max-w-3xl mx-auto">
             <p className="font-serif italic text-2xl md:text-3xl text-white/85 leading-snug max-w-lg mx-auto">
               «&nbsp;Un prix barré ne prouve rien.<br />
               <span className="text-[#d4a855]">Un historique, si.</span>&nbsp;»
@@ -362,7 +470,10 @@ export default async function EnseignesMatchPage() {
           </blockquote>
 
           {/* ── Édito ── */}
-          <section className="mb-20 space-y-12 text-neutral-300 font-light leading-relaxed">
+          <section id="methode" className="mb-24 max-w-3xl mx-auto space-y-12 text-neutral-300 font-light leading-relaxed scroll-mt-24">
+            <div className="border-b border-white/10 pb-6">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[#d4a855]">03 · Comprendre les chiffres</span>
+            </div>
             <div>
               <h2 className="font-serif text-2xl text-white mb-4">Pourquoi le classement bouge en permanence</h2>
               <p>
@@ -397,7 +508,7 @@ export default async function EnseignesMatchPage() {
           </section>
 
           {/* ── FAQ ── */}
-          <section className="mb-20">
+          <section className="mb-20 max-w-3xl mx-auto">
             <h2 className="font-serif text-2xl md:text-3xl text-white mb-8">
               Les questions <span className="italic font-light text-white/70">qu&apos;on nous pose</span>
             </h2>
@@ -417,7 +528,7 @@ export default async function EnseignesMatchPage() {
           </section>
 
           {/* ── CTA ── */}
-          <div className="pt-10 border-t border-white/10">
+          <div className="max-w-3xl mx-auto pt-10 border-t border-white/10">
             <p className="font-serif italic text-lg text-white/70 mb-6">Ton parfum mérite le bon prix.</p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -430,7 +541,7 @@ export default async function EnseignesMatchPage() {
                 href="/parfums-moins-de-50-euros"
                 className="px-8 py-4 border border-white/20 text-white text-xs sm:text-sm font-bold tracking-widest uppercase hover:bg-white/5 transition-colors"
               >
-                Les parfums à −50&nbsp;€
+                Les parfums à moins de 50&nbsp;€
               </Link>
             </div>
           </div>

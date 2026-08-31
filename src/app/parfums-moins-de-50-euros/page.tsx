@@ -327,7 +327,7 @@ export default async function Under50Page() {
                 Tous les parfums comparés
               </Link>
               <Link
-                href="/sephora-vs-nocibe-vs-marionnaud"
+                href="/comparatif-prix-parfums"
                 className="px-8 py-4 border border-white/20 text-white text-xs sm:text-sm font-bold tracking-widest uppercase hover:bg-white/5 transition-colors"
               >
                 Le match des enseignes

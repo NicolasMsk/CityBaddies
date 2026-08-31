@@ -237,7 +237,7 @@ export default async function CategoriesPage() {
                 </h3>
                 <p className="text-slate-400 leading-relaxed pl-4 border-l border-white/10 ml-[3px]">
                   Aucune enseigne n&apos;est toujours la moins chère. Notre page{' '}
-                  <Link href="/sephora-vs-nocibe-vs-marionnaud" className="text-white font-normal underline decoration-white/30 underline-offset-4 hover:decoration-white">Sephora vs Nocibé vs Marionnaud</Link>{' '}
+                  <Link href="/comparatif-prix-parfums" className="text-white font-normal underline decoration-white/30 underline-offset-4 hover:decoration-white">Comparatif prix parfums</Link>{' '}
                   compte les victoires de chacune en continu, à taille égale.
                 </p>
               </div>

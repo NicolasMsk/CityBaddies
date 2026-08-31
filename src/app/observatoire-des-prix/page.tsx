@@ -327,7 +327,7 @@ export default async function ObservatoirePage() {
 
           <div className="pt-8 border-t border-white/10 flex flex-wrap gap-4">
             <Link href="/produits" className="px-8 py-4 bg-white text-black text-sm font-bold tracking-widest uppercase hover:bg-neutral-200 transition-colors">Comparer un parfum</Link>
-            <Link href="/sephora-vs-nocibe-vs-marionnaud" className="px-8 py-4 border border-white/20 text-white text-xs sm:text-sm font-bold tracking-widest uppercase hover:bg-white/5 transition-colors">Le match des enseignes</Link>
+            <Link href="/comparatif-prix-parfums" className="px-8 py-4 border border-white/20 text-white text-xs sm:text-sm font-bold tracking-widest uppercase hover:bg-white/5 transition-colors">Le match des enseignes</Link>
           </div>
         </div>
       </div>

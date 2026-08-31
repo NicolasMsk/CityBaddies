@@ -249,7 +249,7 @@ export default async function PairComparisonPage({ params }: { params: Promise<{
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Accueil', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Comparatif des enseignes', item: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud` },
+        { '@type': 'ListItem', position: 2, name: 'Comparatif des enseignes', item: `${BASE_URL}/comparatif-prix-parfums` },
         { '@type': 'ListItem', position: 3, name: `${left.label} vs ${right.label}`, item: pageUrl },
       ],
     },
@@ -271,7 +271,7 @@ export default async function PairComparisonPage({ params }: { params: Promise<{
       <div className="max-w-4xl mx-auto px-6">
         <nav className="text-[10px] uppercase tracking-[0.2em] text-neutral-500 mb-10">
           <Link href="/" className="hover:text-white">Accueil</Link> <span className="mx-2">/</span>
-          <Link href="/sephora-vs-nocibe-vs-marionnaud" className="hover:text-white">Comparatifs</Link>
+          <Link href="/comparatif-prix-parfums" className="hover:text-white">Comparatifs</Link>
         </nav>
 
         <header className="mb-14">

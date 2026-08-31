@@ -18,7 +18,7 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
   'Parfums': [
     { label: 'Tous les parfums', href: '/produits' },
     { label: 'À moins de 50 €', href: '/parfums-moins-de-50-euros' },
-    { label: 'Le match des enseignes', href: '/sephora-vs-nocibe-vs-marionnaud' },
+    { label: 'Le match des enseignes', href: '/comparatif-prix-parfums' },
     { label: 'Observatoire des prix', href: '/observatoire-des-prix' },
     { label: 'Codes promo', href: '/codes-promo' },
     { label: 'Guides d\'achat', href: '/guides' },

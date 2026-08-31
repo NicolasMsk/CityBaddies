@@ -14,7 +14,7 @@ Ce que le site fait :
 - [Tous les parfums comparés](https://citybaddies.com/produits) : liste des parfums suivis, avec meilleur prix actuel
 - [Marques](https://citybaddies.com/marques) : une page par maison (Chanel, Dior, Guerlain…) avec les prix actuels de chaque parfum
 - [Observatoire des prix](https://citybaddies.com/observatoire-des-prix) : l'étude mensuelle — enseigne la moins chère, écart moyen entre enseignes, plus fortes baisses du mois, prix barrés supérieurs au maximum relevé
-- [Sephora vs Nocibé vs Marionnaud](https://citybaddies.com/sephora-vs-nocibe-vs-marionnaud) : quelle enseigne est la moins chère — victoires et écarts recalculés à chaque relevé
+- [Comparatif prix parfums](https://citybaddies.com/comparatif-prix-parfums) : cinq enseignes comparées — victoires et écarts recalculés à chaque relevé
 - [Sephora vs Nocibé](https://citybaddies.com/comparatif/sephora-vs-nocibe) : comparatif direct, à parfum et contenance identiques
 - [Sephora vs Marionnaud](https://citybaddies.com/comparatif/sephora-vs-marionnaud) : comparatif direct, à parfum et contenance identiques
 - [Nocibé vs Marionnaud](https://citybaddies.com/comparatif/nocibe-vs-marionnaud) : comparatif direct, à parfum et contenance identiques

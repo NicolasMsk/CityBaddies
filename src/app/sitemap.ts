@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/sephora-vs-nocibe-vs-marionnaud`,
+      url: `${BASE_URL}/comparatif-prix-parfums`,
       lastModified: dataDate,
       changeFrequency: 'daily',
       priority: 0.8,

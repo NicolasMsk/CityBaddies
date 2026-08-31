@@ -56,7 +56,7 @@ const megaBrands = [
 const megaExplore = [
   { href: '/produits', label: 'Tous les parfums comparés' },
   { href: '/parfums-moins-de-50-euros', label: 'À moins de 50 €' },
-  { href: '/sephora-vs-nocibe-vs-marionnaud', label: 'Le match des enseignes' },
+  { href: '/comparatif-prix-parfums', label: 'Le match des enseignes' },
   { href: '/observatoire-des-prix', label: 'Observatoire des prix' },
   { href: '/methodologie', label: 'Comment on relève les prix' },
 ];
